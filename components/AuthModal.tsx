@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
 import { getBackend } from "@/lib/backend";
 
 export default function AuthModal({ open, reason, onClose }: { open: boolean; reason?: string; onClose: () => void }) {
@@ -52,27 +51,26 @@ export default function AuthModal({ open, reason, onClose }: { open: boolean; re
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <button className="icon-btn modal-x" onClick={onClose} aria-label="Close">
-              <X size={18} />
+            <button className="modal-x" onClick={onClose} aria-label="Close">
+              ×
             </button>
-            <div className="stamp">Members only</div>
-            <h2 className="display">{tab === "up" ? "Pull up a chair." : "Welcome back."}</h2>
-            <p className="muted">{reason ?? "Locals review spots, share photos, and keep the list honest."}</p>
+            <h2 className="modal-title">{tab === "up" ? "Make an account" : "Sign in"}</h2>
+            <p className="muted">{reason ?? "You need one to write reviews, post photos and add places. It's free."}</p>
 
             <div className="seg">
               <button className={tab === "up" ? "on" : ""} onClick={() => setTab("up")} type="button">
-                Join free
+                I&apos;m new
               </button>
               <button className={tab === "in" ? "on" : ""} onClick={() => setTab("in")} type="button">
-                Sign in
+                I have an account
               </button>
             </div>
 
             <form onSubmit={submit} className="form">
               {tab === "up" && (
                 <label>
-                  <span>Display name</span>
-                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Magic City Mae" required maxLength={40} />
+                  <span>Name people will see</span>
+                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="First name is fine" required maxLength={40} />
                 </label>
               )}
               <label>
@@ -92,12 +90,12 @@ export default function AuthModal({ open, reason, onClose }: { open: boolean; re
                 />
               </label>
               {err && <p className="form-err">{err}</p>}
-              <button className="btn btn-rust btn-block" disabled={busy}>
-                {busy ? "One sec…" : tab === "up" ? "Create my account" : "Sign in"}
+              <button className="btn btn-green btn-block" disabled={busy}>
+                {busy ? "One sec…" : tab === "up" ? "Create account" : "Sign in"}
               </button>
             </form>
             {backend.mode === "local" && (
-              <p className="fine">Demo mode: accounts, reviews and photos are saved on this device until the site&apos;s database is connected.</p>
+              <p className="fine">Test mode: accounts, reviews and photos only save on this device until the database is hooked up.</p>
             )}
           </motion.div>
         </motion.div>

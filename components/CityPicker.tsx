@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, MapPin, Sparkles, X } from "lucide-react";
-import { CITIES, STATES, citiesIn, stateName, type City } from "@/lib/regions";
+import { CITIES, STATES, apState, citiesIn, stateName, type City } from "@/lib/regions";
 import { useApp } from "./Providers";
 
 /** "Where's home?" — first-visit onboarding and the city switcher. */
@@ -60,57 +59,51 @@ export default function CityPicker({
             transition={{ type: "spring", stiffness: 280, damping: 26 }}
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <button className="icon-btn modal-x" onClick={onClose} aria-label="Close">
-              <X size={18} />
+            <button className="modal-x" onClick={onClose} aria-label="Close">
+              ×
             </button>
-            <div className="stamp">{firstRun ? "Welcome" : "Change city"}</div>
-            <h2 className="display">
-              Where&apos;s <em>home?</em>
-            </h2>
-            <p className="muted">We&apos;ll show you the independent spots locals love — and you can add the ones we&apos;re missing.</p>
+            <h2 className="modal-title">{firstRun ? "Where do you live?" : "Pick a city"}</h2>
+            <p className="muted">So we show you the right map. You can change it any time.</p>
 
             <label className="form state-select">
-              <span>Home state</span>
+              <span>State</span>
               <select value={state} onChange={(e) => setState(e.target.value)}>
                 {STATES.map((s) => (
                   <option key={s.code} value={s.code}>
                     {s.name}
-                    {openStates.has(s.code) ? "" : " — coming soon"}
+                    {openStates.has(s.code) ? "" : " (not yet)"}
                   </option>
                 ))}
               </select>
             </label>
 
             {cities.length > 0 ? (
-              <div className="city-grid">
-                {cities.map((c, i) => (
-                  <motion.button
-                    key={c.id}
-                    className={`city-card ${c.status} ${c.id === current.id ? "on" : ""}`}
-                    onClick={() => onPick(c)}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0, transition: { delay: i * 0.025 } }}
-                  >
-                    <span className="city-name">{c.name}</span>
-                    <span className="city-nick">{c.nickname}</span>
-                    <span className={`city-status ${c.status}`}>
-                      {c.status === "live" ? (
-                        <>
-                          <MapPin size={11} /> {liveCounts[c.id] ?? 0}+ spots
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles size={11} /> {liveCounts[c.id] ? `${liveCounts[c.id]} spots · ` : ""}Founding members wanted
-                        </>
-                      )}
-                    </span>
-                  </motion.button>
+              <>
+              <ul className="directory">
+                {cities.map((c) => (
+                  <li key={c.id}>
+                    <button className={c.id === current.id ? "on" : ""} onClick={() => onPick(c)}>
+                      <span className="dir-name">
+                        {c.name}, {apState(c.state)}
+                      </span>
+                      <span className="leader" aria-hidden />
+                      <span className={`dir-status ${c.status}`}>
+                        {c.status === "live"
+                          ? `${liveCounts[c.id] ?? 0} places`
+                          : liveCounts[c.id]
+                            ? `${liveCounts[c.id]} so far, add yours`
+                            : "just getting started"}
+                      </span>
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ul>
+              <p className="fine">Places outside Birmingham are added by people who live there, and we check each one.</p>
+              </>
             ) : (
               <div className="waitlist">
                 {joined ? (
-                  <p className="display small-display">You&apos;re on the {stateName(state)} list. We&apos;ll email you the day it opens.</p>
+                  <p>You&apos;re on the {stateName(state)} list. We&apos;ll email you when it opens.</p>
                 ) : (
                   <form
                     className="form"
@@ -120,28 +113,28 @@ export default function CityPicker({
                         await backend.waitlist(email.trim(), state, wantCity.trim());
                         setJoined(true);
                       } catch {
-                        toast("Couldn't join — try again", "err");
+                        toast("That didn't go through. Try again?", "err");
                       }
                     }}
                   >
                     <p>
-                      <strong>{stateName(state)} isn&apos;t open yet.</strong> We open new states when enough locals ask — get on the list and you&apos;ll be a founding member.
+                      <strong>We&apos;re not in {stateName(state)} yet.</strong> We open a state once enough people there ask. Leave your email and we&apos;ll tell you when.
                     </p>
                     <div className="form-grid">
                       <label>
                         <span>Your city</span>
-                        <input value={wantCity} onChange={(e) => setWantCity(e.target.value)} placeholder="e.g. Nashville" maxLength={60} />
+                        <input value={wantCity} onChange={(e) => setWantCity(e.target.value)} placeholder="Your town" maxLength={60} />
                       </label>
                       <label>
                         <span>Email</span>
                         <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
                       </label>
                     </div>
-                    <button className="btn btn-rust">Notify me</button>
+                    <button className="btn btn-green">Let me know</button>
                   </form>
                 )}
-                <button className="link-btn" onClick={() => onPick(CITIES[0])}>
-                  Browse {CITIES[0].name} in the meantime <ArrowRight size={13} />
+                <button className="textbtn" onClick={() => onPick(CITIES[0])}>
+                  Look around {CITIES[0].name} for now →
                 </button>
               </div>
             )}

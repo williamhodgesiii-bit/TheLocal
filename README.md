@@ -1,12 +1,14 @@
 # The Local — Birmingham's independent food & drink map
 
-Pick a craving, pick a part of town, and the map of Birmingham moves for you. Independent spots only: no fast food, no national chains.
+Pick what sounds good and what part of town, and the map of Birmingham follows along. Locally owned places only: no fast food, no chains.
 
-- **Left 30%**: genre chips (Southern, BBQ, Italian, Seafood, Latin, Asian, Greek, Chef's Table, Brunch, Coffee, Sweets, **Drinks** with Cocktails / Breweries / Wine / Bars sub-filters), neighborhoods (Downtown, Southside & Five Points, Lakeview & Pepper Place, Avondale, Homewood, English Village, Mountain Brook Village, Crestline, Cahaba Heights), search, price and sort.
-- **Right 70%**: a map you can't pan or zoom. The camera follows your choices. Pins and neighborhood names can still be clicked as shortcuts.
-- **Spot page**: the storefront photo, then food photos, then member reviews. Members upload photos, tagged storefront, food or vibe. Also directions, save, share and nearby spots.
-- **Surprise me**: a slot-machine pick, weighted toward popular local spots. It can stay inside your current filters. Press `S` anywhere to open it.
-- Keyboard: `/` search · `↑/↓` browse · `Esc` back · `S` surprise.
+**The look**: the site is built to look like things you'd find around town, not a template. The left side is a diner menu with dotted leaders, and your choices get circled in ballpoint pen. A restaurant's page is a green guest check with taped-up snapshots and reviews in handwriting. The map is a printed city map whose numbered pins match the menu. Surprise Me prints a kitchen ticket. The header reads like a newspaper masthead with an AP-style dateline. Fonts: Yellowtail (sign script), Young Serif, Libre Franklin and Nanum Pen Script, all self-hosted.
+
+- **Left 30%**: kinds of food (Southern, BBQ, Italian, Seafood, Latin, Asian, Greek, Special occasion, Brunch, Coffee, Sweets, and **Drinks** with cocktails, breweries, wine and bars), neighborhoods (Downtown, Southside & Five Points, Lakeview & Pepper Place, Avondale, Homewood, English Village, Mountain Brook Village, Crestline, Cahaba Heights), search, price and sort.
+- **Right 70%**: a map you can't pan or zoom. The camera follows your choices. Pins and neighborhood names can still be clicked.
+- **Restaurant page**: building photo first, then food photos, then member reviews. Members can upload photos. Also directions, save, share and nearby places.
+- **Surprise me**: picks a place, weighted toward the well-loved ones. It can stay inside your current picks.
+- **Keyboard**: `/` search · `↑/↓` browse · `Esc` back · `S` surprise.
 
 ## Community spots & verification
 

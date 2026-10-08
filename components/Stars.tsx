@@ -25,7 +25,7 @@ export function Stars({ value, size = 14 }: { value: number; size?: number }) {
   );
 }
 
-const WORDS = ["", "Skip it", "It's alright", "Solid", "Real good", "Bring everybody"];
+const WORDS = ["", "1 out of 5", "2 out of 5", "3 out of 5", "4 out of 5", "5 out of 5"];
 
 export function StarInput({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   const [hover, setHover] = useState(0);

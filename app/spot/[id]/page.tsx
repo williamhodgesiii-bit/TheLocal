@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const s = await resolve(params.id);
   if (!s) return { title: "Spot", robots: { index: false } };
   const city = CITY_BY_ID[s.city];
-  const title = `${s.name} — ${GENRE_BY_ID[s.genres[0]].label} in ${areaLabelOf(s)}, ${city?.name ?? ""}`;
+  const title = `${s.name}, ${GENRE_BY_ID[s.genres[0]].label.toLowerCase()} in ${areaLabelOf(s)}, ${city?.name ?? ""}`;
   return {
     title,
     description: `${s.knownFor}. ${s.blurb}`,

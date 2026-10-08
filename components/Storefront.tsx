@@ -15,7 +15,7 @@ const WALLS = [
   { fill: "#38484F", brick: false, trim: "#EFE3CC" },
   { fill: "#A4532F", brick: true, trim: "#F2E7D2" },
 ];
-const AWNINGS = ["#B4502A", "#2F4A3A", "#1F2D3A", "#C9A04A", "#7A2E2E", "#3B302A"];
+const AWNINGS = ["#B23A24", "#2C5A43", "#26408B", "#DDA526", "#7A2E2E", "#22201C"];
 const SKIES = [
   ["#2A2130", "#7E4136", "#E39A5B"], // dusk
   ["#14182A", "#28304A", "#4B4566"], // night

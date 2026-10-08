@@ -2,14 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { PenLine, Trash2 } from "lucide-react";
 import { track } from "@vercel/analytics";
 import type { Review } from "@/lib/backend";
 import type { Spot } from "@/lib/data";
 import { useApp } from "./Providers";
 import { StarInput, Stars } from "./Stars";
 
-const PROMPTS = ["What did you order?", "Who should go here?", "Best seat in the house?", "Would you go back?"];
+const PROMPTS = ["What'd you get? Would you go back?", "Who would you bring here?", "Anything you'd skip?", "Best time to go?"];
 
 export default function Reviews({ spot }: { spot: Spot }) {
   const { backend, user, requireAuth, toast } = useApp();
@@ -54,14 +53,14 @@ export default function Reviews({ spot }: { spot: Spot }) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!rating) return toast("Tap a star rating first", "err");
-    if (body.trim().length < 10) return toast("Tell us a little more (10+ characters)", "err");
+    if (!rating) return toast("Pick a rating first", "err");
+    if (body.trim().length < 10) return toast("Write a little more than that", "err");
     setBusy(true);
     try {
       const r = await backend.addReview(spot.id, rating, body.trim());
       setReviews((list) => [r, ...(list ?? []).filter((x) => x.userId !== r.userId)]);
       setWriting(false);
-      toast("Review posted. Thanks, local!", "ok");
+      toast("Posted. Thanks for writing it up.", "ok");
       track("review", { id: spot.id, rating });
     } catch (e) {
       toast(e instanceof Error ? e.message : "Couldn't post review", "err");
@@ -78,25 +77,26 @@ export default function Reviews({ spot }: { spot: Spot }) {
   return (
     <section className="reviews">
       <div className="reviews-head">
-        <h3 className="eyebrow">Word from the locals</h3>
-        <button className="btn btn-ink btn-sm" onClick={open}>
-          <PenLine size={14} /> {mine ? "Edit your review" : "Write a review"}
+        <h3 className="small-head">What people are saying</h3>
+        <button className="textbtn" onClick={open}>
+          {mine ? "Edit yours" : "Write one"}
         </button>
       </div>
 
       {stats.count > 0 && (
         <div className="score">
           <div className="score-big">
-            <span className="display">{stats.avg.toFixed(1)}</span>
-            <Stars value={stats.avg} size={15} />
-            <span className="mono-sm">
-              {stats.count} review{stats.count === 1 ? "" : "s"}
+            <span className="score-n">{stats.avg.toFixed(1)}</span>
+            <span className="score-of">
+              out of 5
+              <br />
+              {stats.count} {stats.count === 1 ? "member" : "members"}
             </span>
           </div>
           <div className="bars">
             {stats.dist.map((c, i) => (
               <div className="bar-row" key={i}>
-                <span className="mono-sm">{5 - i}</span>
+                <span className="bar-n">{5 - i}</span>
                 <span className="bar">
                   <motion.span initial={{ width: 0 }} animate={{ width: `${(c / stats.count) * 100}%` }} transition={{ delay: 0.1 + i * 0.05 }} />
                 </span>
@@ -125,13 +125,13 @@ export default function Reviews({ spot }: { spot: Spot }) {
               autoFocus
             />
             <div className="row between">
-              <span className="mono-sm">{body.length}/2000</span>
+              <span className="count">{body.length} / 2000</span>
               <div className="row gap8">
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setWriting(false)}>
-                  Cancel
+                <button type="button" className="textbtn" onClick={() => setWriting(false)}>
+                  Never mind
                 </button>
-                <button className="btn btn-rust btn-sm" disabled={busy}>
-                  {busy ? "Posting…" : "Post review"}
+                <button className="btn btn-green" disabled={busy}>
+                  {busy ? "Posting…" : "Post it"}
                 </button>
               </div>
             </div>
@@ -146,28 +146,24 @@ export default function Reviews({ spot }: { spot: Spot }) {
         </div>
       ) : reviews.length === 0 ? (
         <div className="empty-reviews">
-          <p className="display">No reviews yet.</p>
-          <p className="muted small">Been to {spot.name}? Be the first local to weigh in.</p>
+          <p>Nobody&apos;s written this one up yet. If you&apos;ve been, you&apos;d be first.</p>
         </div>
       ) : (
         <ul className="review-list">
           {reviews.map((r, i) => (
-            <motion.li key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-              <div className="avatar" aria-hidden>
-                {r.userName.slice(0, 1).toUpperCase()}
-              </div>
+            <motion.li key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}>
               <div className="review-main">
-                <div className="row between">
-                  <strong>{r.userName}</strong>
-                  <span className="mono-sm">{new Date(r.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>
+                <p className="r-body">{r.body}</p>
+                <div className="r-sig">
+                  <span className="pen-sig">{r.userName}</span>
+                  <Stars value={r.rating} size={12} />
+                  <span className="r-date">{new Date(r.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>
+                  {r.userId === user?.id && (
+                    <button className="textbtn" onClick={() => remove(r.id)}>
+                      delete
+                    </button>
+                  )}
                 </div>
-                <Stars value={r.rating} size={13} />
-                <p>{r.body}</p>
-                {r.userId === user?.id && (
-                  <button className="link-btn" onClick={() => remove(r.id)}>
-                    <Trash2 size={12} /> Delete
-                  </button>
-                )}
               </div>
             </motion.li>
           ))}

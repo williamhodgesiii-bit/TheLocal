@@ -10,10 +10,10 @@ export function generateStaticParams() {
 export function generateMetadata({ params }: { params: { state: string; city: string } }): Metadata {
   const c = findCity(params.state, params.city);
   if (!c) return {};
-  const title = `${c.name}, ${stateName(c.state)} — independent restaurants, coffee & bars`;
+  const title = `${c.name}, ${stateName(c.state)} restaurants, coffee & bars`;
   return {
     title,
-    description: `The independent food & drink map of ${c.name}. No chains, no fast food — every spot added by locals and verified by The Local.`,
+    description: `Locally owned restaurants, coffee shops and bars in ${c.name}. No chains, no fast food. Added by people who live there and checked by The Local.`,
     alternates: { canonical: `/${params.state}/${params.city}` },
     openGraph: { title, url: `/${params.state}/${params.city}` },
   };

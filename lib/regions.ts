@@ -49,7 +49,7 @@ export const CITIES: City[] = [
   c("auburn", "Auburn & Opelika", "AL", [32.62, -85.45], "founding", "The Loveliest Village"),
   c("the-shoals", "Florence & The Shoals", "AL", [34.7998, -87.6773], "founding", "The Shoals"),
   c("decatur", "Decatur", "AL", [34.6059, -86.9833], "founding", "The River City"),
-  c("gadsden", "Gadsden", "AL", [34.0143, -86.0066], "founding", "The City of Champions"),
+  c("gadsden", "Gadsden", "AL", [34.0143, -86.0066], "founding", "On the Coosa"),
   c("dothan", "Dothan", "AL", [31.2232, -85.3905], "founding", "The Peanut Capital"),
   c("eastern-shore", "Fairhope & Eastern Shore", "AL", [30.5227, -87.9033], "founding", "The Eastern Shore"),
   c("gulf-coast", "Gulf Shores & Orange Beach", "AL", [30.27, -87.65], "founding", "The Alabama Gulf Coast", 12),
@@ -63,3 +63,13 @@ export const cityPath = (city: City) => (city.id === DEFAULT_CITY ? "/" : `/${ci
 export const findCity = (state: string, slug: string) => CITIES.find((x) => x.state.toLowerCase() === state.toLowerCase() && x.slug === slug);
 
 export const HOME_KEY = "tl.home";
+
+/** AP style state abbreviations, the way a newspaper dateline writes them. */
+const AP: Record<string, string> = {
+  AL: "Ala.", AZ: "Ariz.", AR: "Ark.", CA: "Calif.", CO: "Colo.", CT: "Conn.", DE: "Del.", FL: "Fla.", GA: "Ga.", IL: "Ill.",
+  IN: "Ind.", KS: "Kan.", KY: "Ky.", LA: "La.", MD: "Md.", MA: "Mass.", MI: "Mich.", MN: "Minn.", MS: "Miss.", MO: "Mo.",
+  MT: "Mont.", NE: "Neb.", NV: "Nev.", NH: "N.H.", NJ: "N.J.", NM: "N.M.", NY: "N.Y.", NC: "N.C.", ND: "N.D.", OK: "Okla.",
+  OR: "Ore.", PA: "Pa.", RI: "R.I.", SC: "S.C.", SD: "S.D.", TN: "Tenn.", VT: "Vt.", VA: "Va.", WA: "Wash.", WV: "W.Va.",
+  WI: "Wis.", WY: "Wyo.",
+};
+export const apState = (code: string) => AP[code] ?? stateName(code);

@@ -1,38 +1,36 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Check } from "lucide-react";
 import PartnerForm from "@/components/PartnerForm";
 
 export const metadata: Metadata = {
-  title: "For restaurants — partner with The Local",
-  description: "Claim your listing, share your best photos, and get featured where Birmingham decides where to eat tonight.",
+  title: "For restaurants",
+  description: "Claim your listing on The Local for free, or pay to be featured in your neighborhood.",
 };
 
 const TIERS = [
   {
     id: "neighbor",
-    name: "Neighbor",
+    name: "Listing",
     price: "Free",
     per: "",
-    pitch: "Every independent spot deserves a fair shake.",
-    perks: ["Claim & verify your listing", "Update hours, links and menu", "Respond to member reviews", "Owner badge on your page"],
+    pitch: "Every locally owned place gets one.",
+    perks: ["Claim and verify your page", "Update your hours, links and menu", "Answer reviews", "An owner mark on your page"],
   },
   {
     id: "regular",
-    name: "Regular",
+    name: "Featured",
     price: "$39",
-    per: "/mo",
-    pitch: "For places ready to stand out in their genre.",
-    perks: ["Everything in Neighbor", "Featured (labeled) placement in your genre list", "Curate your photo gallery & cover shot", "Monthly views, saves & directions report", "Add specials and events"],
-    hot: true,
+    per: "a month",
+    pitch: "Show up first in your kind of food.",
+    perks: ["Everything in Listing", "Top of your category, marked as paid", "Pick your cover photo and order your gallery", "A monthly count of views, saves and directions", "Post specials and events"],
   },
   {
     id: "institution",
-    name: "Institution",
+    name: "Front page",
     price: "$99",
-    per: "/mo",
-    pitch: "Own your neighborhood on the map.",
-    perks: ["Everything in Regular", "Spotlight pin on the neighborhood map", "Boosted odds in Surprise Me (labeled)", "A feature in The Weekly Plate newsletter", "Priority support & quarterly strategy call"],
+    per: "a month",
+    pitch: "Own your part of town.",
+    perks: ["Everything in Featured", "Top of your neighborhood on the map", "Comes up more often in Surprise Me (marked)", "A write-up in the Thursday List email", "A call with us every quarter"],
   },
 ];
 
@@ -40,61 +38,63 @@ export default function Partners({ searchParams }: { searchParams: { spot?: stri
   return (
     <div className="partners">
       <header className="partners-top">
-        <Link href="/" className="btn btn-outline-light btn-sm">
-          <ArrowLeft size={14} /> Back to the map
+        <Link href="/" className="textbtn">
+          ← Back to the map
         </Link>
+        <span className="brand-script">The Local</span>
       </header>
+
       <section className="partners-hero">
-        <span className="stamp light">For restaurants, bars & cafés</span>
-        <h1 className="display">
-          Put your place <em>on the map.</em>
-        </h1>
+        <p className="cap-kicker">For restaurants, bars and coffee shops</p>
+        <h1>Get your place in front of people deciding where to eat tonight.</h1>
         <p>
-          The Local is where Birmingham decides where to eat tonight — independent spots only, no national chains and no fast food. Claim your listing for free, or partner with us to get in front of locals who are hungry right now.
+          The Local only lists places that are locally owned. No chains, no fast food. A basic listing is free. If you want to be seen first in your
+          neighborhood or your kind of food, there are two paid options.
         </p>
       </section>
 
-      <section className="tiers">
-        {TIERS.map((t) => (
-          <article key={t.id} className={`tier ${t.hot ? "hot" : ""}`}>
-            {t.hot && <span className="tier-flag">Most popular</span>}
-            <h2 className="display">{t.name}</h2>
-            <div className="tier-price">
-              <strong>{t.price}</strong>
-              <span>{t.per}</span>
-            </div>
-            <p className="muted">{t.pitch}</p>
-            <ul>
-              {t.perks.map((p) => (
-                <li key={p}>
-                  <Check size={15} /> {p}
-                </li>
-              ))}
-            </ul>
-            <a href={`#contact`} className={`btn ${t.hot ? "btn-rust" : "btn-ink"} btn-block`}>
-              {t.price === "Free" ? "Claim my listing" : `Choose ${t.name}`}
-            </a>
-          </article>
-        ))}
+      <section className="rates">
+        <h2 className="menu-head">
+          <span>Rates</span>
+        </h2>
+        <div className="rate-grid">
+          {TIERS.map((t) => (
+            <article key={t.id} className="rate">
+              <h3>{t.name}</h3>
+              <p className="rate-price">
+                <strong>{t.price}</strong> {t.per}
+              </p>
+              <p className="rate-pitch">{t.pitch}</p>
+              <ul>
+                {t.perks.map((p) => (
+                  <li key={p}>{p}</li>
+                ))}
+              </ul>
+              <a href="#contact" className="btn btn-line btn-block">
+                {t.price === "Free" ? "Claim my listing" : `Ask about ${t.name}`}
+              </a>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="principles">
         <div>
-          <h3 className="eyebrow">Our promise to diners</h3>
+          <h3 className="small-head">What we promise diners</h3>
           <p>
-            Paid placement is always labeled <span className="sponsored">Sponsored</span>. Partners can&apos;t buy, edit or remove member reviews, and ratings only come
-            from people with accounts.
+            Anything paid is marked <span className="paid">Paid listing</span>. Owners can&apos;t buy, edit or remove reviews. Ratings only come from people with
+            accounts.
           </p>
         </div>
         <div>
-          <h3 className="eyebrow">Also available</h3>
-          <p>Newsletter sponsorships, neighborhood takeovers (e.g. “Avondale Week”), event listings, and reservation &amp; delivery link-outs for your page.</p>
+          <h3 className="small-head">Other ways to work with us</h3>
+          <p>Sponsor the Thursday List email, take over a neighborhood for a week, list an event, or add reservation and delivery links to your page.</p>
         </div>
       </section>
 
       <section id="contact" className="contact">
-        <h2 className="display">Let&apos;s talk.</h2>
-        <p className="muted">Tell us about your spot — or flag a listing that&apos;s closed or wrong. We answer within one business day.</p>
+        <h2>Get in touch</h2>
+        <p className="muted">Tell us about your place, or tell us if a listing is closed or wrong. We get back to everyone within a business day.</p>
         <PartnerForm spot={searchParams.spot} />
       </section>
     </div>

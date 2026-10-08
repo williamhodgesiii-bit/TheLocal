@@ -3,13 +3,11 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, Camera, Check, Loader2, MapPin, Search, ShieldCheck, X } from "lucide-react";
 import { track } from "@vercel/analytics";
 import { DRINK_KINDS, GENRES, distanceKm, slugify, type Area, type DrinkKind, type GenreId, type Spot } from "@/lib/data";
 import { looksLikeChain, normalizeName } from "@/lib/chains";
 import type { City } from "@/lib/regions";
 import { useApp } from "./Providers";
-import { GenreIcon } from "./Icon";
 
 const PinPicker = dynamic(() => import("./PinPicker"), { ssr: false, loading: () => <div className="pin-picker" /> });
 
@@ -122,9 +120,9 @@ export default function SubmitSpot({
     !coords && "a pin on the map",
     !areaLabel && "the neighborhood",
     knownFor.trim().length < 3 && "what it's known for",
-    blurb.trim().length < 20 && "a few sentences on why you love it (20+ characters)",
+    blurb.trim().length < 20 && "a couple sentences about it",
     !visited && "confirm you've been",
-    !independent && "confirm it's independent",
+    !independent && "confirm it's locally owned",
     chain && !notChain && "confirm it isn't a chain",
     dup && !dupOk && "confirm it's not a duplicate",
   ].filter(Boolean) as string[];
@@ -159,7 +157,7 @@ export default function SubmitSpot({
       setDone(true);
       onDone?.();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Couldn't submit — try again.");
+      setErr(e instanceof Error ? e.message : "That didn't go through. Try again?");
       toast("Submission failed", "err");
     } finally {
       setBusy(false);
@@ -181,36 +179,32 @@ export default function SubmitSpot({
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <button className="icon-btn modal-x" onClick={onClose} aria-label="Close">
-              <X size={18} />
+            <button className="modal-x" onClick={onClose} aria-label="Close">
+              ×
             </button>
 
             {done ? (
               <div className="submit-done">
-                <motion.div className="done-seal" initial={{ scale: 0, rotate: -40 }} animate={{ scale: 1, rotate: -8 }} transition={{ type: "spring", stiffness: 200, damping: 12 }}>
-                  <ShieldCheck size={40} />
-                  <span>Pending verification</span>
-                </motion.div>
-                <h2 className="display">Thanks, local.</h2>
+                <motion.p className="done-stamp" initial={{ scale: 1.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25 }}>
+                  Received
+                </motion.p>
+                <h2 className="modal-title">Got it. Thanks.</h2>
                 <p className="muted">
-                  A real person on our team will confirm <strong>{name}</strong> exists, is open and is independent — usually within 48 hours. You can follow it under
-                  <em> Your spots</em> in your account menu, and it&apos;ll show on the {city.name} map with your name once it&apos;s verified.
+                  One of us will make sure <strong>{name}</strong> is real, open and locally owned. That usually takes a day or two. You can check on it under
+                  <em> Places you&apos;ve added</em> in your account menu. Once it&apos;s checked, it goes on the {city.name} map with your name on it.
                 </p>
-                <button className="btn btn-rust" onClick={onClose}>
+                <button className="btn btn-green" onClick={onClose}>
                   Back to the map
                 </button>
               </div>
             ) : (
               <form onSubmit={submit} className="form submit-form">
-                <div className="stamp">Member submission</div>
-                <h2 className="display">
-                  Add a spot in <em>{city.name}</em>
-                </h2>
-                <p className="muted small">Independent places only — no chains, no fast food. Every submission is verified by our team before it goes live.</p>
+                <h2 className="modal-title">Add a place in {city.name}</h2>
+                <p className="muted small">Locally owned places only, no chains and no fast food. We check every one before it goes up.</p>
 
                 <fieldset>
                   <legend>
-                    <span className="num">01</span> The basics
+                    <span className="num">1.</span> The place
                   </legend>
                   <label>
                     <span>Name</span>
@@ -218,9 +212,8 @@ export default function SubmitSpot({
                   </label>
                   {chain && (
                     <div className="warn">
-                      <AlertTriangle size={16} />
                       <div>
-                        <strong>That name matches a national chain.</strong> The Local only lists independent spots — no chains or fast food.
+                        <strong>That name matches a chain.</strong> We only list places that are locally owned.
                         <label className="check">
                           <input type="checkbox" checked={notChain} onChange={(e) => setNotChain(e.target.checked)} /> It&apos;s a different, locally owned place
                         </label>
@@ -229,9 +222,8 @@ export default function SubmitSpot({
                   )}
                   {dup && (
                     <div className="warn">
-                      <AlertTriangle size={16} />
                       <div>
-                        <strong>{dup.name} is already on the map</strong> ({dup.address}).
+                        <strong>{dup.name} is already on here</strong> ({dup.address}).
                         <label className="check">
                           <input type="checkbox" checked={dupOk} onChange={(e) => setDupOk(e.target.checked)} /> Mine is a different place
                         </label>
@@ -249,7 +241,7 @@ export default function SubmitSpot({
                         onClick={() => toggleGenre(g.id)}
                         aria-pressed={genres.includes(g.id)}
                       >
-                        <GenreIcon name={g.icon} size={14} /> {g.short}
+                        {g.short}
                       </button>
                     ))}
                   </div>
@@ -279,25 +271,24 @@ export default function SubmitSpot({
 
                 <fieldset>
                   <legend>
-                    <span className="num">02</span> Where is it?
+                    <span className="num">2.</span> Where it is
                   </legend>
                   <div className="row gap8 address-row">
                     <label className="grow">
                       <span>Street address</span>
                       <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Main St" maxLength={160} required />
                     </label>
-                    <button type="button" className="btn btn-ink btn-sm" onClick={lookup} disabled={looking}>
-                      {looking ? <Loader2 size={14} className="spin" /> : <Search size={14} />} Find it
+                    <button type="button" className="btn btn-line" onClick={lookup} disabled={looking}>
+                      {looking ? "Looking…" : "Find it"}
                     </button>
                   </div>
                   {hits && (
                     <div className="hits">
                       {hits.length === 0 ? (
-                        <span className="mono-sm">No matches — tap the map to drop the pin yourself.</span>
+                        <span className="hint">Couldn&apos;t find it. Tap the map to put the pin down yourself.</span>
                       ) : (
                         hits.map((h, i) => (
                           <button type="button" key={i} className="hit" onClick={() => pick(h)}>
-                            <MapPin size={14} />
                             <span>
                               <strong>{h.name}</strong>
                               <span className="mono-sm">{h.address}</span>
@@ -310,7 +301,7 @@ export default function SubmitSpot({
                   )}
                   <div className="pin-wrap-outer">
                     <PinPicker center={city.center} value={coords} onChange={setCoords} />
-                    <span className="pin-hint">{coords ? "Drag the pin to the front door" : "Tap the map to drop a pin"}</span>
+                    <span className="pin-hint">{coords ? "Drag the pin onto the front door" : "Tap the map where it is"}</span>
                   </div>
                   <label>
                     <span>Neighborhood</span>
@@ -323,34 +314,34 @@ export default function SubmitSpot({
                           {a.label}
                         </option>
                       ))}
-                      <option value={NEW_AREA}>Somewhere else…</option>
+                      <option value={NEW_AREA}>Not listed</option>
                     </select>
                   </label>
                   {area === NEW_AREA && (
                     <label>
                       <span>Neighborhood name</span>
-                      <input value={newArea} onChange={(e) => setNewArea(e.target.value)} placeholder="e.g. Five Points, Midtown, Downtown" maxLength={40} />
+                      <input value={newArea} onChange={(e) => setNewArea(e.target.value)} placeholder="What locals call that area" maxLength={40} />
                     </label>
                   )}
                 </fieldset>
 
                 <fieldset>
                   <legend>
-                    <span className="num">03</span> Why locals should go
+                    <span className="num">3.</span> Why go
                   </legend>
                   <label>
                     <span>Known for</span>
-                    <input value={knownFor} onChange={(e) => setKnownFor(e.target.value)} placeholder="The one thing you have to order" maxLength={80} />
+                    <input value={knownFor} onChange={(e) => setKnownFor(e.target.value)} placeholder="What should someone order?" maxLength={80} />
                   </label>
                   <label>
-                    <span>In your words</span>
-                    <textarea value={blurb} onChange={(e) => setBlurb(e.target.value)} rows={3} maxLength={600} placeholder="What makes it special? Who should go? Best time to visit?" />
+                    <span>Tell us about it</span>
+                    <textarea value={blurb} onChange={(e) => setBlurb(e.target.value)} rows={3} maxLength={600} placeholder="A few sentences, like you'd tell a friend." />
                   </label>
                 </fieldset>
 
                 <fieldset>
                   <legend>
-                    <span className="num">04</span> Help us verify <span className="opt">optional</span>
+                    <span className="num">4.</span> Help us check it <span className="opt">(optional)</span>
                   </legend>
                   <div className="form-grid">
                     <label>
@@ -364,13 +355,11 @@ export default function SubmitSpot({
                   </div>
                   <label className="photo-drop">
                     <input type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
-                    <Camera size={18} />
-                    <span>{photo ? photo.name : "Add a photo of the storefront"}</span>
-                    {photo && <Check size={16} />}
+                    <span>{photo ? `Photo: ${photo.name}` : "+ Add a photo of the front"}</span>
                   </label>
                   <label>
                     <span>Note for our team</span>
-                    <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Hours, owner's name, anything that helps" maxLength={300} />
+                    <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Hours, owner's name, anything that helps us check" maxLength={300} />
                   </label>
                 </fieldset>
 
@@ -379,15 +368,15 @@ export default function SubmitSpot({
                     <input type="checkbox" checked={visited} onChange={(e) => setVisited(e.target.checked)} /> I&apos;ve been here myself
                   </label>
                   <label className="check">
-                    <input type="checkbox" checked={independent} onChange={(e) => setIndependent(e.target.checked)} /> It&apos;s independent — not a national chain or fast food
+                    <input type="checkbox" checked={independent} onChange={(e) => setIndependent(e.target.checked)} /> It&apos;s locally owned, not a chain or fast food
                   </label>
                 </div>
 
                 {err && <p className="form-err">{err}</p>}
                 <div className="submit-bar">
-                  <span className="mono-sm">{problems.length ? `${problems.length} thing${problems.length > 1 ? "s" : ""} left` : "Ready to send"}</span>
-                  <button className="btn btn-rust" disabled={busy}>
-                    {busy ? "Sending…" : "Submit for verification"}
+                  <span className="hint">{problems.length ? `${problems.length} thing${problems.length > 1 ? "s" : ""} left` : "Ready"}</span>
+                  <button className="btn btn-green" disabled={busy}>
+                    {busy ? "Sending…" : "Send it in"}
                   </button>
                 </div>
               </form>

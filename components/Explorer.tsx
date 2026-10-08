@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, ChevronDown, ClipboardCheck, Dices, Heart, LogOut, MapPin, Plus, Search, ShieldCheck, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import {
   DRINK_KINDS,
   GENRES,
@@ -20,40 +19,18 @@ import {
   type Spot,
 } from "@/lib/data";
 import type { RatingSummary } from "@/lib/backend";
-import { CITY_BY_ID, DEFAULT_CITY, HOME_KEY, cityPath, stateName, type City } from "@/lib/regions";
+import { CITY_BY_ID, DEFAULT_CITY, HOME_KEY, apState, cityPath, stateName, type City } from "@/lib/regions";
 import CityPicker from "./CityPicker";
 import SubmitSpot from "./SubmitSpot";
 import MySubmissions from "./MySubmissions";
 import { useApp } from "./Providers";
-import { GenreIcon } from "./Icon";
-import Storefront from "./Storefront";
 import SpotDetail from "./SpotDetail";
 import Surprise from "./Surprise";
-import { Stars } from "./Stars";
+import Circled from "./Circled";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false, loading: () => <div className="leaflet-host map-loading" /> });
 
 type Sort = "popular" | "rating" | "az";
-
-const BHM_TICKER = [
-  "No drive-thrus. No chains. Just Birmingham.",
-  "White sauce is a food group",
-  "Market at Pepper Place — Saturdays, get there early",
-  "Over the mountain or under the furnace, we've got you",
-  "The Magic City, est. 1871",
-  "Reviews by locals, for locals",
-  "Know a spot we're missing? Add it",
-];
-const tickerFor = (c: City) =>
-  c.id === DEFAULT_CITY
-    ? BHM_TICKER
-    : [
-        `No drive-thrus. No chains. Just ${c.name}.`,
-        "Founding members wanted — add your favorite local spot",
-        "Every spot is verified by a real person",
-        "Reviews by locals, for locals",
-        `${c.nickname ?? c.name}, ${stateName(c.state)}`,
-      ];
 const SEEN_KEY = "tl.seenApproved";
 
 export default function Explorer({ cityId, initialSpot, initialSpotData }: { cityId?: string; initialSpot?: string; initialSpotData?: Spot }) {
@@ -145,7 +122,7 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
         }
         const fresh = subs.filter((x) => x.status !== "pending" && !seen.includes(x.id));
         fresh.forEach((x) =>
-          toast(x.status === "approved" ? `✦ ${x.name} was verified — it's live on the map!` : `${x.name} wasn't approved. See Your spots for why.`, x.status === "approved" ? "ok" : undefined)
+          toast(x.status === "approved" ? `${x.name} checked out. It's on the map now.` : `${x.name} wasn't approved. Your spots has the reason.`, x.status === "approved" ? "ok" : undefined)
         );
         if (fresh.length) localStorage.setItem(SEEN_KEY, JSON.stringify([...seen, ...fresh.map((x) => x.id)]));
       })
@@ -185,7 +162,7 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
     const path = sel ? `/spot/${sel.id}` : cityPath(city);
     const qs = p.toString();
     history.replaceState(null, "", qs ? `${path}?${qs}` : path);
-    document.title = sel ? `${sel.name} · The Local` : `The Local — ${city.name}'s independent food & drink map`;
+    document.title = sel ? `${sel.name} · The Local` : `The Local · ${city.name} restaurants, coffee & bars`;
   }, [genre, drink, area, selectedId, spotById, city]);
 
   useEffect(() => {
@@ -293,293 +270,276 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
   const activeArea = area === "all" ? null : areaById[area] ?? null;
   const founding = city.status === "founding";
   const openAdd = () => {
-    if (requireAuth(`Sign in to add a spot in ${city.name}. Every submission is verified by our team.`)) setAdding(true);
+    if (requireAuth(`Sign in to add a place in ${city.name}. We check every one before it goes up.`)) setAdding(true);
   };
   const filtersOn = prices.length > 0 || savedOnly || sort !== "popular";
 
+  const numbers = useMemo(() => Object.fromEntries(list.map((s, i) => [s.id, i + 1])) as Record<string, number>, [list]);
+  const [today, setToday] = useState("");
+  useEffect(() => {
+    setToday(new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }));
+  }, []);
+
   const mapTitle = selected ? selected.name : activeArea ? activeArea.label : city.name;
   const mapSub = selected
-    ? `${areaLabelOf(selected)} · ${selected.knownFor}`
-    : `${list.length} ${list.length === 1 ? "spot" : "spots"}${activeGenre ? ` · ${activeGenre.label}` : ""}${activeArea ? "" : " · all neighborhoods"}`;
+    ? `${areaLabelOf(selected)}. ${selected.address}`
+    : `${list.length} ${list.length === 1 ? "place" : "places"}${activeGenre ? `, ${activeGenre.label.toLowerCase()}` : ""}${activeArea ? "" : ", all over town"}`;
+  const resetAll = () => {
+    setGenre("all");
+    setArea("all");
+    setDrink("all");
+    setQuery("");
+    setPrices([]);
+    setSavedOnly(false);
+    setSort("popular");
+  };
+  const surpriseOrAdd = () => (allSpots.length ? setSurprise(true) : openAdd());
 
   return (
     <div className="app">
-      {/* ================= TOP BAR ================= */}
-      <header className="topbar">
-        <button className="brand" onClick={() => (chooseGenre("all"), chooseArea("all"))} aria-label="The Local — home">
-          <Logo />
-          <span className="brand-words">
-            <span className="brand-the">the</span>
-            <span className="brand-local">LOCAL</span>
-          </span>
-        </button>
-        <button className="city-switch" onClick={() => setPicker({ open: true, first: false })}>
-          <MapPin size={14} /> {city.name}, {city.state} <ChevronDown size={14} />
-        </button>
-        <nav className="top-actions">
-          <button className="btn btn-outline-light btn-sm add-top" onClick={openAdd}>
-            <Plus size={15} /> <span>Add a spot</span>
+      <header className="masthead">
+        <div className="mast-row">
+          <button className="brand" onClick={() => (resetAll(), select(null))} aria-label="The Local, home">
+            <span className="brand-script">The Local</span>
+            <span className="brand-sub">
+              {city.name}, {apState(city.state)}
+            </span>
           </button>
-          <Link href="/partners" className="top-link">
-            For restaurants <ArrowUpRight size={14} />
-          </Link>
-          <button className={`icon-btn on-dark ${savedOnly ? "saved" : ""}`} onClick={() => (setSavedOnly((v) => !v), select(null))} aria-pressed={savedOnly} title="Your saved spots">
-            <Heart size={17} fill={savedOnly ? "currentColor" : "none"} />
-            {saved.length > 0 && <span className="badge">{saved.length}</span>}
-          </button>
-          <motion.button className="btn btn-ember surprise-btn" onClick={() => (allSpots.length ? setSurprise(true) : openAdd())} whileTap={{ scale: 0.94, rotate: -2 }}>
-            <Dices size={17} className="dice" /> <span>Surprise me</span>
-          </motion.button>
-          {user ? (
-            <div className="user-wrap">
-              <button className="avatar avatar-btn" onClick={() => setUserMenu((v) => !v)} aria-label="Account">
-                {user.name.slice(0, 1).toUpperCase()}
-              </button>
-              <AnimatePresence>
-                {userMenu && (
-                  <motion.div className="user-menu" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-                    <strong>{user.name}</strong>
-                    <span className="mono-sm">{user.email}</span>
-                    <button className="menu-item" onClick={() => (setMine(true), setUserMenu(false))}>
-                      <ShieldCheck size={14} /> Your spots
-                    </button>
-                    {admin && (
-                      <Link className="menu-item" href="/admin">
-                        <ClipboardCheck size={14} /> Verification queue
-                      </Link>
-                    )}
-                    <button
-                      className="link-btn"
-                      onClick={() => {
-                        backend.signOut();
-                        setUserMenu(false);
-                        toast("Signed out. See you around.");
-                      }}
-                    >
-                      <LogOut size={13} /> Sign out
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <button className="btn btn-outline-light btn-sm" onClick={() => openAuth()}>
-              Sign in
+          <nav className="mast-nav">
+            <button className="navlink hide-sm" onClick={() => setPicker({ open: true, first: false })}>
+              Change city
             </button>
-          )}
-        </nav>
+            <button className="navlink hide-sm" onClick={openAdd}>
+              Add a place
+            </button>
+            <Link className="navlink hide-md" href="/partners">
+              For restaurants
+            </Link>
+            <button className={`navlink ${savedOnly ? "on" : ""}`} onClick={() => (setSavedOnly((v) => !v), select(null))} aria-pressed={savedOnly}>
+              Saved{saved.length ? ` (${saved.length})` : ""}
+            </button>
+            {user ? (
+              <div className="user-wrap">
+                <button className="navlink" onClick={() => setUserMenu((v) => !v)} aria-expanded={userMenu}>
+                  {user.name.split(" ")[0]} ▾
+                </button>
+                <AnimatePresence>
+                  {userMenu && (
+                    <motion.div className="user-menu" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}>
+                      <span className="um-name">{user.name}</span>
+                      <span className="um-mail">{user.email}</span>
+                      <button className="menu-item" onClick={() => (setMine(true), setUserMenu(false))}>
+                        Places you&apos;ve added
+                      </button>
+                      {admin && (
+                        <Link className="menu-item" href="/admin">
+                          Verification desk
+                        </Link>
+                      )}
+                      <button
+                        className="menu-item"
+                        onClick={() => {
+                          backend.signOut();
+                          setUserMenu(false);
+                          toast("Signed out.");
+                        }}
+                      >
+                        Sign out
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <button className="navlink" onClick={() => openAuth()}>
+                Sign in
+              </button>
+            )}
+            <button className="btn-surprise" onClick={surpriseOrAdd}>
+              Surprise me
+            </button>
+          </nav>
+        </div>
+        <div className="dateline">
+          <span>{today}</span>
+          <span className="dl-mid">
+            Independent restaurants, coffee &amp; bars of {city.name}, {stateName(city.state)}
+          </span>
+          <span>No chains. No fast food.</span>
+        </div>
       </header>
 
-      <div className="ticker" aria-hidden>
-        <div className="ticker-track">
-          {[...tickerFor(city), ...tickerFor(city)].map((t, i) => (
-            <span key={i}>
-              {t} <b>✦</b>
-            </span>
-          ))}
-        </div>
-      </div>
-
       <main className="main">
-        {/* ================= SIDEBAR (30%) ================= */}
         <aside className="sidebar">
           <div className="sidebar-scroll" ref={scrollRef}>
             <AnimatePresence mode="wait" initial={false}>
               {selected ? (
-                <SpotDetail key={selected.id} spot={selected} pool={allSpots} onBack={() => select(null)} onSelect={select} />
+                <SpotDetail key={selected.id} spot={selected} number={numbers[selected.id]} pool={allSpots} onBack={() => select(null)} onSelect={select} />
               ) : (
-                <motion.div key="browse" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
+                <motion.div key="browse" className="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
                   <div className="city-bar">
                     <button onClick={() => setPicker({ open: true, first: false })}>
-                      <MapPin size={14} /> {city.name}, {city.state} <ChevronDown size={14} />
+                      {city.name}, {apState(city.state)} <u>change</u>
                     </button>
-                    <button className="btn btn-ink btn-sm" onClick={openAdd}>
-                      <Plus size={14} /> Add a spot
+                    <button className="textbtn" onClick={openAdd}>
+                      + Add a place
                     </button>
                   </div>
+
                   {founding && (
-                    <section className="founding-panel">
-                      <span className="stamp light">
-                        <Sparkles size={12} /> Founding city
-                      </span>
-                      <p className="display">
-                        {allSpots.length === 0 ? `Help put ${city.name} on the map.` : `${allSpots.length} verified spot${allSpots.length === 1 ? "" : "s"} so far — keep 'em coming.`}
+                    <section className="notice">
+                      <h3>{allSpots.length === 0 ? `Nothing in ${city.name} yet.` : `${allSpots.length} place${allSpots.length === 1 ? "" : "s"} in ${city.name} so far.`}</h3>
+                      <p>
+                        We&apos;re building this one with the people who live here. Add the places you actually go. Somebody on our end checks each one is real, open and
+                        locally owned, then it goes up with your name on it.
                       </p>
-                      <p className="small">
-                        {city.name} is open to founding members. Add the independent places you love; we verify each one, then it goes live with your name on it.
-                      </p>
-                      <button className="btn btn-ember btn-sm" onClick={openAdd}>
-                        <Plus size={14} /> Add a spot in {city.name}
+                      <button className="btn btn-green" onClick={openAdd}>
+                        Add a place in {city.name}
                       </button>
                     </section>
                   )}
-                  <section className="panel">
-                    <div className="eyebrow-row">
-                      <h2 className="eyebrow">
-                        <span className="num">01</span> What are you craving?
-                      </h2>
-                    </div>
-                    
-                      <div className="genres">
-                        <GenreChip active={genre === "all"} label="Everything" icon="all" color="#1C1714" count={genreCounts.all} onClick={() => chooseGenre("all")} />
-                        {GENRES.map((g) => (
-                          <GenreChip
-                            key={g.id}
-                            active={genre === g.id}
-                            label={g.label}
-                            icon={g.icon}
-                            color={g.color}
-                            count={genreCounts[g.id] ?? 0}
-                            onClick={() => chooseGenre(g.id)}
-                          />
-                        ))}
-                      </div>
-                    
-                    <AnimatePresence>
-                      {genre === "drinks" && (
-                        <motion.div className="subchips" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-                          {[{ id: "all" as const, label: "All drinks" }, ...DRINK_KINDS].map((k) => (
-                            <button key={k.id} className={`subchip ${drink === k.id ? "on" : ""}`} onClick={() => setDrink(k.id)}>
-                              {k.label}
+
+                  <section className="menu-sec">
+                    <h2 className="menu-head">
+                      <span>What sounds good?</span>
+                    </h2>
+                    <ul className="board">
+                      <BoardRow label="A little of everything" count={genreCounts.all} on={genre === "all"} seed={0} onClick={() => chooseGenre("all")} />
+                      {GENRES.map((g, i) => (
+                        <BoardRow key={g.id} label={g.label} count={genreCounts[g.id] ?? 0} on={genre === g.id} seed={i + 1} onClick={() => chooseGenre(g.id)} />
+                      ))}
+                    </ul>
+                    {genre === "drinks" && (
+                      <p className="subline">
+                        {[{ id: "all" as const, label: "Any" }, ...DRINK_KINDS].map((k, i) => (
+                          <span key={k.id}>
+                            {i > 0 && <span className="sep">/</span>}
+                            <button className="optbtn" onClick={() => setDrink(k.id)}>
+                              <Circled on={drink === k.id} seed={i}>
+                                {k.label}
+                              </Circled>
                             </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    {activeGenre && (
-                      <motion.p key={activeGenre.id} className="genre-tagline" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}>
-                        “{activeGenre.tagline}”
-                      </motion.p>
+                          </span>
+                        ))}
+                      </p>
                     )}
                   </section>
 
-                  <section className="panel">
-                    <h2 className="eyebrow">
-                      <span className="num">02</span> Pick a part of town
+                  <section className="menu-sec">
+                    <h2 className="menu-head">
+                      <span>What part of town?</span>
                     </h2>
-                    <div className="areas">
-                      <AreaPill active={area === "all"} label={`All of ${city.name}`} count={areaCounts.all} onClick={() => chooseArea("all")} />
-                      {areas.map((a) => (
-                        <AreaPill key={a.id} active={area === a.id} label={a.label} count={areaCounts[a.id] ?? 0} onClick={() => chooseArea(a.id)} />
-                      ))}
-                    </div>
-                    {activeArea && <p className="area-blurb">{activeArea.blurb}</p>}
-                  </section>
-
-                  <section className="panel tight">
-                    <div className="search-row">
-                      <label className="search">
-                        <Search size={16} />
-                        <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search oysters, patio, brunch…" aria-label="Search" />
-                        {query && (
-                          <button onClick={() => setQuery("")} aria-label="Clear search">
-                            <X size={14} />
+                    <p className="hoods">
+                      {[{ id: "all", label: `Anywhere in ${city.name}` }, ...areas].map((a, i) => (
+                        <span key={a.id} className={(areaCounts[a.id] ?? 0) === 0 && a.id !== "all" ? "zero" : ""}>
+                          <button className="optbtn" onClick={() => chooseArea(a.id)}>
+                            <Circled on={area === a.id} seed={i}>
+                              {a.label}
+                            </Circled>
+                            <sup>{a.id === "all" ? areaCounts.all : areaCounts[a.id] ?? 0}</sup>
                           </button>
-                        )}
-                        <kbd>/</kbd>
-                      </label>
-                      <button className={`icon-btn square ${moreFilters || filtersOn ? "active" : ""}`} onClick={() => setMoreFilters((v) => !v)} aria-label="More filters" aria-expanded={moreFilters}>
-                        <SlidersHorizontal size={16} />
-                      </button>
-                    </div>
-                    <AnimatePresence>
-                      {moreFilters && (
-                        <motion.div className="more-filters" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-                          <div className="filter-group">
-                            <span className="mono-sm">Price</span>
-                            {[1, 2, 3, 4].map((p) => (
-                              <button key={p} className={`subchip ${prices.includes(p) ? "on" : ""}`} onClick={() => setPrices((x) => (x.includes(p) ? x.filter((y) => y !== p) : [...x, p]))}>
-                                {priceLabel(p)}
-                              </button>
-                            ))}
-                          </div>
-                          <div className="filter-group">
-                            <span className="mono-sm">Sort</span>
-                            {(
-                              [
-                                ["popular", "Local favorites"],
-                                ["rating", "Top rated"],
-                                ["az", "A–Z"],
-                              ] as [Sort, string][]
-                            ).map(([k, l]) => (
-                              <button key={k} className={`subchip ${sort === k ? "on" : ""}`} onClick={() => setSort(k)}>
-                                {l}
-                              </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                        </span>
+                      ))}
+                    </p>
+                    {activeArea?.blurb && <p className="hood-blurb">{activeArea.blurb}</p>}
                   </section>
 
-                  <div className="results-head">
-                    <span className="mono-sm">
-                      {list.length} {list.length === 1 ? "spot" : "spots"}
-                      {savedOnly && " · saved"}
+                  <section className="menu-sec search-sec">
+                    <label className="lookup">
+                      <span className="sr-only">Search</span>
+                      <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Looking for something? Oysters, patio, biscuits" />
+                      {query && (
+                        <button className="textbtn" onClick={() => setQuery("")}>
+                          clear
+                        </button>
+                      )}
+                    </label>
+                    <button className="textbtn" onClick={() => setMoreFilters((v) => !v)} aria-expanded={moreFilters}>
+                      {moreFilters ? "Fewer options" : filtersOn ? "Options (on)" : "More options"}
+                    </button>
+                    {moreFilters && (
+                      <div className="more">
+                        <p>
+                          <span className="more-label">Price</span>
+                          {[1, 2, 3, 4].map((p, i) => (
+                            <button key={p} className="optbtn" onClick={() => setPrices((x) => (x.includes(p) ? x.filter((y) => y !== p) : [...x, p]))}>
+                              <Circled on={prices.includes(p)} seed={i}>
+                                {priceLabel(p)}
+                              </Circled>
+                            </button>
+                          ))}
+                        </p>
+                        <p>
+                          <span className="more-label">Order by</span>
+                          {(
+                            [
+                              ["popular", "most loved"],
+                              ["rating", "member ratings"],
+                              ["az", "A to Z"],
+                            ] as [Sort, string][]
+                          ).map(([k, l], i) => (
+                            <button key={k} className="optbtn" onClick={() => setSort(k)}>
+                              <Circled on={sort === k} seed={i + 1}>
+                                {l}
+                              </Circled>
+                            </button>
+                          ))}
+                        </p>
+                      </div>
+                    )}
+                  </section>
+
+                  <div className="list-head">
+                    <span>
+                      {list.length} {list.length === 1 ? "place" : "places"}
+                      {savedOnly ? ", saved by you" : ""}
                     </span>
                     {(genre !== "all" || area !== "all" || query || filtersOn) && (
-                      <button
-                        className="link-btn"
-                        onClick={() => {
-                          setGenre("all");
-                          setArea("all");
-                          setDrink("all");
-                          setQuery("");
-                          setPrices([]);
-                          setSavedOnly(false);
-                          setSort("popular");
-                        }}
-                      >
-                        Reset
+                      <button className="textbtn" onClick={resetAll}>
+                        Start over
                       </button>
                     )}
                   </div>
 
-                  <ol className="spot-list">
-                    <AnimatePresence initial={false}>
-                      {list.map((s, i) => (
-                        <SpotRow
-                          key={s.id}
-                          spot={s}
-                          index={i}
-                          rating={ratings[s.id]}
-                          hot={hoveredId === s.id}
-                          saved={saved.includes(s.id)}
-                          onHover={setHoveredId}
-                          onClick={() => select(s.id)}
-                          injectAd={i === 4 && list.length > 6}
-                        />
-                      ))}
-                    </AnimatePresence>
+                  <ol className="bill">
+                    {list.map((s, i) => (
+                      <SpotRow
+                        key={s.id}
+                        spot={s}
+                        n={i + 1}
+                        rating={ratings[s.id]}
+                        hot={hoveredId === s.id}
+                        saved={saved.includes(s.id)}
+                        onHover={setHoveredId}
+                        onClick={() => select(s.id)}
+                        ad={i === 4 && list.length > 6}
+                      />
+                    ))}
                   </ol>
 
                   {list.length === 0 && !(founding && allSpots.length === 0) && (
                     <div className="empty">
-                      <p className="display">Nothing on this block — yet.</p>
-                      <p className="muted small">Try another neighborhood, or let us pick for you.</p>
-                      <button className="btn btn-rust btn-sm" onClick={() => setSurprise(true)}>
-                        <Dices size={14} /> Surprise me
+                      <p>Nothing matches that.</p>
+                      <button className="textbtn" onClick={resetAll}>
+                        Start over
                       </button>
                     </div>
                   )}
 
-                  <button className="missing" onClick={openAdd}>
-                    <span className="missing-plus">
-                      <Plus size={20} />
-                    </span>
-                    <span>
-                      <strong>Know a spot we&apos;re missing?</strong>
-                      <span>Add it — our team verifies every place before it goes live, with credit to you.</span>
-                    </span>
+                  <button className="write-in" onClick={openAdd}>
+                    <span className="wi-title">Missing a place?</span>
+                    <span>Write it in. We check every one before it goes up, and you get the credit.</span>
                   </button>
 
-                  <Newsletter />
+                  <Newsletter city={city} />
                   <footer className="side-foot">
-                    <span>Independent spots only — no fast food, no national chains.</span>
-                    <span>
-                      Pins are approximate. Spot closed or missing? <Link href="/partners#contact">Tell us</Link>.
-                    </span>
-                    <span>© {new Date().getFullYear()} The Local · Made in the Magic City</span>
+                    <p>Locally owned places only. If it has a drive-thru or a corporate HQ out of state, it&apos;s not on here.</p>
+                    <p>
+                      Map pins are close, not exact. Something closed or wrong? <Link href="/partners#contact">Let us know</Link>.
+                    </p>
+                    <p>
+                      © {new Date().getFullYear()} The Local, {city.name}, {apState(city.state)}
+                    </p>
                   </footer>
                 </motion.div>
               )}
@@ -587,40 +547,42 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
           </div>
         </aside>
 
-        {/* ================= MAP (70%) ================= */}
-        <section className="mapwrap" style={{ ["--c" as string]: selected ? GENRE_BY_ID[selected.genres[0]].color : activeGenre?.color ?? "#E2793A" }}>
-          <MapView key={city.id} city={city} areas={areas} spots={allSpots} visible={visible} selectedId={selectedId} hoveredId={hoveredId} area={area} onSelect={select} onHover={setHoveredId} onArea={chooseArea} />
-          <div className="map-vignette" aria-hidden />
-          <div className="map-frame" aria-hidden />
-          <div className="map-title" aria-live="polite">
-            <AnimatePresence mode="wait">
-              <motion.div key={mapTitle} initial={{ opacity: 0, y: 18, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
-                <span className="map-kicker">{selected ? "Now showing" : activeArea ? "Neighborhood" : city.nickname ?? stateName(city.state)}</span>
-                <h2 className="map-h">{mapTitle}</h2>
-                <span className="map-sub">{mapSub}</span>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-          <Compass spin={(selectedId ?? "") + area + genre} />
-          <div className="map-legend">
-            {(activeGenre ? [activeGenre] : GENRES.slice(0, 12)).map((g) => (
-              <button key={g.id} onClick={() => chooseGenre(g.id)} style={{ ["--c" as string]: g.color }}>
-                <i /> {g.short}
-              </button>
-            ))}
+        <section className="mapwrap">
+          <div className="map-plate">
+            <MapView
+              key={city.id}
+              city={city}
+              areas={areas}
+              spots={allSpots}
+              numbers={numbers}
+              visible={visible}
+              selectedId={selectedId}
+              hoveredId={hoveredId}
+              area={area}
+              onSelect={select}
+              onHover={setHoveredId}
+              onArea={chooseArea}
+            />
+            <div className="map-caption" aria-live="polite">
+              <span className="cap-kicker">{selected ? `No. ${numbers[selected.id] ?? ""}` : activeArea ? "Neighborhood" : city.nickname ?? stateName(city.state)}</span>
+              <h2 className="cap-title">{mapTitle}</h2>
+              <span className="cap-sub">{mapSub}</span>
+            </div>
+            <p className="map-key">
+              <i className="k-on" /> numbers match the list <i className="k-off" /> not in your picks
+            </p>
           </div>
         </section>
       </main>
 
-      <button className="fab" onClick={() => setSurprise(true)} aria-label="Surprise me">
-        <Dices size={22} />
+      <button className="fab" onClick={surpriseOrAdd}>
+        Surprise me
       </button>
 
       <Surprise
         open={surprise && allSpots.length > 0}
         onClose={() => setSurprise(false)}
         all={allSpots}
-        cityNick={city.id === DEFAULT_CITY ? "Magic City" : city.name}
         filtered={list}
         onGo={(id) => {
           setSurprise(false);
@@ -659,111 +621,74 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
   );
 }
 
-/* ---------------------------------------------------------------- */
-
-function GenreChip({ active, label, icon, color, count, onClick }: { active: boolean; label: string; icon: string; color: string; count: number; onClick: () => void }) {
+function BoardRow({ label, count, on, seed, onClick }: { label: string; count: number; on: boolean; seed: number; onClick: () => void }) {
   return (
-    <motion.button
-      className={`chip ${active ? "on" : ""} ${count === 0 ? "zero" : ""}`}
-      style={{ ["--c" as string]: color }}
-      onClick={onClick}
-      whileTap={{ scale: 0.93 }}
-      aria-pressed={active}
-    >
-      <GenreIcon name={icon} size={15} strokeWidth={2.2} />
-      <span>{label}</span>
-      <span className="chip-count">{count}</span>
-    </motion.button>
-  );
-}
-
-function AreaPill({ active, label, count, onClick }: { active: boolean; label: string; count: number; onClick: () => void }) {
-  return (
-    <button className={`area ${active ? "on" : ""} ${count === 0 ? "zero" : ""}`} onClick={onClick} aria-pressed={active}>
-      {label}
-      <span>{count}</span>
-    </button>
+    <li className={count === 0 ? "zero" : ""}>
+      <button onClick={onClick} aria-pressed={on} className={on ? "on" : ""}>
+        <Circled on={on} seed={seed}>
+          {label}
+        </Circled>
+        <span className="leader" aria-hidden />
+        <span className="board-n">{count}</span>
+      </button>
+    </li>
   );
 }
 
 function SpotRow({
   spot,
-  index,
+  n,
   rating,
   hot,
   saved,
   onHover,
   onClick,
-  injectAd,
+  ad,
 }: {
   spot: Spot;
-  index: number;
+  n: number;
   rating?: { avg: number; count: number };
   hot: boolean;
   saved: boolean;
   onHover: (id: string | null) => void;
   onClick: () => void;
-  injectAd: boolean;
+  ad: boolean;
 }) {
-  const g = GENRE_BY_ID[spot.genres[0]];
   return (
     <>
-      <motion.li
-        layout="position"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0, transition: { delay: Math.min(index, 12) * 0.03 } }}
-        exit={{ opacity: 0, x: -16, transition: { duration: 0.15 } }}
-        className={`spot ${hot ? "hot" : ""}`}
-        style={{ ["--c" as string]: g.color }}
-        onMouseEnter={() => onHover(spot.id)}
-        onMouseLeave={() => onHover(null)}
-      >
-        <button onClick={onClick} className="spot-btn">
-          <span className="spot-num">{String(index + 1).padStart(2, "0")}</span>
-          <span className="spot-art">
-            <Storefront spot={spot} mini />
-          </span>
-          <span className="spot-main">
-            <span className="spot-name">
-              {spot.name}
-              {saved && <Heart size={12} fill="currentColor" className="saved-heart" />}
+      <li className={`item ${hot ? "hot" : ""}`} onMouseEnter={() => onHover(spot.id)} onMouseLeave={() => onHover(null)}>
+        <button onClick={onClick} className="item-btn">
+          <span className="item-no">{n}</span>
+          <span className="item-body">
+            <span className="item-line">
+              <span className="item-name">{spot.name}</span>
+              <span className="leader" aria-hidden />
+              <span className="item-price">{priceLabel(spot.price)}</span>
             </span>
-            <span className="spot-meta">
-              {g.short} · {areaLabelOf(spot)} · {priceLabel(spot.price)}
-              {spot.sponsored && <span className="sponsored">Sponsored</span>}
+            <span className="item-known">{spot.knownFor}</span>
+            <span className="item-meta">
+              {spot.genres.map((g) => GENRE_BY_ID[g].short).join(", ")} · {areaLabelOf(spot)}
+              {rating ? ` · ${rating.avg.toFixed(1)} from ${rating.count} ${rating.count === 1 ? "member" : "members"}` : ""}
+              {saved ? " · saved" : ""}
+              {spot.sponsored && <span className="paid">Paid listing</span>}
             </span>
-            <span className="spot-known">{spot.knownFor}</span>
-          </span>
-          <span className="spot-side">
-            {rating ? (
-              <>
-                <span className="spot-score">{rating.avg.toFixed(1)}</span>
-                <Stars value={rating.avg} size={10} />
-              </>
-            ) : (
-              <span className="spot-new">Be first</span>
-            )}
-            <ArrowUpRight size={16} className="spot-arrow" />
           </span>
         </button>
-      </motion.li>
-      {injectAd && (
-        <motion.li layout="position" className="ad-slot" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      </li>
+      {ad && (
+        <li className="classified">
           <Link href="/partners">
-            <span className="stamp light">Your spot here</span>
-            <strong className="display">Run a local spot?</strong>
-            <span>Get featured where Birmingham decides where to eat tonight.</span>
-            <span className="ad-cta">
-              See partner plans <ArrowUpRight size={14} />
-            </span>
+            <span className="cl-label">Restaurants</span>
+            <strong>Own a place like these?</strong>
+            <span>Claim your listing for free, or pay to be featured in your neighborhood. Rates inside.</span>
           </Link>
-        </motion.li>
+        </li>
       )}
     </>
   );
 }
 
-function Newsletter() {
+function Newsletter({ city }: { city: City }) {
   const { backend, toast } = useApp();
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
@@ -775,56 +700,21 @@ function Newsletter() {
         try {
           await backend.subscribe(email.trim());
           setDone(true);
-          toast("You're on the list ✦", "ok");
         } catch {
-          toast("Couldn't subscribe — try again", "err");
+          toast("That didn't go through. Try again?", "err");
         }
       }}
     >
-      <span className="stamp light">The Weekly Plate</span>
-      <p className="display">Five local spots in your inbox every Thursday.</p>
+      <h3>The Thursday List</h3>
+      <p>Five places in {city.name} worth your time, one email a week. That&apos;s it.</p>
       {done ? (
-        <p className="mono-sm">Thanks — see you Thursday.</p>
+        <p className="nl-done">You&apos;re on it. See you Thursday.</p>
       ) : (
-        <div className="row gap6">
-          <input type="email" required placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email" />
-          <button className="btn btn-ember btn-sm">Subscribe</button>
+        <div className="nl-row">
+          <input type="email" required placeholder="your email" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email" />
+          <button className="btn btn-green">Sign up</button>
         </div>
       )}
     </form>
-  );
-}
-
-function Logo() {
-  return (
-    <svg viewBox="0 0 40 40" width="38" height="38" aria-hidden className="logo">
-      <rect x="1" y="1" width="38" height="38" rx="9" fill="#B4502A" />
-      <rect x="1" y="1" width="38" height="38" rx="9" fill="none" stroke="#F4ECDD" strokeOpacity=".25" />
-      <path d="M20 7c-5.5 0-9.5 4.1-9.5 9.3 0 6.6 9.5 16.7 9.5 16.7s9.5-10.1 9.5-16.7C29.5 11.1 25.5 7 20 7Z" fill="#F4ECDD" />
-      <path d="M17 11.5v5.2c0 1 .6 1.7 1.6 1.9V25h2.8v-6.4c1-.2 1.6-.9 1.6-1.9v-5.2h-1.4v4.4h-.9v-4.4h-1.4v4.4h-.9v-4.4H17Z" fill="#1C1714" />
-    </svg>
-  );
-}
-
-function Compass({ spin }: { spin: string }) {
-  const [rot, setRot] = useState(0);
-  useEffect(() => {
-    setRot((r) => r + 40 + Math.random() * 60);
-    const t = setTimeout(() => setRot((r) => Math.round(r / 360) * 360), 700);
-    return () => clearTimeout(t);
-  }, [spin]);
-  return (
-    <div className="compass" aria-hidden>
-      <svg viewBox="0 0 100 100" style={{ transform: `rotate(${rot}deg)` }}>
-        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeOpacity=".35" />
-        <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" strokeOpacity=".2" strokeDasharray="1 4" />
-        <path d="M50 8 58 50 50 92 42 50Z" fill="currentColor" fillOpacity=".25" />
-        <path d="M50 8 58 50H42Z" fill="var(--c)" />
-        <path d="M8 50 50 44 92 50 50 56Z" fill="currentColor" fillOpacity=".18" />
-        <text x="50" y="6" textAnchor="middle" fontSize="9" fill="currentColor" fontFamily="'Big Shoulders Display'" fontWeight="800" transform="translate(0 0)">
-          N
-        </text>
-      </svg>
-    </div>
   );
 }

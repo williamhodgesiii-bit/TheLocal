@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Check, ExternalLink, Globe, Loader2, Phone, Search, ShieldCheck, ShieldX } from "lucide-react";
+import { Check, ExternalLink, Globe, Loader2, Phone, Search, ShieldCheck, ShieldX } from "lucide-react";
 import { AREAS, GENRES, GENRE_BY_ID, slugify, type GenreId } from "@/lib/data";
 import { looksLikeChain } from "@/lib/chains";
 import type { Submission, SubmissionStatus } from "@/lib/backend";
@@ -14,9 +14,9 @@ import { useApp } from "./Providers";
 const PinPicker = dynamic(() => import("./PinPicker"), { ssr: false, loading: () => <div className="pin-picker" /> });
 
 const CHECKS = [
-  ["exists", "It exists and is open — confirmed by phone, a visit, or a current listing"],
+  ["exists", "It exists and is open (called, visited, or a current listing)"],
   ["location", "Address and pin are correct"],
-  ["independent", "Independent — not a national chain or fast food"],
+  ["independent", "Locally owned, not a chain or fast food"],
   ["content", "Name, description and photo are accurate and appropriate"],
 ] as const;
 
@@ -48,17 +48,19 @@ export default function AdminQueue() {
   return (
     <div className="admin">
       <header className="admin-top">
-        <Link href="/" className="btn btn-outline-light btn-sm">
-          <ArrowLeft size={14} /> Back to the map
+        <Link href="/" className="textbtn">
+          ← Back to the map
         </Link>
-        <span className="brand-local">VERIFICATION DESK</span>
+        <span>
+          <span className="brand-script">The Local</span> <span className="cap-kicker" style={{ display: "inline" }}>verification desk</span>
+        </span>
       </header>
 
       {allowed === null ? (
         <p className="admin-msg">Checking access…</p>
       ) : !allowed ? (
         <div className="admin-msg">
-          <h1 className="display">Staff only.</h1>
+          <h1>Staff only</h1>
           <p>{user ? "Your account isn't on the verification team." : "Sign in with a staff account to review submissions."}</p>
           {!user && (
             <button className="btn btn-ember" onClick={() => openAuth("Sign in with your staff account.")}>
@@ -83,7 +85,7 @@ export default function AdminQueue() {
           {list === null ? (
             <p className="admin-msg">Loading…</p>
           ) : list.length === 0 ? (
-            <p className="admin-msg">{tab === "pending" ? "Inbox zero. Go get a biscuit." : "Nothing here yet."}</p>
+            <p className="admin-msg">{tab === "pending" ? "Nothing waiting. Check back later." : "Nothing here yet."}</p>
           ) : (
             <div className="admin-list">
               <AnimatePresence>
@@ -163,7 +165,7 @@ function ReviewCard({ sub, onDone }: { sub: Submission; onDone: () => void }) {
         { cityId: sub.cityId, name: name.trim(), address: address.trim(), area, areaLabel, coords, genres, drinks: genres.includes("drinks") ? sub.drinks : [], price, knownFor, blurb, website: sub.website, phone: sub.phone, tags: sub.tags, pop },
         checks
       );
-      toast(`${name} is live ✦`, "ok");
+      toast(`${name} is up on the map.`, "ok");
       onDone();
     } catch (e) {
       toast(e instanceof Error ? e.message : "Couldn't approve", "err");
@@ -299,7 +301,7 @@ function ReviewCard({ sub, onDone }: { sub: Submission; onDone: () => void }) {
           </div>
           {lookup && (
             <div className="hits">
-              {lookup.length === 0 && <span className="mono-sm">No listing found — call or visit to verify.</span>}
+              {lookup.length === 0 && <span className="mono-sm">No listing found. Call or go by.</span>}
               {lookup.map((h, i) => (
                 <button key={i} className="hit" onClick={() => setCoords([h.lat, h.lng])} title="Use this location">
                   <span>

@@ -24,7 +24,7 @@ export default function PartnerForm({ spot }: { spot?: string }) {
       });
       setDone(true);
     } catch {
-      toast("Couldn't send — please try again", "err");
+      toast("That didn't go through. Try again?", "err");
     } finally {
       setBusy(false);
     }
@@ -33,8 +33,8 @@ export default function PartnerForm({ spot }: { spot?: string }) {
   if (done)
     return (
       <div className="form-done">
-        <p className="display">Got it — thank you.</p>
-        <p className="muted">We&apos;ll be in touch shortly.</p>
+        <p className="modal-title">Got it. Thank you.</p>
+        <p className="muted">We&apos;ll be in touch soon.</p>
       </div>
     );
 
@@ -56,19 +56,19 @@ export default function PartnerForm({ spot }: { spot?: string }) {
         <label>
           <span>I&apos;m interested in</span>
           <select name="tier" defaultValue={known ? "neighbor" : "regular"}>
-            <option value="neighbor">Neighbor — claim my free listing</option>
-            <option value="regular">Regular — $39/mo</option>
-            <option value="institution">Institution — $99/mo</option>
-            <option value="newsletter">Newsletter sponsorship</option>
-            <option value="correction">Report a closed / incorrect listing</option>
+            <option value="neighbor">Free listing (claim my page)</option>
+            <option value="regular">Featured, $39 a month</option>
+            <option value="institution">Front page, $99 a month</option>
+            <option value="newsletter">Sponsor the Thursday List</option>
+            <option value="correction">A listing is closed or wrong</option>
           </select>
         </label>
       </div>
       <label>
         <span>Anything else?</span>
-        <textarea name="message" rows={4} placeholder="Tell us about your place, or what needs fixing." />
+        <textarea name="message" rows={4} placeholder="Tell us about your place, or what needs fixing" />
       </label>
-      <button className="btn btn-rust" disabled={busy}>
+      <button className="btn btn-green" disabled={busy}>
         {busy ? "Sending…" : "Send"}
       </button>
     </form>

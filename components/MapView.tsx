@@ -2,13 +2,15 @@
 
 import { useEffect, useRef } from "react";
 import L from "leaflet";
-import { GENRE_BY_ID, LANDMARKS, RED_MOUNTAIN, type Area, type AreaId, type Spot } from "@/lib/data";
+import { LANDMARKS, RED_MOUNTAIN, type Area, type AreaId, type Spot } from "@/lib/data";
 import type { City } from "@/lib/regions";
 
 type Props = {
   city: City;
   areas: Area[];
   spots: Spot[];
+  /** list position for each visible spot; printed on its pin */
+  numbers: Record<string, number>;
   visible: Set<string>;
   selectedId: string | null;
   hoveredId: string | null;
@@ -18,9 +20,9 @@ type Props = {
   onArea: (id: AreaId) => void;
 };
 
-const TILES = process.env.NEXT_PUBLIC_MAP_TILES || "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png";
+const TILES = process.env.NEXT_PUBLIC_MAP_TILES || "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png";
 const LABELS_ENV = process.env.NEXT_PUBLIC_MAP_LABEL_TILES;
-const LABELS = LABELS_ENV === "none" ? "" : LABELS_ENV || "https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png";
+const LABELS = LABELS_ENV === "none" ? "" : LABELS_ENV || "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png";
 
 const LANDMARK_SVG: Record<string, string> = {
   vulcan:
@@ -31,7 +33,7 @@ const LANDMARK_SVG: Record<string, string> = {
 };
 
 /**
- * A deliberately non-interactive map: no pan, no zoom, no scroll. The camera is
+ * A non-interactive map: no pan, no zoom, no scroll. The camera is
  * driven entirely by the sidebar (genre, neighborhood, selection). Pins and
  * neighborhood labels remain clickable as shortcuts.
  */
@@ -40,7 +42,6 @@ export default function MapView(props: Props) {
   const map = useRef<L.Map | null>(null);
   const markers = useRef<Map<string, L.Marker>>(new Map());
   const hoods = useRef<Map<string, L.Marker>>(new Map());
-  const readout = useRef<HTMLDivElement>(null);
   const cb = useRef(props);
   cb.current = props;
 
@@ -72,10 +73,10 @@ export default function MapView(props: Props) {
 
     if (cb.current.city.id === "birmingham-al") {
       // Red Mountain ridge — the over-the-mountain divide
-      L.polyline(RED_MOUNTAIN, { color: "#C9A04A", weight: 1.5, opacity: 0.55, dashArray: "2 7", interactive: false }).addTo(m);
+      L.polyline(RED_MOUNTAIN, { color: "#2C5A43", weight: 1.4, opacity: 0.55, dashArray: "1 6", lineCap: "round", interactive: false }).addTo(m);
       L.marker([33.4745, -86.835], {
         interactive: false,
-        icon: L.divIcon({ className: "ridge-label", html: "<span>R E D &nbsp; M O U N T A I N</span>", iconSize: [0, 0] }),
+        icon: L.divIcon({ className: "ridge-label", html: "<span>Red Mountain</span>", iconSize: [0, 0] }),
       }).addTo(m);
 
       for (const lm of LANDMARKS) {
@@ -87,13 +88,6 @@ export default function MapView(props: Props) {
       }
     }
 
-    const report = () => {
-      const c = m.getCenter();
-      if (readout.current)
-        readout.current.textContent = `${c.lat.toFixed(4)}° N  ${Math.abs(c.lng).toFixed(4)}° W  ·  Z${m.getZoom().toFixed(1)}`;
-    };
-    m.on("move", report);
-    report();
     // small screens zoomed out: drop secondary labels so pins stay legible
     const density = () => el.current?.classList.toggle("compact", m.getSize().x < 700 && m.getZoom() < 14.2);
     m.on("zoomend resize", density);
@@ -124,7 +118,6 @@ export default function MapView(props: Props) {
     });
     for (const s of props.spots) {
       if (markers.current.has(s.id)) continue;
-      const g = GENRE_BY_ID[s.genres[0]];
       const label = s.name.replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`);
       const mk = L.marker(s.coords, {
         keyboard: false,
@@ -132,7 +125,7 @@ export default function MapView(props: Props) {
         icon: L.divIcon({
           className: "pin-wrap",
           iconSize: [0, 0],
-          html: `<div class="pin" style="--c:${g.color}"><span class="pin-ring"></span><span class="pin-dot"></span><span class="pin-label">${label}</span></div>`,
+          html: `<div class="pin"><span class="pin-dot"><b class="pin-n"></b></span><span class="pin-label">${label}</span></div>`,
         }),
       })
         .on("click", () => cb.current.onSelect(s.id))
@@ -169,13 +162,15 @@ export default function MapView(props: Props) {
       node.classList.toggle("dim", !props.visible.has(id));
       node.classList.toggle("hot", props.hoveredId === id);
       node.classList.toggle("selected", props.selectedId === id);
+      const num = node.querySelector(".pin-n");
+      if (num) num.textContent = props.numbers[id] ? String(props.numbers[id]) : "";
       mk.setZIndexOffset(props.selectedId === id ? 2000 : props.hoveredId === id ? 1000 : props.visible.has(id) ? 0 : -1000);
     });
     hoods.current.forEach((mk, id) => {
       mk.getElement()?.classList.toggle("active", props.area === id);
       mk.getElement()?.classList.toggle("quiet", props.selectedId !== null);
     });
-  }, [props.visible, props.hoveredId, props.selectedId, props.area, props.spots, props.areas]);
+  }, [props.visible, props.numbers, props.hoveredId, props.selectedId, props.area, props.spots, props.areas]);
 
   // camera
   useEffect(() => {
@@ -208,10 +203,5 @@ export default function MapView(props: Props) {
     }
   }, [props.selectedId, props.visible, props.area, props.spots, props.areas, props.city]);
 
-  return (
-    <>
-      <div ref={el} className="leaflet-host" aria-label="Map of Birmingham restaurants" />
-      <div ref={readout} className="map-coords" aria-hidden />
-    </>
-  );
+  return <div ref={el} className="leaflet-host" aria-label={`Map of ${props.city.name} restaurants`} />;
 }

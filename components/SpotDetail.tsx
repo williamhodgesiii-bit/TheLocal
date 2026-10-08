@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, BadgeCheck, Camera, ChevronLeft, ChevronRight, Heart, Navigation, Phone, Share2, Store, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { track } from "@vercel/analytics";
 import Link from "next/link";
 import { GENRE_BY_ID, areaLabelOf, distanceKm, mapsUrl, priceLabel, type Spot } from "@/lib/data";
+import { hash } from "@/lib/images";
 import { representativePhotos } from "@/lib/images";
 import type { Photo, PhotoKind } from "@/lib/backend";
 import { useApp } from "./Providers";
@@ -16,7 +17,19 @@ type GPhoto = { url: string; author: string; authorUri: string | null };
 type Places = { enabled: boolean; photos: GPhoto[]; rating?: number | null; ratingCount?: number | null; website?: string | null };
 type Slide = { key: string; kind: "svg" | "img"; url?: string; label: string; credit?: string };
 
-export default function SpotDetail({ spot, pool, onBack, onSelect }: { spot: Spot; pool: Spot[]; onBack: () => void; onSelect: (id: string) => void }) {
+export default function SpotDetail({
+  spot,
+  number,
+  pool,
+  onBack,
+  onSelect,
+}: {
+  spot: Spot;
+  number?: number;
+  pool: Spot[];
+  onBack: () => void;
+  onSelect: (id: string) => void;
+}) {
   const { backend, requireAuth, toast, saved, toggleSaved } = useApp();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [places, setPlaces] = useState<Places | null>(null);
@@ -42,25 +55,25 @@ export default function SpotDetail({ spot, pool, onBack, onSelect }: { spot: Spo
     };
   }, [spot.id, backend]);
 
-  // Building first, then food — exactly as diners scan a place.
+  // Building first, then food, the way you size a place up from the sidewalk.
   const hero: Slide = useMemo(() => {
     const b = photos.find((p) => p.kind === "building");
-    if (b) return { key: b.id, kind: "img", url: b.url, label: "Storefront", credit: `📷 ${b.userName}` };
+    if (b) return { key: b.id, kind: "img", url: b.url, label: "Out front", credit: `photo by ${b.userName}` };
     const gp = places?.photos?.[0];
-    if (gp) return { key: gp.url, kind: "img", url: gp.url, label: "Storefront", credit: `Google · ${gp.author}` };
-    return { key: "svg", kind: "svg", label: "Illustrated storefront" };
+    if (gp) return { key: gp.url, kind: "img", url: gp.url, label: "Out front", credit: `via Google, ${gp.author}` };
+    return { key: "svg", kind: "svg", label: "Our sketch of the front" };
   }, [photos, places]);
 
   const food: Slide[] = useMemo(() => {
     const out: Slide[] = [];
     photos
       .filter((p) => p.url !== hero.url)
-      .forEach((p) => out.push({ key: p.id, kind: "img", url: p.url, label: p.caption || (p.kind === "food" ? "From the kitchen" : p.kind === "vibe" ? "The vibe" : "Storefront"), credit: `📷 ${p.userName}` }));
+      .forEach((p) => out.push({ key: p.id, kind: "img", url: p.url, label: p.caption || (p.kind === "food" ? "On the table" : p.kind === "vibe" ? "Inside" : "Out front"), credit: `photo by ${p.userName}` }));
     places?.photos?.slice(hero.key === places.photos[0]?.url ? 1 : 0).forEach((p) =>
-      out.push({ key: p.url, kind: "img", url: p.url, label: "Photo", credit: `Google · ${p.author}` })
+      out.push({ key: p.url, kind: "img", url: p.url, label: "Photo", credit: `via Google, ${p.author}` })
     );
     if (out.length < 3)
-      representativePhotos(spot, 3 - out.length).forEach((u, i) => out.push({ key: u + i, kind: "img", url: u, label: "Representative", credit: "Unsplash" }));
+      representativePhotos(spot, 3 - out.length).forEach((u, i) => out.push({ key: u + i, kind: "img", url: u, label: "Stock photo", credit: "Unsplash, not taken here" }));
     return out;
   }, [photos, places, hero, spot]);
 
@@ -82,7 +95,7 @@ export default function SpotDetail({ spot, pool, onBack, onSelect }: { spot: Spo
       try {
         const p = await backend.addPhoto(spot.id, f, uploadKind);
         setPhotos((x) => [p, ...x]);
-        toast("Photo added — thanks for sharing!", "ok");
+        toast("Photo added. Thanks.", "ok");
         track("photo_upload", { id: spot.id, kind: uploadKind });
       } catch (e) {
         toast(e instanceof Error ? e.message : "Upload failed", "err");
@@ -103,7 +116,7 @@ export default function SpotDetail({ spot, pool, onBack, onSelect }: { spot: Spo
   async function share() {
     const url = `${location.origin}/spot/${spot.id}`;
     try {
-      if (navigator.share) await navigator.share({ title: spot.name, text: `${spot.name} — ${spot.knownFor}`, url });
+      if (navigator.share) await navigator.share({ title: spot.name, text: `${spot.name}: ${spot.knownFor}`, url });
       else {
         await navigator.clipboard.writeText(url);
         toast("Link copied");
@@ -116,123 +129,129 @@ export default function SpotDetail({ spot, pool, onBack, onSelect }: { spot: Spo
 
   const isSaved = saved.includes(spot.id);
 
+  const checkNo = String(1000 + (hash(spot.id) % 9000));
+  const website = places?.website || safeUrl(spot.website);
+
   return (
     <motion.article
       key={spot.id}
       className="detail"
-      initial={{ x: 40, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: 40, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 32 }}
-      style={{ ["--c" as string]: g.color }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
     >
       <div className="detail-bar">
-        <button className="btn btn-ghost btn-sm" onClick={onBack}>
-          <ArrowLeft size={15} /> All spots
+        <button className="textbtn" onClick={onBack}>
+          ← Back to the list
         </button>
-        <div className="row gap6">
-          <button className={`icon-btn ${isSaved ? "saved" : ""}`} onClick={() => toggleSaved(spot.id)} aria-label={isSaved ? "Unsave" : "Save"} aria-pressed={isSaved}>
-            <Heart size={17} fill={isSaved ? "currentColor" : "none"} />
+        <div className="row gap12">
+          <button className={`textbtn ${isSaved ? "on" : ""}`} onClick={() => toggleSaved(spot.id)} aria-pressed={isSaved}>
+            {isSaved ? "Saved" : "Save"}
           </button>
-          <button className="icon-btn" onClick={share} aria-label="Share">
-            <Share2 size={17} />
+          <button className="textbtn" onClick={share}>
+            Share
           </button>
         </div>
       </div>
 
-      <header className="detail-head">
-        <div className="meta">
-          <span className="genre-dot" /> {spot.genres.map((x) => GENRE_BY_ID[x].short).join(" · ")} — {areaLabelOf(spot)}
-          {spot.sponsored && <span className="sponsored">Sponsored</span>}
+      <div className="guest-check">
+        <div className="check-top">
+          <span className="check-title">Guest Check</span>
+          <span className="check-no">No. {checkNo}</span>
         </div>
-        <h1 className="display detail-title">{spot.name}</h1>
-        <div className="detail-sub">
-          <span className="price">{priceLabel(spot.price)}</span>
-          <span className="dot-sep" />
-          <span>{spot.address}</span>
-          {places?.rating ? (
-            <>
-              <span className="dot-sep" />
-              <span title="Google rating">G ★ {places.rating.toFixed(1)}{places.ratingCount ? ` (${places.ratingCount.toLocaleString()})` : ""}</span>
-            </>
-          ) : null}
+        <div className="check-row check-name">
+          <span className="cl">Place</span>
+          <h1>{spot.name}</h1>
         </div>
-        <div className="verified">
-          <BadgeCheck size={15} />
+        <div className="check-grid">
+          <div>
+            <span className="cl">Part of town</span>
+            <span>{areaLabelOf(spot)}</span>
+          </div>
+          <div>
+            <span className="cl">Price</span>
+            <span>{priceLabel(spot.price)}</span>
+          </div>
+          <div>
+            <span className="cl">Kind</span>
+            <span>{spot.genres.map((x) => GENRE_BY_ID[x].short).join(", ")}</span>
+          </div>
+          <div>
+            <span className="cl">On the map</span>
+            <span>{number ? `No. ${number}` : "–"}</span>
+          </div>
+        </div>
+        <div className="check-row">
+          <span className="cl">Address</span>
+          <span>
+            {spot.address}
+            {places?.rating ? <span className="g-rate"> · Google {places.rating.toFixed(1)}</span> : null}
+          </span>
+        </div>
+        <div className="check-row check-order">
+          <span className="cl">Order</span>
+          <span className="pen">{spot.knownFor}</span>
+        </div>
+        <p className="check-foot">
           {spot.addedBy ? (
-            <span>
-              Added by <strong>{spot.addedBy}</strong> · verified by The Local{spot.verifiedAt ? ` ${new Date(spot.verifiedAt).toLocaleDateString(undefined, { month: "short", year: "numeric" })}` : ""}
-            </span>
+            <>
+              Written in by <span className="pen-sig">{spot.addedBy}</span>, checked by us
+              {spot.verifiedAt ? ` ${new Date(spot.verifiedAt).toLocaleDateString(undefined, { month: "long", year: "numeric" })}` : ""}.
+            </>
           ) : (
-            <span>Curated &amp; verified by The Local</span>
+            <>Picked and checked by The Local.</>
           )}
+          {spot.sponsored && <span className="paid">Paid listing</span>}
+        </p>
+      </div>
+
+      {/* building, then food */}
+      <div className="snaps">
+        <figure className="snap snap-hero" onClick={() => setLightbox(0)}>
+          <div className="snap-img">{hero.kind === "svg" ? <Storefront spot={spot} /> : <Img src={hero.url!} alt={`${spot.name} from the street`} spot={spot} />}</div>
+          <figcaption>
+            {hero.label}
+            {hero.credit && <span> · {hero.credit}</span>}
+          </figcaption>
+        </figure>
+        <div className="snap-row">
+          {food.slice(0, 4).map((x, i) => (
+            <figure key={x.key} className="snap snap-sm" onClick={() => setLightbox(i + 1)}>
+              <div className="snap-img">
+                <Img src={x.url!} alt={x.label} spot={spot} />
+              </div>
+              <figcaption>{x.label}</figcaption>
+            </figure>
+          ))}
         </div>
-      </header>
-
-      {/* building */}
-      <figure className="hero-photo" onClick={() => setLightbox(0)}>
-        {hero.kind === "svg" ? <Storefront spot={spot} /> : <Img src={hero.url!} alt={`${spot.name} storefront`} spot={spot} />}
-        <figcaption>
-          <span className="chip-sm">{hero.label}</span>
-          {hero.credit && <span className="credit">{hero.credit}</span>}
-        </figcaption>
-        {hero.kind === "svg" && (
-          <button
-            className="hero-cta"
-            onClick={(e) => {
-              e.stopPropagation();
-              startUpload("building");
-            }}
-          >
-            <Camera size={14} /> Have a real photo? Add it
+        <p className="snap-add">
+          Been here? <button className="textbtn" onClick={() => startUpload(hero.kind === "svg" ? "building" : "food")} disabled={uploading}>
+            {uploading ? "uploading…" : hero.kind === "svg" ? "Add a real photo of the front" : "Add your photos"}
           </button>
-        )}
-      </figure>
-
-      {/* food strip */}
-      <div className="food-strip">
-        {food.slice(0, 5).map((s, i) => (
-          <button key={s.key} className="food-tile" onClick={() => setLightbox(i + 1)}>
-            <Img src={s.url!} alt={s.label} spot={spot} />
-            <span className="food-label">{s.label}</span>
-          </button>
-        ))}
-        <button className="food-tile add" onClick={() => startUpload("food")} disabled={uploading}>
-          <Camera size={20} />
-          <span>{uploading ? "Uploading…" : "Add photo"}</span>
-        </button>
+        </p>
       </div>
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => onFile(e.target.files?.[0])} />
 
       <section className="detail-body">
-        <div className="known-stamp">
-          <span>Known for</span>
-          <strong>{spot.knownFor}</strong>
-        </div>
         <p className="lede">{spot.blurb}</p>
-        <div className="tags">
-          {spot.tags.map((t) => (
-            <span key={t} className="tag">
-              #{t.replace(/\s+/g, "")}
-            </span>
-          ))}
-        </div>
-        <div className="row gap8 wrap">
-          <a className="btn btn-rust" href={mapsUrl(spot)} target="_blank" rel="noreferrer" onClick={() => track("directions", { id: spot.id })}>
-            <Navigation size={15} /> Directions
+        <p className="tags">{spot.tags.join(" · ")}</p>
+        <div className="actions">
+          <a className="btn btn-green" href={mapsUrl(spot)} target="_blank" rel="noreferrer" onClick={() => track("directions", { id: spot.id })}>
+            Directions
           </a>
           {spot.phone && (
-            <a className="btn btn-ghost" href={`tel:${spot.phone.replace(/[^0-9+]/g, "")}`}>
-              <Phone size={15} /> Call
+            <a className="btn btn-line" href={`tel:${spot.phone.replace(/[^0-9+]/g, "")}`}>
+              Call
             </a>
           )}
-          {(places?.website || spot.website) && (
-            <a className="btn btn-ghost" href={places?.website || safeUrl(spot.website)} target="_blank" rel="noreferrer nofollow ugc" onClick={() => track("website", { id: spot.id })}>
+          {website && (
+            <a className="btn btn-line" href={website} target="_blank" rel="noreferrer nofollow ugc" onClick={() => track("website", { id: spot.id })}>
               Website
             </a>
           )}
-          <button className="btn btn-ghost" onClick={() => startUpload("vibe")}>
-            <Camera size={15} /> Share a photo
+          <button className="btn btn-line" onClick={() => startUpload("vibe")}>
+            Add a photo
           </button>
         </div>
       </section>
@@ -240,34 +259,26 @@ export default function SpotDetail({ spot, pool, onBack, onSelect }: { spot: Spo
       <Reviews spot={spot} />
 
       <section className="nearby">
-        <h3 className="eyebrow">Also nearby</h3>
-        <div className="nearby-row">
+        <h3 className="small-head">Close by</h3>
+        <ul>
           {nearby.map(({ s, d }) => (
-            <button key={s.id} className="nearby-card" onClick={() => onSelect(s.id)} style={{ ["--c" as string]: GENRE_BY_ID[s.genres[0]].color }}>
-              <span className="nearby-art">
-                <Storefront spot={s} mini />
-              </span>
-              <span className="nearby-name">{s.name}</span>
-              <span className="mono-sm">
-                {GENRE_BY_ID[s.genres[0]].short} · {(d * 0.621).toFixed(1)} mi
-              </span>
-            </button>
+            <li key={s.id}>
+              <button onClick={() => onSelect(s.id)}>
+                <span className="nb-name">{s.name}</span>
+                <span className="leader" aria-hidden />
+                <span className="nb-d">{(d * 0.621).toFixed(1)} mi</span>
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
       <Link href={`/partners?spot=${spot.id}`} className="claim">
-        <Store size={16} />
-        <span>
-          <strong>Own {spot.name}?</strong> Claim this listing to add your photos, menu links and respond to reviews.
-        </span>
-        <ChevronRight size={16} />
+        Is this your place? Claim the listing to add your own photos and menu, and answer reviews.
       </Link>
 
       <AnimatePresence>
-        {lightbox !== null && (
-          <Lightbox slides={slides} index={lightbox} spot={spot} onIndex={setLightbox} onClose={() => setLightbox(null)} />
-        )}
+        {lightbox !== null && <Lightbox slides={slides} index={lightbox} spot={spot} onIndex={setLightbox} onClose={() => setLightbox(null)} />}
       </AnimatePresence>
     </motion.article>
   );
@@ -290,7 +301,7 @@ function Img({ src, alt, spot }: { src: string; alt: string; spot: Spot }) {
     const g = GENRE_BY_ID[spot.genres[0]];
     return (
       <span className="img-fallback" style={{ ["--c" as string]: g.color }}>
-        <span>{g.short}</span>
+        <span>{g.label}</span>
       </span>
     );
   }
@@ -321,7 +332,7 @@ function Lightbox({ slides, index, spot, onIndex, onClose }: { slides: Slide[]; 
       <motion.figure key={s.key} initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} onClick={(e) => e.stopPropagation()}>
         {s.kind === "svg" ? <Storefront spot={spot} /> : <Img src={s.url!} alt={s.label} spot={spot} />}
         <figcaption>
-          {s.label} {s.credit && <span className="credit">· {s.credit}</span>} <span className="mono-sm">{index + 1}/{n}</span>
+          {s.label} {s.credit && <span className="credit">· {s.credit}</span>} <span className="lb-count">{index + 1} of {n}</span>
         </figcaption>
       </motion.figure>
       <button className="icon-btn lb-next" aria-label="Next" onClick={(e) => (e.stopPropagation(), onIndex((index + 1) % n))}>
