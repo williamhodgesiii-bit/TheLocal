@@ -16,16 +16,8 @@ export type GenreId =
 
 export type DrinkKind = "cocktails" | "brewery" | "wine" | "bar";
 
-export type AreaId =
-  | "downtown"
-  | "southside"
-  | "lakeview"
-  | "avondale"
-  | "homewood"
-  | "englishvillage"
-  | "mtnbrook"
-  | "crestline"
-  | "cahaba";
+/** Birmingham's curated neighborhoods; community cities derive theirs from member-added spots. */
+export type AreaId = string;
 
 export interface Genre {
   id: GenreId;
@@ -48,6 +40,8 @@ export interface Area {
 
 export interface Spot {
   id: string;
+  /** region id, e.g. "birmingham-al" (see lib/regions.ts) */
+  city: string;
   name: string;
   genres: GenreId[];
   drinks?: DrinkKind[];
@@ -62,6 +56,14 @@ export interface Spot {
   pop: number;
   /** Paid placement (Partner program). Always labeled in the UI. */
   sponsored?: boolean;
+  /** neighborhood display name when `area` isn't a curated area */
+  areaLabel?: string;
+  website?: string;
+  phone?: string;
+  /** member who added it (community spots) */
+  addedBy?: string;
+  /** when our team verified it exists */
+  verifiedAt?: string;
 }
 
 export const GENRES: Genre[] = [
@@ -122,7 +124,7 @@ const onAveS = (house: number, ave: number) => grid(house / 100, -ave - 0.5);
 const onStN = (house: number, st: number) => grid(st, house / 100 - 1);
 const onStS = (house: number, st: number) => grid(st, -(house / 100) - 0.5);
 
-const RAW_SPOTS: Spot[] = [
+const RAW_SPOTS: Omit<Spot, "city">[] = [
   /* ----------------------------- DOWNTOWN ----------------------------- */
   {
     id: "helen", name: "Helen", genres: ["chefs"], area: "downtown",
@@ -493,11 +495,43 @@ const RAW_SPOTS: Spot[] = [
 ];
 
 const ov = overrides as Record<string, [number, number]>;
-export const SPOTS: Spot[] = RAW_SPOTS.map((s) => (ov[s.id] ? { ...s, coords: ov[s.id] } : s));
+/** Editorially curated Birmingham launch guide. Community spots come from the backend. */
+export const SPOTS: Spot[] = RAW_SPOTS.map((s) => ({ ...s, city: "birmingham-al", coords: ov[s.id] ?? s.coords }));
 
 export const SPOT_BY_ID: Record<string, Spot> = Object.fromEntries(SPOTS.map((s) => [s.id, s]));
 export const GENRE_BY_ID = Object.fromEntries(GENRES.map((g) => [g.id, g])) as Record<GenreId, Genre>;
-export const AREA_BY_ID = Object.fromEntries(AREAS.map((a) => [a.id, a])) as Record<AreaId, Area>;
+export const AREA_BY_ID: Record<string, Area> = Object.fromEntries(AREAS.map((a) => [a.id, a]));
+
+export const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+
+export function areaLabelOf(s: Spot) {
+  return AREA_BY_ID[s.area]?.label ?? s.areaLabel ?? s.area.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+/** Curated areas (Birmingham) plus any neighborhoods members have added. */
+export function deriveAreas(cityId: string, spots: Spot[]): Area[] {
+  const curated = cityId === "birmingham-al" ? AREAS : [];
+  const known = new Set(curated.map((a) => a.id));
+  const groups = new Map<string, Spot[]>();
+  for (const s of spots) {
+    if (known.has(s.area)) continue;
+    groups.set(s.area, [...(groups.get(s.area) ?? []), s]);
+  }
+  const derived: Area[] = [...groups.entries()].map(([id, list]) => {
+    const lat = list.reduce((a, s) => a + s.coords[0], 0) / list.length;
+    const lng = list.reduce((a, s) => a + s.coords[1], 0) / list.length;
+    return { id, label: areaLabelOf(list[0]), center: [lat, lng], zoom: 15.5, blurb: "", labelAt: [lat - 0.0035, lng] };
+  });
+  return [...curated, ...derived.sort((a, b) => a.label.localeCompare(b.label))];
+}
 
 /** Decorative landmarks drawn on the map. */
 export const LANDMARKS = [

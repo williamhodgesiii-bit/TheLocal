@@ -8,6 +8,24 @@ Pick a craving, pick a part of town, and the map of Birmingham moves for you. In
 - **Surprise me**: a slot-machine pick, weighted toward popular local spots. It can stay inside your current filters. Press `S` anywhere to open it.
 - Keyboard: `/` search · `↑/↓` browse · `Esc` back · `S` surprise.
 
+## Community spots & verification
+
+- **Add a spot**: any signed-in member can submit a place they've been to, from the top bar, the "Know a spot we're missing?" card, or a founding city's banner. The form asks for name, genres, price, address and a pin, neighborhood, "known for", a description, optional website, phone and storefront photo, and two confirmations (*I've been here* and *it's independent*).
+- **Guardrails before submit**: names that match a national chain or fast-food list are flagged (`lib/chains.ts`). Spots already on the map are flagged as duplicates by name and distance. "Find it" looks up the address (Google Places with a key, otherwise OpenStreetMap). A member can have at most 10 submissions pending at once.
+- **Verification desk** (`/admin`): staff see each submission next to an editable pin map, plus lookup tools: the Google listing status (*operational* or *closed permanently*), search, maps, the website and a tap-to-call link. Staff can fix any field. **Certify & publish** stays locked until four checks are ticked: it exists and is open, the location is correct, it's independent, and the content is appropriate. Staff can also decline with a reason.
+- **After approval**: the spot goes live on its city map with "Added by {member} · verified by The Local". The member's storefront photo becomes the building photo. The member gets a notice next visit and can track every status under **Your spots**, with *Verified contributor* and *Founding Local* badges.
+- **Staff in production**: run this after the member signs up:
+  `insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';`
+
+## Cities & states
+
+`lib/regions.ts` defines states and cities.
+- **Birmingham** is the *live* launch city with the curated guide.
+- Other Alabama cities (Huntsville, Montgomery, Mobile, Tuscaloosa, Auburn–Opelika, the Shoals, Decatur, Gadsden, Dothan, the Eastern Shore and the Gulf Coast) are **founding cities**. Members add spots there, and neighborhoods appear automatically from the spots that get approved.
+- Every other state shows a **waitlist** (the `waitlist` table) so you can see where demand is before you expand.
+
+On first visit, people pick a home state and city, and the choice is remembered. Each city has its own page (`/al/huntsville`) and every spot has its own page (`/spot/{id}`). Both are in the sitemap. To open a new city or state, add a line to `CITIES`.
+
 ## Deploy (Vercel)
 
 1. Import the repo into Vercel (framework: Next.js). It deploys with **no environment variables**. Accounts, reviews and photos then run in on-device **demo mode**.

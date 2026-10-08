@@ -2,9 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import L from "leaflet";
-import { AREAS, GENRE_BY_ID, LANDMARKS, RED_MOUNTAIN, type AreaId, type Spot } from "@/lib/data";
+import { GENRE_BY_ID, LANDMARKS, RED_MOUNTAIN, type Area, type AreaId, type Spot } from "@/lib/data";
+import type { City } from "@/lib/regions";
 
 type Props = {
+  city: City;
+  areas: Area[];
   spots: Spot[];
   visible: Set<string>;
   selectedId: string | null;
@@ -18,7 +21,6 @@ type Props = {
 const TILES = process.env.NEXT_PUBLIC_MAP_TILES || "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png";
 const LABELS_ENV = process.env.NEXT_PUBLIC_MAP_LABEL_TILES;
 const LABELS = LABELS_ENV === "none" ? "" : LABELS_ENV || "https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png";
-const HOME: [number, number] = [33.497, -86.782];
 
 const LANDMARK_SVG: Record<string, string> = {
   vulcan:
@@ -46,8 +48,8 @@ export default function MapView(props: Props) {
   useEffect(() => {
     if (!el.current || map.current) return;
     const m = L.map(el.current, {
-      center: HOME,
-      zoom: 12.5,
+      center: cb.current.city.center,
+      zoom: cb.current.city.zoom,
       zoomControl: false,
       dragging: false,
       scrollWheelZoom: false,
@@ -68,48 +70,21 @@ export default function MapView(props: Props) {
     }).addTo(m);
     if (LABELS) L.tileLayer(LABELS, { subdomains: "abcd", maxZoom: 19, className: "label-tiles" }).addTo(m);
 
-    // Red Mountain ridge — the over-the-mountain divide
-    L.polyline(RED_MOUNTAIN, { color: "#C9A04A", weight: 1.5, opacity: 0.55, dashArray: "2 7", interactive: false }).addTo(m);
-    L.marker([33.4745, -86.835], {
-      interactive: false,
-      icon: L.divIcon({ className: "ridge-label", html: "<span>R E D &nbsp; M O U N T A I N</span>", iconSize: [0, 0] }),
-    }).addTo(m);
-
-    for (const lm of LANDMARKS) {
-      L.marker(lm.coords, {
+    if (cb.current.city.id === "birmingham-al") {
+      // Red Mountain ridge — the over-the-mountain divide
+      L.polyline(RED_MOUNTAIN, { color: "#C9A04A", weight: 1.5, opacity: 0.55, dashArray: "2 7", interactive: false }).addTo(m);
+      L.marker([33.4745, -86.835], {
         interactive: false,
-        keyboard: false,
-        icon: L.divIcon({ className: "landmark", html: `<div>${LANDMARK_SVG[lm.icon]}<span>${lm.label}</span></div>`, iconSize: [0, 0] }),
+        icon: L.divIcon({ className: "ridge-label", html: "<span>R E D &nbsp; M O U N T A I N</span>", iconSize: [0, 0] }),
       }).addTo(m);
-    }
 
-    for (const a of AREAS) {
-      const mk = L.marker(a.labelAt, {
-        keyboard: false,
-        icon: L.divIcon({ className: "hood", html: `<button type="button">${a.label}</button>`, iconSize: [0, 0] }),
-        zIndexOffset: -500,
-      })
-        .on("click", () => cb.current.onArea(a.id))
-        .addTo(m);
-      hoods.current.set(a.id, mk);
-    }
-
-    for (const s of cb.current.spots) {
-      const g = GENRE_BY_ID[s.genres[0]];
-      const mk = L.marker(s.coords, {
-        keyboard: false,
-        riseOnHover: true,
-        icon: L.divIcon({
-          className: "pin-wrap",
-          iconSize: [0, 0],
-          html: `<div class="pin" style="--c:${g.color}"><span class="pin-ring"></span><span class="pin-dot"></span><span class="pin-label">${s.name}</span></div>`,
-        }),
-      })
-        .on("click", () => cb.current.onSelect(s.id))
-        .on("mouseover", () => cb.current.onHover(s.id))
-        .on("mouseout", () => cb.current.onHover(null))
-        .addTo(m);
-      markers.current.set(s.id, mk);
+      for (const lm of LANDMARKS) {
+        L.marker(lm.coords, {
+          interactive: false,
+          keyboard: false,
+          icon: L.divIcon({ className: "landmark", html: `<div>${LANDMARK_SVG[lm.icon]}<span>${lm.label}</span></div>`, iconSize: [0, 0] }),
+        }).addTo(m);
+      }
     }
 
     const report = () => {
@@ -136,6 +111,56 @@ export default function MapView(props: Props) {
     };
   }, []);
 
+  // keep pins in sync with the spot list (community spots arrive async / after approval)
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    const ids = new Set(props.spots.map((s) => s.id));
+    markers.current.forEach((mk, id) => {
+      if (!ids.has(id)) {
+        mk.remove();
+        markers.current.delete(id);
+      }
+    });
+    for (const s of props.spots) {
+      if (markers.current.has(s.id)) continue;
+      const g = GENRE_BY_ID[s.genres[0]];
+      const label = s.name.replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`);
+      const mk = L.marker(s.coords, {
+        keyboard: false,
+        riseOnHover: true,
+        icon: L.divIcon({
+          className: "pin-wrap",
+          iconSize: [0, 0],
+          html: `<div class="pin" style="--c:${g.color}"><span class="pin-ring"></span><span class="pin-dot"></span><span class="pin-label">${label}</span></div>`,
+        }),
+      })
+        .on("click", () => cb.current.onSelect(s.id))
+        .on("mouseover", () => cb.current.onHover(s.id))
+        .on("mouseout", () => cb.current.onHover(null))
+        .addTo(m);
+      markers.current.set(s.id, mk);
+    }
+  }, [props.spots]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    hoods.current.forEach((mk) => mk.remove());
+    hoods.current.clear();
+    for (const a of props.areas) {
+      const label = a.label.replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`);
+      const mk = L.marker(a.labelAt, {
+        keyboard: false,
+        icon: L.divIcon({ className: "hood", html: `<button type="button">${label}</button>`, iconSize: [0, 0] }),
+        zIndexOffset: -500,
+      })
+        .on("click", () => cb.current.onArea(a.id))
+        .addTo(m);
+      hoods.current.set(a.id, mk);
+    }
+  }, [props.areas]);
+
   // marker states
   useEffect(() => {
     markers.current.forEach((mk, id) => {
@@ -150,7 +175,7 @@ export default function MapView(props: Props) {
       mk.getElement()?.classList.toggle("active", props.area === id);
       mk.getElement()?.classList.toggle("quiet", props.selectedId !== null);
     });
-  }, [props.visible, props.hoveredId, props.selectedId, props.area]);
+  }, [props.visible, props.hoveredId, props.selectedId, props.area, props.spots, props.areas]);
 
   // camera
   useEffect(() => {
@@ -163,7 +188,7 @@ export default function MapView(props: Props) {
       return;
     }
     const pts = props.spots.filter((s) => props.visible.has(s.id) && (props.area === "all" || s.area === props.area)).map((s) => s.coords);
-    const area = props.area === "all" ? null : AREAS.find((a) => a.id === props.area)!;
+    const area = props.area === "all" ? null : props.areas.find((a) => a.id === props.area) ?? null;
     if (pts.length >= 2) {
       const small = m.getSize().x < 600;
       const pad = small ? 36 : 80;
@@ -179,9 +204,9 @@ export default function MapView(props: Props) {
     } else if (area) {
       m.flyTo(area.center, area.zoom, opts);
     } else {
-      m.flyTo(HOME, 12.5, opts);
+      m.flyTo(props.city.center, props.city.zoom, opts);
     }
-  }, [props.selectedId, props.visible, props.area, props.spots]);
+  }, [props.selectedId, props.visible, props.area, props.spots, props.areas, props.city]);
 
   return (
     <>

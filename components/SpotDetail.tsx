@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Camera, ChevronLeft, ChevronRight, Heart, Navigation, Share2, Store, X } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Camera, ChevronLeft, ChevronRight, Heart, Navigation, Phone, Share2, Store, X } from "lucide-react";
 import { track } from "@vercel/analytics";
 import Link from "next/link";
-import { AREA_BY_ID, GENRE_BY_ID, SPOTS, distanceKm, mapsUrl, priceLabel, type Spot } from "@/lib/data";
+import { GENRE_BY_ID, areaLabelOf, distanceKm, mapsUrl, priceLabel, type Spot } from "@/lib/data";
 import { representativePhotos } from "@/lib/images";
 import type { Photo, PhotoKind } from "@/lib/backend";
 import { useApp } from "./Providers";
@@ -16,7 +16,7 @@ type GPhoto = { url: string; author: string; authorUri: string | null };
 type Places = { enabled: boolean; photos: GPhoto[]; rating?: number | null; ratingCount?: number | null; website?: string | null };
 type Slide = { key: string; kind: "svg" | "img"; url?: string; label: string; credit?: string };
 
-export default function SpotDetail({ spot, onBack, onSelect }: { spot: Spot; onBack: () => void; onSelect: (id: string) => void }) {
+export default function SpotDetail({ spot, pool, onBack, onSelect }: { spot: Spot; pool: Spot[]; onBack: () => void; onSelect: (id: string) => void }) {
   const { backend, requireAuth, toast, saved, toggleSaved } = useApp();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [places, setPlaces] = useState<Places | null>(null);
@@ -31,7 +31,8 @@ export default function SpotDetail({ spot, onBack, onSelect }: { spot: Spot; onB
     setPhotos([]);
     setPlaces(null);
     backend.listPhotos(spot.id).then((p) => live && setPhotos(p)).catch(() => {});
-    fetch(`/api/places?spot=${spot.id}`)
+    const q = new URLSearchParams({ spot: spot.id, name: spot.name, address: spot.address, city: spot.city });
+    fetch(`/api/places?${q}`)
       .then((r) => r.json())
       .then((j) => live && setPlaces(j))
       .catch(() => {});
@@ -67,11 +68,11 @@ export default function SpotDetail({ spot, onBack, onSelect }: { spot: Spot; onB
 
   const nearby = useMemo(
     () =>
-      SPOTS.filter((s) => s.id !== spot.id)
+      pool.filter((s) => s.id !== spot.id)
         .map((s) => ({ s, d: distanceKm(spot.coords, s.coords) }))
         .sort((a, b) => a.d - b.d)
         .slice(0, 4),
-    [spot]
+    [spot, pool]
   );
 
   const onFile = useCallback(
@@ -141,7 +142,7 @@ export default function SpotDetail({ spot, onBack, onSelect }: { spot: Spot; onB
 
       <header className="detail-head">
         <div className="meta">
-          <span className="genre-dot" /> {spot.genres.map((x) => GENRE_BY_ID[x].short).join(" · ")} — {AREA_BY_ID[spot.area].label}
+          <span className="genre-dot" /> {spot.genres.map((x) => GENRE_BY_ID[x].short).join(" · ")} — {areaLabelOf(spot)}
           {spot.sponsored && <span className="sponsored">Sponsored</span>}
         </div>
         <h1 className="display detail-title">{spot.name}</h1>
@@ -155,6 +156,16 @@ export default function SpotDetail({ spot, onBack, onSelect }: { spot: Spot; onB
               <span title="Google rating">G ★ {places.rating.toFixed(1)}{places.ratingCount ? ` (${places.ratingCount.toLocaleString()})` : ""}</span>
             </>
           ) : null}
+        </div>
+        <div className="verified">
+          <BadgeCheck size={15} />
+          {spot.addedBy ? (
+            <span>
+              Added by <strong>{spot.addedBy}</strong> · verified by The Local{spot.verifiedAt ? ` ${new Date(spot.verifiedAt).toLocaleDateString(undefined, { month: "short", year: "numeric" })}` : ""}
+            </span>
+          ) : (
+            <span>Curated &amp; verified by The Local</span>
+          )}
         </div>
       </header>
 
@@ -210,8 +221,13 @@ export default function SpotDetail({ spot, onBack, onSelect }: { spot: Spot; onB
           <a className="btn btn-rust" href={mapsUrl(spot)} target="_blank" rel="noreferrer" onClick={() => track("directions", { id: spot.id })}>
             <Navigation size={15} /> Directions
           </a>
-          {places?.website && (
-            <a className="btn btn-ghost" href={places.website} target="_blank" rel="noreferrer" onClick={() => track("website", { id: spot.id })}>
+          {spot.phone && (
+            <a className="btn btn-ghost" href={`tel:${spot.phone.replace(/[^0-9+]/g, "")}`}>
+              <Phone size={15} /> Call
+            </a>
+          )}
+          {(places?.website || spot.website) && (
+            <a className="btn btn-ghost" href={places?.website || safeUrl(spot.website)} target="_blank" rel="noreferrer nofollow ugc" onClick={() => track("website", { id: spot.id })}>
               Website
             </a>
           )}
@@ -255,6 +271,17 @@ export default function SpotDetail({ spot, onBack, onSelect }: { spot: Spot; onB
       </AnimatePresence>
     </motion.article>
   );
+}
+
+function safeUrl(u?: string) {
+  if (!u) return undefined;
+  const v = /^https?:\/\//i.test(u) ? u : `https://${u.replace(/^@/, "instagram.com/")}`;
+  try {
+    const url = new URL(v);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function Img({ src, alt, spot }: { src: string; alt: string; spot: Spot }) {

@@ -74,3 +74,111 @@ create table if not exists public.partner_leads (
 );
 alter table public.partner_leads enable row level security;
 create policy "anyone can submit a lead" on public.partner_leads for insert with check (true);
+
+-- =====================================================================
+-- Community spots: members submit → staff verify → spot goes live
+-- =====================================================================
+
+-- Staff who can moderate. Add yourself after signing up:
+--   insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';
+create table if not exists public.admins (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.admins enable row level security;
+
+create or replace function public.is_admin() returns boolean
+  language sql stable security definer set search_path = public
+  as $$ select exists (select 1 from public.admins where user_id = auth.uid()) $$;
+grant execute on function public.is_admin() to anon, authenticated;
+
+create table if not exists public.submissions (
+  id uuid primary key default gen_random_uuid(),
+  city_id text not null,
+  name text not null check (char_length(name) between 2 and 80),
+  address text not null check (char_length(address) between 4 and 160),
+  area text not null,
+  area_label text not null,
+  lat double precision not null,
+  lng double precision not null,
+  genres text[] not null check (array_length(genres, 1) between 1 and 3),
+  drinks text[] not null default '{}',
+  price smallint not null check (price between 1 and 4),
+  known_for text not null check (char_length(known_for) between 3 and 80),
+  blurb text not null check (char_length(blurb) between 20 and 600),
+  website text,
+  phone text,
+  tags text[] not null default '{}',
+  note text,
+  photo_url text,
+  submitted_by uuid not null references auth.users (id) on delete cascade,
+  submitter_name text not null,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  reject_reason text,
+  checklist jsonb,
+  reviewed_by uuid references auth.users (id),
+  reviewed_at timestamptz,
+  spot_id text,
+  created_at timestamptz not null default now()
+);
+create index if not exists submissions_status_idx on public.submissions (status, created_at);
+create index if not exists submissions_user_idx on public.submissions (submitted_by, created_at desc);
+
+alter table public.submissions enable row level security;
+create policy "members see their own submissions; staff see all" on public.submissions
+  for select using (auth.uid() = submitted_by or public.is_admin());
+-- members can submit (pending only), max 10 waiting at a time
+create policy "members submit spots" on public.submissions for insert with check (
+  auth.uid() = submitted_by and status = 'pending'
+  and (select count(*) from public.submissions s where s.submitted_by = auth.uid() and s.status = 'pending') < 10
+);
+create policy "staff review submissions" on public.submissions for update using (public.is_admin());
+
+create table if not exists public.spots (
+  id text primary key,
+  city_id text not null,
+  name text not null,
+  address text not null,
+  area text not null,
+  area_label text,
+  lat double precision not null,
+  lng double precision not null,
+  genres text[] not null,
+  drinks text[] not null default '{}',
+  price smallint not null,
+  known_for text not null,
+  blurb text not null,
+  website text,
+  phone text,
+  tags text[] not null default '{}',
+  pop smallint not null default 60,
+  sponsored boolean not null default false,
+  status text not null default 'live' check (status in ('live', 'closed', 'hidden')),
+  added_by text,
+  submitted_by uuid references auth.users (id) on delete set null,
+  submission_id uuid references public.submissions (id) on delete set null,
+  verified_by uuid references auth.users (id),
+  verified_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists spots_city_idx on public.spots (city_id) where status = 'live';
+
+alter table public.spots enable row level security;
+create policy "live spots are public" on public.spots for select using (status = 'live' or public.is_admin());
+create policy "staff publish spots" on public.spots for insert with check (public.is_admin());
+create policy "staff edit spots" on public.spots for update using (public.is_admin());
+
+-- staff attach a submitter's storefront photo when approving
+create policy "staff add photos" on public.photos for insert with check (public.is_admin());
+
+-- ---------- Expansion waitlist ----------
+create table if not exists public.waitlist (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  state text not null,
+  city text,
+  created_at timestamptz not null default now(),
+  unique (email, state)
+);
+alter table public.waitlist enable row level security;
+create policy "anyone can join the waitlist" on public.waitlist for insert with check (true);

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { SPOT_BY_ID } from "@/lib/data";
+import { CITY_BY_ID } from "@/lib/regions";
+import { rateLimited } from "@/lib/ratelimit";
 
 // Optional enrichment: real storefront/food photos + Google rating via Places API (New).
 // Enabled when GOOGLE_PLACES_API_KEY is set on the server. Responses are CDN-cached for a day.
@@ -8,10 +10,16 @@ export const dynamic = "force-dynamic";
 type PlacesPhoto = { name: string; authorAttributions?: { displayName?: string; uri?: string }[] };
 
 export async function GET(req: Request) {
-  const id = new URL(req.url).searchParams.get("spot") ?? "";
-  const spot = SPOT_BY_ID[id];
+  const params = new URL(req.url).searchParams;
+  const id = params.get("spot") ?? "";
+  // curated spots resolve by id; community spots pass their name/address/city
+  const spot = SPOT_BY_ID[id] ?? (params.get("name") && params.get("address")
+    ? { name: params.get("name")!.slice(0, 80), address: params.get("address")!.slice(0, 160) }
+    : null);
+  const city = CITY_BY_ID[params.get("city") ?? ""] ?? CITY_BY_ID["birmingham-al"];
   const key = process.env.GOOGLE_PLACES_API_KEY;
   if (!spot) return NextResponse.json({ error: "unknown spot" }, { status: 404 });
+  if (key && !SPOT_BY_ID[id] && rateLimited(req, "places", 60)) return NextResponse.json({ enabled: true, photos: [] }, { status: 429 });
   if (!key) return NextResponse.json({ enabled: false, photos: [] }, { headers: cache(86400) });
 
   try {
@@ -22,7 +30,7 @@ export async function GET(req: Request) {
         "X-Goog-Api-Key": key,
         "X-Goog-FieldMask": "places.id,places.photos,places.rating,places.userRatingCount,places.googleMapsUri,places.websiteUri,places.location",
       },
-      body: JSON.stringify({ textQuery: `${spot.name}, ${spot.address}, Birmingham, AL`, maxResultCount: 1 }),
+      body: JSON.stringify({ textQuery: `${spot.name}, ${spot.address}, ${city.name}, ${city.state}`, maxResultCount: 1 }),
     });
     const json = await search.json();
     const place = json.places?.[0];

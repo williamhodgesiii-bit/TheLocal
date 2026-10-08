@@ -2,6 +2,7 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { resizeImage } from "./image";
+import { slugify, type DrinkKind, type GenreId, type Spot } from "./data";
 
 export type User = { id: string; name: string; email: string };
 export type Review = {
@@ -25,6 +26,36 @@ export type Photo = {
   createdAt: string;
 };
 export type RatingSummary = Record<string, { avg: number; count: number }>;
+export type SpotInput = {
+  cityId: string;
+  name: string;
+  address: string;
+  area: string;
+  areaLabel: string;
+  coords: [number, number];
+  genres: GenreId[];
+  drinks: DrinkKind[];
+  price: 1 | 2 | 3 | 4;
+  knownFor: string;
+  blurb: string;
+  website?: string;
+  phone?: string;
+  tags: string[];
+};
+export type SubmissionStatus = "pending" | "approved" | "rejected";
+export type Submission = SpotInput & {
+  id: string;
+  status: SubmissionStatus;
+  submittedBy: string;
+  submitterName: string;
+  note?: string;
+  photoUrl?: string;
+  rejectReason?: string;
+  reviewedAt?: string;
+  spotId?: string;
+  createdAt: string;
+};
+export type Checklist = Record<string, boolean>;
 export type Lead = { name: string; business: string; email: string; tier: string; message?: string };
 
 export interface Backend {
@@ -42,6 +73,44 @@ export interface Backend {
   ratings(): Promise<RatingSummary>;
   subscribe(email: string): Promise<void>;
   lead(l: Lead): Promise<void>;
+  waitlist(email: string, state: string, city: string): Promise<void>;
+
+  /* community spots */
+  listSpots(cityId: string): Promise<Spot[]>;
+  getSpot(id: string): Promise<Spot | null>;
+  submitSpot(input: SpotInput, note?: string, photo?: File): Promise<Submission>;
+  mySubmissions(): Promise<Submission[]>;
+
+  /* moderation */
+  isAdmin(): Promise<boolean>;
+  listSubmissions(status: SubmissionStatus): Promise<Submission[]>;
+  approveSubmission(sub: Submission, edits: SpotInput & { pop: number }, checklist: Checklist): Promise<Spot>;
+  rejectSubmission(id: string, reason: string): Promise<void>;
+}
+
+const newSpotId = (name: string) => `${slugify(name)}-${Math.random().toString(36).slice(2, 6)}`;
+
+function spotFrom(sub: Submission, edits: SpotInput & { pop: number }, id: string, reviewedAt: string): Spot {
+  return {
+    id,
+    city: edits.cityId,
+    name: edits.name,
+    genres: edits.genres,
+    drinks: edits.drinks.length ? edits.drinks : undefined,
+    area: edits.area,
+    areaLabel: edits.areaLabel,
+    address: edits.address,
+    coords: edits.coords,
+    price: edits.price,
+    knownFor: edits.knownFor,
+    blurb: edits.blurb,
+    tags: edits.tags,
+    pop: edits.pop,
+    website: edits.website || undefined,
+    phone: edits.phone || undefined,
+    addedBy: sub.submitterName,
+    verifiedAt: reviewedAt,
+  };
 }
 
 /* ============================== SUPABASE ============================== */
@@ -64,8 +133,100 @@ function supabaseBackend(sb: SupabaseClient): Backend {
     return u;
   }
 
+  const mapSub = (r: Record<string, any>): Submission => ({
+    id: r.id, cityId: r.city_id, name: r.name, address: r.address, area: r.area, areaLabel: r.area_label, coords: [r.lat, r.lng],
+    genres: r.genres ?? [], drinks: r.drinks ?? [], price: r.price, knownFor: r.known_for, blurb: r.blurb, website: r.website ?? undefined,
+    phone: r.phone ?? undefined, tags: r.tags ?? [], status: r.status, submittedBy: r.submitted_by, submitterName: r.submitter_name,
+    note: r.note ?? undefined, photoUrl: r.photo_url ?? undefined, rejectReason: r.reject_reason ?? undefined, reviewedAt: r.reviewed_at ?? undefined,
+    spotId: r.spot_id ?? undefined, createdAt: r.created_at,
+  });
+  const mapSpot = (r: Record<string, any>): Spot => ({
+    id: r.id, city: r.city_id, name: r.name, genres: r.genres ?? [], drinks: r.drinks?.length ? r.drinks : undefined, area: r.area,
+    areaLabel: r.area_label ?? undefined, address: r.address, coords: [r.lat, r.lng], price: r.price, knownFor: r.known_for, blurb: r.blurb,
+    tags: r.tags ?? [], pop: r.pop ?? 60, sponsored: r.sponsored ?? false, website: r.website ?? undefined, phone: r.phone ?? undefined,
+    addedBy: r.added_by ?? undefined, verifiedAt: r.verified_at ?? undefined,
+  });
+  const inputRow = (i: SpotInput) => ({
+    city_id: i.cityId, name: i.name, address: i.address, area: i.area, area_label: i.areaLabel, lat: i.coords[0], lng: i.coords[1],
+    genres: i.genres, drinks: i.drinks, price: i.price, known_for: i.knownFor, blurb: i.blurb, website: i.website || null,
+    phone: i.phone || null, tags: i.tags,
+  });
+
   return {
     mode: "supabase",
+    async waitlist(email, state, city) {
+      const { error } = await sb.from("waitlist").insert({ email, state, city });
+      if (error && !String(error.message).includes("duplicate")) throw error;
+    },
+    async listSpots(cityId) {
+      const { data, error } = await sb.from("spots").select("*").eq("city_id", cityId).eq("status", "live");
+      if (error) return [];
+      return (data ?? []).map(mapSpot);
+    },
+    async getSpot(id) {
+      const { data } = await sb.from("spots").select("*").eq("id", id).eq("status", "live").maybeSingle();
+      return data ? mapSpot(data) : null;
+    },
+    async submitSpot(input, note, photo) {
+      const u = await requireUser();
+      let photo_url: string | null = null;
+      if (photo) {
+        const blob = await resizeImage(photo, 1600, 0.82);
+        const path = `${u.id}/submissions/${Date.now()}.jpg`;
+        const up = await sb.storage.from("spot-photos").upload(path, blob, { contentType: "image/jpeg" });
+        if (up.error) throw up.error;
+        photo_url = sb.storage.from("spot-photos").getPublicUrl(path).data.publicUrl;
+      }
+      const { data, error } = await sb
+        .from("submissions")
+        .insert({ ...inputRow(input), submitted_by: u.id, submitter_name: u.name, note: note || null, photo_url })
+        .select()
+        .single();
+      if (error) throw new Error(error.message.includes("row-level security") ? "You have 10 spots waiting for review — hang tight while we verify those first." : error.message);
+      return mapSub(data);
+    },
+    async mySubmissions() {
+      const { data: auth } = await sb.auth.getUser();
+      if (!auth.user) return [];
+      const { data } = await sb.from("submissions").select("*").eq("submitted_by", auth.user.id).order("created_at", { ascending: false });
+      return (data ?? []).map(mapSub);
+    },
+    async isAdmin() {
+      const { data } = await sb.rpc("is_admin");
+      return data === true;
+    },
+    async listSubmissions(status) {
+      const { data, error } = await sb.from("submissions").select("*").eq("status", status).order("created_at", { ascending: status === "pending" });
+      if (error) throw error;
+      return (data ?? []).map(mapSub);
+    },
+    async approveSubmission(sub, edits, checklist) {
+      const u = await requireUser();
+      const reviewedAt = new Date().toISOString();
+      const id = newSpotId(edits.name);
+      const spot = spotFrom(sub, edits, id, reviewedAt);
+      const ins = await sb.from("spots").insert({
+        id, ...inputRow(edits), pop: edits.pop, status: "live", added_by: sub.submitterName, submitted_by: sub.submittedBy,
+        verified_at: reviewedAt, verified_by: u.id, submission_id: sub.id,
+      });
+      if (ins.error) throw ins.error;
+      const upd = await sb
+        .from("submissions")
+        .update({ status: "approved", spot_id: id, checklist, reviewed_at: reviewedAt, reviewed_by: u.id })
+        .eq("id", sub.id);
+      if (upd.error) throw upd.error;
+      if (sub.photoUrl)
+        await sb.from("photos").insert({ spot_id: id, user_id: sub.submittedBy, display_name: sub.submitterName, url: sub.photoUrl, kind: "building" });
+      return spot;
+    },
+    async rejectSubmission(id, reason) {
+      const u = await requireUser();
+      const { error } = await sb
+        .from("submissions")
+        .update({ status: "rejected", reject_reason: reason, reviewed_at: new Date().toISOString(), reviewed_by: u.id })
+        .eq("id", id);
+      if (error) throw error;
+    },
     async getUser() {
       const { data } = await sb.auth.getSession();
       return toUser(data.session?.user);
@@ -147,7 +308,11 @@ function supabaseBackend(sb: SupabaseClient): Backend {
 // Works with zero configuration so the site is fully usable on first deploy.
 // Everything lives in this browser's localStorage.
 
-const K = { users: "tl.users", session: "tl.session", reviews: "tl.reviews", photos: "tl.photos", subs: "tl.subs", leads: "tl.leads" };
+const K = {
+  users: "tl.users", session: "tl.session", reviews: "tl.reviews", photos: "tl.photos", subs: "tl.subs", leads: "tl.leads",
+  submissions: "tl.submissions", spots: "tl.spots", waitlist: "tl.waitlist",
+};
+const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
 
 function read<T>(k: string, fallback: T): T {
   try {
@@ -259,6 +424,59 @@ function localBackend(): Backend {
     },
     async lead(l) {
       write(K.leads, [...read<Lead[]>(K.leads, []), { ...l, at: new Date().toISOString() }]);
+    },
+    async waitlist(email, state, city) {
+      write(K.waitlist, [...read<unknown[]>(K.waitlist, []), { email, state, city, at: new Date().toISOString() }]);
+    },
+    async listSpots(cityId) {
+      return read<Spot[]>(K.spots, []).filter((s) => s.city === cityId);
+    },
+    async getSpot(id) {
+      return read<Spot[]>(K.spots, []).find((s) => s.id === id) ?? null;
+    },
+    async submitSpot(input, note, photo) {
+      const u = current();
+      if (!u) throw new Error("Sign in first.");
+      const all = read<Submission[]>(K.submissions, []);
+      if (all.filter((x) => x.submittedBy === u.id && x.status === "pending").length >= 10)
+        throw new Error("You have 10 spots waiting for review — hang tight while we verify those first.");
+      const photoUrl = photo ? await blobToDataUrl(await resizeImage(photo, 900, 0.72)) : undefined;
+      const sub: Submission = { ...input, id: uid(), status: "pending", submittedBy: u.id, submitterName: u.name, note, photoUrl, createdAt: new Date().toISOString() };
+      write(K.submissions, [sub, ...all]);
+      return sub;
+    },
+    async mySubmissions() {
+      const u = current();
+      return u ? read<Submission[]>(K.submissions, []).filter((x) => x.submittedBy === u.id) : [];
+    },
+    async isAdmin() {
+      const u = current();
+      if (!u) return false;
+      return ADMIN_EMAILS.length ? ADMIN_EMAILS.includes(u.email) : true; // demo: every member can moderate
+    },
+    async listSubmissions(status) {
+      const list = read<Submission[]>(K.submissions, []).filter((x) => x.status === status);
+      return status === "pending" ? list.reverse() : list;
+    },
+    async approveSubmission(sub, edits) {
+      const reviewedAt = new Date().toISOString();
+      const spot = spotFrom(sub, edits, newSpotId(edits.name), reviewedAt);
+      write(K.spots, [...read<Spot[]>(K.spots, []), spot]);
+      write(
+        K.submissions,
+        read<Submission[]>(K.submissions, []).map((x) => (x.id === sub.id ? { ...x, status: "approved", spotId: spot.id, reviewedAt } : x))
+      );
+      if (sub.photoUrl) {
+        const p: Photo = { id: uid(), spotId: spot.id, userId: sub.submittedBy, userName: sub.submitterName, url: sub.photoUrl, kind: "building", createdAt: reviewedAt };
+        write(K.photos, [p, ...read<Photo[]>(K.photos, [])]);
+      }
+      return spot;
+    },
+    async rejectSubmission(id, reason) {
+      write(
+        K.submissions,
+        read<Submission[]>(K.submissions, []).map((x) => (x.id === id ? { ...x, status: "rejected", rejectReason: reason, reviewedAt: new Date().toISOString() } : x))
+      );
     },
   };
 }

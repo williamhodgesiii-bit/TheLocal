@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Dices, MapPin, X } from "lucide-react";
 import { track } from "@vercel/analytics";
-import { AREA_BY_ID, GENRE_BY_ID, priceLabel, type Spot } from "@/lib/data";
+import { GENRE_BY_ID, areaLabelOf, priceLabel, type Spot } from "@/lib/data";
 import Storefront from "./Storefront";
 
 const ITEM_H = 64;
@@ -28,7 +28,9 @@ export default function Surprise({
   all,
   filtered,
   onGo,
+  cityNick = "city",
 }: {
+  cityNick?: string;
   open: boolean;
   onClose: () => void;
   all: Spot[];
@@ -96,7 +98,7 @@ export default function Surprise({
             </button>
             <div className="stamp">Can&apos;t decide?</div>
             <h2 className="display">
-              Let the <em>Magic City</em> pick.
+              Let the <em>{cityNick}</em> pick.
             </h2>
 
             <div className="reel-window" aria-live="polite">
@@ -134,7 +136,7 @@ export default function Surprise({
                   </div>
                   <div>
                     <div className="meta">
-                      {g.short} · {AREA_BY_ID[winner.area].label} · {priceLabel(winner.price)}
+                      {g.short} · {areaLabelOf(winner)} · {priceLabel(winner.price)}
                     </div>
                     <p className="known">Known for: {winner.knownFor}</p>
                     <p className="muted small">{winner.blurb}</p>

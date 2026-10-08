@@ -2,17 +2,17 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, Dices, Heart, LogOut, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowUpRight, ChevronDown, ClipboardCheck, Dices, Heart, LogOut, MapPin, Plus, Search, ShieldCheck, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import {
-  AREAS,
-  AREA_BY_ID,
   DRINK_KINDS,
   GENRES,
   GENRE_BY_ID,
   SPOTS,
-  SPOT_BY_ID,
+  areaLabelOf,
+  deriveAreas,
   priceLabel,
   type AreaId,
   type DrinkKind,
@@ -20,6 +20,10 @@ import {
   type Spot,
 } from "@/lib/data";
 import type { RatingSummary } from "@/lib/backend";
+import { CITY_BY_ID, DEFAULT_CITY, HOME_KEY, cityPath, stateName, type City } from "@/lib/regions";
+import CityPicker from "./CityPicker";
+import SubmitSpot from "./SubmitSpot";
+import MySubmissions from "./MySubmissions";
 import { useApp } from "./Providers";
 import { GenreIcon } from "./Icon";
 import Storefront from "./Storefront";
@@ -31,18 +35,36 @@ const MapView = dynamic(() => import("./MapView"), { ssr: false, loading: () => 
 
 type Sort = "popular" | "rating" | "az";
 
-const TICKER = [
+const BHM_TICKER = [
   "No drive-thrus. No chains. Just Birmingham.",
   "White sauce is a food group",
   "Market at Pepper Place — Saturdays, get there early",
   "Over the mountain or under the furnace, we've got you",
   "The Magic City, est. 1871",
   "Reviews by locals, for locals",
-  "Tip your bartender",
+  "Know a spot we're missing? Add it",
 ];
+const tickerFor = (c: City) =>
+  c.id === DEFAULT_CITY
+    ? BHM_TICKER
+    : [
+        `No drive-thrus. No chains. Just ${c.name}.`,
+        "Founding members wanted — add your favorite local spot",
+        "Every spot is verified by a real person",
+        "Reviews by locals, for locals",
+        `${c.nickname ?? c.name}, ${stateName(c.state)}`,
+      ];
+const SEEN_KEY = "tl.seenApproved";
 
-export default function Explorer({ initialSpot }: { initialSpot?: string }) {
-  const { backend, user, openAuth, saved, toast } = useApp();
+export default function Explorer({ cityId, initialSpot, initialSpotData }: { cityId?: string; initialSpot?: string; initialSpotData?: Spot }) {
+  const { backend, user, openAuth, requireAuth, saved, toast } = useApp();
+  const router = useRouter();
+  const [city, setCity] = useState<City>(CITY_BY_ID[cityId ?? initialSpotData?.city ?? DEFAULT_CITY] ?? CITY_BY_ID[DEFAULT_CITY]);
+  const [community, setCommunity] = useState<Spot[]>(initialSpotData ? [initialSpotData] : []);
+  const [picker, setPicker] = useState<{ open: boolean; first: boolean }>({ open: false, first: false });
+  const [adding, setAdding] = useState(false);
+  const [mine, setMine] = useState(false);
+  const [admin, setAdmin] = useState(false);
   const [genre, setGenre] = useState<GenreId | "all">("all");
   const [drink, setDrink] = useState<DrinkKind | "all">("all");
   const [area, setArea] = useState<AreaId | "all">("all");
@@ -61,6 +83,84 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
   const searchRef = useRef<HTMLInputElement>(null);
   const hydrated = useRef(false);
 
+  /* ---------- city ---------- */
+  // "/" has no city in the URL: use the member's home city, or ask on first visit
+  useEffect(() => {
+    if (cityId || initialSpot) return;
+    let home: string | null = null;
+    try {
+      home = localStorage.getItem(HOME_KEY);
+    } catch {
+      /* ignore */
+    }
+    if (!home) setPicker({ open: true, first: true });
+    else if (home !== DEFAULT_CITY && CITY_BY_ID[home]) router.replace(cityPath(CITY_BY_ID[home]));
+  }, [cityId, initialSpot, router]);
+
+  // back/forward between city routes
+  useEffect(() => {
+    if (cityId && CITY_BY_ID[cityId] && cityId !== city.id) {
+      setCity(CITY_BY_ID[cityId]);
+      setArea("all");
+      setSelectedId(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cityId]);
+
+  const pickCity = (c: City) => {
+    try {
+      localStorage.setItem(HOME_KEY, c.id);
+    } catch {
+      /* ignore */
+    }
+    setPicker({ open: false, first: false });
+    if (c.id !== city.id) {
+      setCity(c);
+      setArea("all");
+      setSelectedId(null);
+      router.push(cityPath(c));
+    }
+  };
+
+  const loadCommunity = useCallback(() => {
+    backend
+      .listSpots(city.id)
+      .then((list) => setCommunity(initialSpotData && !list.some((l) => l.id === initialSpotData.id) ? [...list, initialSpotData] : list))
+      .catch(() => {});
+  }, [backend, city.id, initialSpotData]);
+  useEffect(loadCommunity, [loadCommunity]);
+
+  useEffect(() => {
+    if (!user) return setAdmin(false);
+    backend.isAdmin().then(setAdmin).catch(() => setAdmin(false));
+    // let members know when a spot they added has been verified
+    backend
+      .mySubmissions()
+      .then((subs) => {
+        let seen: string[] = [];
+        try {
+          seen = JSON.parse(localStorage.getItem(SEEN_KEY) || "[]");
+        } catch {
+          /* ignore */
+        }
+        const fresh = subs.filter((x) => x.status !== "pending" && !seen.includes(x.id));
+        fresh.forEach((x) =>
+          toast(x.status === "approved" ? `✦ ${x.name} was verified — it's live on the map!` : `${x.name} wasn't approved. See Your spots for why.`, x.status === "approved" ? "ok" : undefined)
+        );
+        if (fresh.length) localStorage.setItem(SEEN_KEY, JSON.stringify([...seen, ...fresh.map((x) => x.id)]));
+      })
+      .catch(() => {});
+  }, [user, backend, toast]);
+
+  const allSpots = useMemo(() => {
+    const seed = city.id === DEFAULT_CITY ? SPOTS : [];
+    const seedIds = new Set(seed.map((x) => x.id));
+    return [...seed, ...community.filter((x) => x.city === city.id && !seedIds.has(x.id))];
+  }, [city.id, community]);
+  const spotById = useMemo(() => Object.fromEntries(allSpots.map((x) => [x.id, x])) as Record<string, Spot>, [allSpots]);
+  const areas = useMemo(() => deriveAreas(city.id, allSpots), [city.id, allSpots]);
+  const areaById = useMemo(() => Object.fromEntries(areas.map((a) => [a.id, a])), [areas]);
+
   /* ---------- URL <-> state ---------- */
   useEffect(() => {
     const p = new URLSearchParams(location.search);
@@ -69,9 +169,9 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
     const d = p.get("d") as DrinkKind | null;
     const s = p.get("s");
     if (g && GENRE_BY_ID[g]) setGenre(g);
-    if (a && AREA_BY_ID[a]) setArea(a);
+    if (a) setArea(a);
     if (d && DRINK_KINDS.some((k) => k.id === d)) setDrink(d);
-    if (s && SPOT_BY_ID[s]) setSelectedId(s);
+    if (s) setSelectedId(s);
     hydrated.current = true;
   }, []);
 
@@ -81,11 +181,12 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
     if (genre !== "all") p.set("g", genre);
     if (genre === "drinks" && drink !== "all") p.set("d", drink);
     if (area !== "all") p.set("a", area);
-    const path = selectedId ? `/spot/${selectedId}` : "/";
+    const sel = selectedId ? spotById[selectedId] : null;
+    const path = sel ? `/spot/${sel.id}` : cityPath(city);
     const qs = p.toString();
     history.replaceState(null, "", qs ? `${path}?${qs}` : path);
-    document.title = selectedId ? `${SPOT_BY_ID[selectedId].name} · The Local` : "The Local — Birmingham's independent food & drink map";
-  }, [genre, drink, area, selectedId]);
+    document.title = sel ? `${sel.name} · The Local` : `The Local — ${city.name}'s independent food & drink map`;
+  }, [genre, drink, area, selectedId, spotById, city]);
 
   useEffect(() => {
     backend.ratings().then(setRatings).catch(() => {});
@@ -100,7 +201,7 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
       if (savedOnly && !saved.includes(s.id)) return false;
       if (q.trim()) {
         const t = q.trim().toLowerCase();
-        const hay = `${s.name} ${s.knownFor} ${s.tags.join(" ")} ${s.genres.map((g) => GENRE_BY_ID[g].label).join(" ")} ${AREA_BY_ID[s.area].label}`.toLowerCase();
+        const hay = `${s.name} ${s.knownFor} ${s.tags.join(" ")} ${s.genres.map((g) => GENRE_BY_ID[g].label).join(" ")} ${areaLabelOf(s)}`.toLowerCase();
         if (!hay.includes(t)) return false;
       }
       return true;
@@ -109,7 +210,7 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
   );
 
   const list = useMemo(() => {
-    const out = SPOTS.filter((s) => matchesBase(s) && (area === "all" || s.area === area));
+    const out = allSpots.filter((s) => matchesBase(s) && (area === "all" || s.area === area));
     const r = (s: Spot) => ratings[s.id]?.avg ?? 0;
     out.sort((a, b) => {
       if (!!b.sponsored !== !!a.sponsored) return b.sponsored ? 1 : -1;
@@ -118,29 +219,29 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
       return b.pop - a.pop;
     });
     return out;
-  }, [matchesBase, area, sort, ratings]);
+  }, [allSpots, matchesBase, area, sort, ratings]);
 
   const visible = useMemo(() => new Set(list.map((s) => s.id)), [list]);
 
   const genreCounts = useMemo(() => {
     const c: Record<string, number> = { all: 0 };
-    for (const s of SPOTS) {
+    for (const s of allSpots) {
       if (area !== "all" && s.area !== area) continue;
       c.all++;
       s.genres.forEach((g) => (c[g] = (c[g] ?? 0) + 1));
     }
     return c;
-  }, [area]);
+  }, [allSpots, area]);
 
   const areaCounts = useMemo(() => {
     const c: Record<string, number> = { all: 0 };
-    for (const s of SPOTS) {
+    for (const s of allSpots) {
       if (!matchesBase(s)) continue;
       c.all++;
       c[s.area] = (c[s.area] ?? 0) + 1;
     }
     return c;
-  }, [matchesBase]);
+  }, [allSpots, matchesBase]);
 
   /* ---------- actions ---------- */
   const select = useCallback((id: string | null) => {
@@ -187,14 +288,18 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [list, selectedId, hoveredId, surprise, select]);
 
-  const selected = selectedId ? SPOT_BY_ID[selectedId] : null;
+  const selected = selectedId ? spotById[selectedId] ?? null : null;
   const activeGenre = genre === "all" ? null : GENRE_BY_ID[genre];
-  const activeArea = area === "all" ? null : AREA_BY_ID[area];
+  const activeArea = area === "all" ? null : areaById[area] ?? null;
+  const founding = city.status === "founding";
+  const openAdd = () => {
+    if (requireAuth(`Sign in to add a spot in ${city.name}. Every submission is verified by our team.`)) setAdding(true);
+  };
   const filtersOn = prices.length > 0 || savedOnly || sort !== "popular";
 
-  const mapTitle = selected ? selected.name : activeArea ? activeArea.label : "Birmingham";
+  const mapTitle = selected ? selected.name : activeArea ? activeArea.label : city.name;
   const mapSub = selected
-    ? `${AREA_BY_ID[selected.area].label} · ${selected.knownFor}`
+    ? `${areaLabelOf(selected)} · ${selected.knownFor}`
     : `${list.length} ${list.length === 1 ? "spot" : "spots"}${activeGenre ? ` · ${activeGenre.label}` : ""}${activeArea ? "" : " · all neighborhoods"}`;
 
   return (
@@ -207,9 +312,14 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
             <span className="brand-the">the</span>
             <span className="brand-local">LOCAL</span>
           </span>
-          <span className="brand-tag">Birmingham, AL · independent eats &amp; drinks</span>
+        </button>
+        <button className="city-switch" onClick={() => setPicker({ open: true, first: false })}>
+          <MapPin size={14} /> {city.name}, {city.state} <ChevronDown size={14} />
         </button>
         <nav className="top-actions">
+          <button className="btn btn-outline-light btn-sm add-top" onClick={openAdd}>
+            <Plus size={15} /> <span>Add a spot</span>
+          </button>
           <Link href="/partners" className="top-link">
             For restaurants <ArrowUpRight size={14} />
           </Link>
@@ -217,7 +327,7 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
             <Heart size={17} fill={savedOnly ? "currentColor" : "none"} />
             {saved.length > 0 && <span className="badge">{saved.length}</span>}
           </button>
-          <motion.button className="btn btn-ember surprise-btn" onClick={() => setSurprise(true)} whileTap={{ scale: 0.94, rotate: -2 }}>
+          <motion.button className="btn btn-ember surprise-btn" onClick={() => (allSpots.length ? setSurprise(true) : openAdd())} whileTap={{ scale: 0.94, rotate: -2 }}>
             <Dices size={17} className="dice" /> <span>Surprise me</span>
           </motion.button>
           {user ? (
@@ -230,6 +340,14 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
                   <motion.div className="user-menu" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
                     <strong>{user.name}</strong>
                     <span className="mono-sm">{user.email}</span>
+                    <button className="menu-item" onClick={() => (setMine(true), setUserMenu(false))}>
+                      <ShieldCheck size={14} /> Your spots
+                    </button>
+                    {admin && (
+                      <Link className="menu-item" href="/admin">
+                        <ClipboardCheck size={14} /> Verification queue
+                      </Link>
+                    )}
                     <button
                       className="link-btn"
                       onClick={() => {
@@ -254,7 +372,7 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
 
       <div className="ticker" aria-hidden>
         <div className="ticker-track">
-          {[...TICKER, ...TICKER].map((t, i) => (
+          {[...tickerFor(city), ...tickerFor(city)].map((t, i) => (
             <span key={i}>
               {t} <b>✦</b>
             </span>
@@ -268,9 +386,33 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
           <div className="sidebar-scroll" ref={scrollRef}>
             <AnimatePresence mode="wait" initial={false}>
               {selected ? (
-                <SpotDetail key={selected.id} spot={selected} onBack={() => select(null)} onSelect={select} />
+                <SpotDetail key={selected.id} spot={selected} pool={allSpots} onBack={() => select(null)} onSelect={select} />
               ) : (
                 <motion.div key="browse" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
+                  <div className="city-bar">
+                    <button onClick={() => setPicker({ open: true, first: false })}>
+                      <MapPin size={14} /> {city.name}, {city.state} <ChevronDown size={14} />
+                    </button>
+                    <button className="btn btn-ink btn-sm" onClick={openAdd}>
+                      <Plus size={14} /> Add a spot
+                    </button>
+                  </div>
+                  {founding && (
+                    <section className="founding-panel">
+                      <span className="stamp light">
+                        <Sparkles size={12} /> Founding city
+                      </span>
+                      <p className="display">
+                        {allSpots.length === 0 ? `Help put ${city.name} on the map.` : `${allSpots.length} verified spot${allSpots.length === 1 ? "" : "s"} so far — keep 'em coming.`}
+                      </p>
+                      <p className="small">
+                        {city.name} is open to founding members. Add the independent places you love; we verify each one, then it goes live with your name on it.
+                      </p>
+                      <button className="btn btn-ember btn-sm" onClick={openAdd}>
+                        <Plus size={14} /> Add a spot in {city.name}
+                      </button>
+                    </section>
+                  )}
                   <section className="panel">
                     <div className="eyebrow-row">
                       <h2 className="eyebrow">
@@ -316,8 +458,8 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
                       <span className="num">02</span> Pick a part of town
                     </h2>
                     <div className="areas">
-                      <AreaPill active={area === "all"} label="All of Birmingham" count={areaCounts.all} onClick={() => chooseArea("all")} />
-                      {AREAS.map((a) => (
+                      <AreaPill active={area === "all"} label={`All of ${city.name}`} count={areaCounts.all} onClick={() => chooseArea("all")} />
+                      {areas.map((a) => (
                         <AreaPill key={a.id} active={area === a.id} label={a.label} count={areaCounts[a.id] ?? 0} onClick={() => chooseArea(a.id)} />
                       ))}
                     </div>
@@ -411,7 +553,7 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
                     </AnimatePresence>
                   </ol>
 
-                  {list.length === 0 && (
+                  {list.length === 0 && !(founding && allSpots.length === 0) && (
                     <div className="empty">
                       <p className="display">Nothing on this block — yet.</p>
                       <p className="muted small">Try another neighborhood, or let us pick for you.</p>
@@ -420,6 +562,16 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
                       </button>
                     </div>
                   )}
+
+                  <button className="missing" onClick={openAdd}>
+                    <span className="missing-plus">
+                      <Plus size={20} />
+                    </span>
+                    <span>
+                      <strong>Know a spot we&apos;re missing?</strong>
+                      <span>Add it — our team verifies every place before it goes live, with credit to you.</span>
+                    </span>
+                  </button>
 
                   <Newsletter />
                   <footer className="side-foot">
@@ -437,13 +589,13 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
 
         {/* ================= MAP (70%) ================= */}
         <section className="mapwrap" style={{ ["--c" as string]: selected ? GENRE_BY_ID[selected.genres[0]].color : activeGenre?.color ?? "#E2793A" }}>
-          <MapView spots={SPOTS} visible={visible} selectedId={selectedId} hoveredId={hoveredId} area={area} onSelect={select} onHover={setHoveredId} onArea={chooseArea} />
+          <MapView key={city.id} city={city} areas={areas} spots={allSpots} visible={visible} selectedId={selectedId} hoveredId={hoveredId} area={area} onSelect={select} onHover={setHoveredId} onArea={chooseArea} />
           <div className="map-vignette" aria-hidden />
           <div className="map-frame" aria-hidden />
           <div className="map-title" aria-live="polite">
             <AnimatePresence mode="wait">
               <motion.div key={mapTitle} initial={{ opacity: 0, y: 18, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
-                <span className="map-kicker">{selected ? "Now showing" : activeArea ? "Neighborhood" : "The Magic City"}</span>
+                <span className="map-kicker">{selected ? "Now showing" : activeArea ? "Neighborhood" : city.nickname ?? stateName(city.state)}</span>
                 <h2 className="map-h">{mapTitle}</h2>
                 <span className="map-sub">{mapSub}</span>
               </motion.div>
@@ -465,15 +617,42 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
       </button>
 
       <Surprise
-        open={surprise}
+        open={surprise && allSpots.length > 0}
         onClose={() => setSurprise(false)}
-        all={SPOTS}
+        all={allSpots}
+        cityNick={city.id === DEFAULT_CITY ? "Magic City" : city.name}
         filtered={list}
         onGo={(id) => {
           setSurprise(false);
-          const s = SPOT_BY_ID[id];
-          if (area !== "all" && s.area !== area) setArea("all");
+          const s = spotById[id];
+          if (s && area !== "all" && s.area !== area) setArea("all");
           select(id);
+        }}
+      />
+
+      <CityPicker
+        open={picker.open}
+        firstRun={picker.first}
+        current={city}
+        liveCounts={{ [DEFAULT_CITY]: SPOTS.length, ...(city.id !== DEFAULT_CITY ? { [city.id]: allSpots.length } : {}) }}
+        onPick={pickCity}
+        onClose={() => {
+          if (picker.first) pickCity(city);
+          else setPicker({ open: false, first: false });
+        }}
+      />
+      <SubmitSpot open={adding} onClose={() => setAdding(false)} city={city} areas={areas} spots={allSpots} />
+      <MySubmissions
+        open={mine}
+        onClose={() => setMine(false)}
+        onAdd={() => (setMine(false), openAdd())}
+        onOpenSpot={(sub) => {
+          setMine(false);
+          if (sub.cityId !== city.id) router.push(`/spot/${sub.spotId}`);
+          else {
+            loadCommunity();
+            select(sub.spotId!);
+          }
         }}
       />
     </div>
@@ -485,7 +664,7 @@ export default function Explorer({ initialSpot }: { initialSpot?: string }) {
 function GenreChip({ active, label, icon, color, count, onClick }: { active: boolean; label: string; icon: string; color: string; count: number; onClick: () => void }) {
   return (
     <motion.button
-      className={`chip ${active ? "on" : ""} ${count === 0 ? "empty" : ""}`}
+      className={`chip ${active ? "on" : ""} ${count === 0 ? "zero" : ""}`}
       style={{ ["--c" as string]: color }}
       onClick={onClick}
       whileTap={{ scale: 0.93 }}
@@ -500,7 +679,7 @@ function GenreChip({ active, label, icon, color, count, onClick }: { active: boo
 
 function AreaPill({ active, label, count, onClick }: { active: boolean; label: string; count: number; onClick: () => void }) {
   return (
-    <button className={`area ${active ? "on" : ""} ${count === 0 ? "empty" : ""}`} onClick={onClick} aria-pressed={active}>
+    <button className={`area ${active ? "on" : ""} ${count === 0 ? "zero" : ""}`} onClick={onClick} aria-pressed={active}>
       {label}
       <span>{count}</span>
     </button>
@@ -550,7 +729,7 @@ function SpotRow({
               {saved && <Heart size={12} fill="currentColor" className="saved-heart" />}
             </span>
             <span className="spot-meta">
-              {g.short} · {AREA_BY_ID[spot.area].label} · {priceLabel(spot.price)}
+              {g.short} · {areaLabelOf(spot)} · {priceLabel(spot.price)}
               {spot.sponsored && <span className="sponsored">Sponsored</span>}
             </span>
             <span className="spot-known">{spot.knownFor}</span>
