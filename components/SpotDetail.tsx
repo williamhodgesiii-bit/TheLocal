@@ -15,7 +15,7 @@ import Reviews from "./Reviews";
 
 type GPhoto = { url: string; author: string; authorUri: string | null };
 type Places = { enabled: boolean; photos: GPhoto[]; rating?: number | null; ratingCount?: number | null; website?: string | null };
-type Slide = { key: string; kind: "svg" | "img"; url?: string; label: string; credit?: string };
+type Slide = { key: string; kind: "svg" | "img"; url?: string; label: string; credit?: string; link?: string };
 
 export default function SpotDetail({
   spot,
@@ -59,10 +59,12 @@ export default function SpotDetail({
   const hero: Slide = useMemo(() => {
     const b = photos.find((p) => p.kind === "building");
     if (b) return { key: b.id, kind: "img", url: b.url, label: "Out front", credit: `photo by ${b.userName}` };
+    const cc = spot.photos?.find((p) => p.kind === "building");
+    if (cc) return { key: cc.url, kind: "img", url: cc.url, label: "Out front", credit: cc.credit, link: cc.link };
     const gp = places?.photos?.[0];
     if (gp) return { key: gp.url, kind: "img", url: gp.url, label: "Out front", credit: `via Google, ${gp.author}` };
     return { key: "svg", kind: "svg", label: "Our sketch of the front" };
-  }, [photos, places]);
+  }, [photos, places, spot.photos]);
 
   const food: Slide[] = useMemo(() => {
     const out: Slide[] = [];
@@ -143,7 +145,7 @@ export default function SpotDetail({
     >
       <div className="detail-bar">
         <button className="textbtn" onClick={onBack}>
-          ← Back to the list
+          ← Back
         </button>
         <div className="row gap12">
           <button className={`textbtn ${isSaved ? "on" : ""}`} onClick={() => toggleSaved(spot.id)} aria-pressed={isSaved}>
@@ -212,7 +214,17 @@ export default function SpotDetail({
           <div className="snap-img">{hero.kind === "svg" ? <Storefront spot={spot} /> : <Img src={hero.url!} alt={`${spot.name} from the street`} spot={spot} />}</div>
           <figcaption>
             {hero.label}
-            {hero.credit && <span> · {hero.credit}</span>}
+            {hero.credit &&
+              (hero.link ? (
+                <>
+                  {" · "}
+                  <a href={hero.link} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                    {hero.credit}
+                  </a>
+                </>
+              ) : (
+                <span> · {hero.credit}</span>
+              ))}
           </figcaption>
         </figure>
         <div className="snap-row">

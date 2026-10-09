@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Explorer from "@/components/Explorer";
-import { CITIES, findCity, stateName } from "@/lib/regions";
+import { OPEN_CITIES, findCity, stateName } from "@/lib/regions";
 
 export function generateStaticParams() {
-  return CITIES.map((c) => ({ state: c.state.toLowerCase(), city: c.slug }));
+  return OPEN_CITIES.map((c) => ({ state: c.state.toLowerCase(), city: c.slug }));
 }
 
 export function generateMetadata({ params }: { params: { state: string; city: string } }): Metadata {

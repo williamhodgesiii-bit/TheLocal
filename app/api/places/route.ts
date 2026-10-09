@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { SPOT_BY_ID } from "@/lib/data";
+import placeIds from "@/lib/place-ids.json";
 import { CITY_BY_ID } from "@/lib/regions";
 import { rateLimited } from "@/lib/ratelimit";
 
@@ -23,18 +24,26 @@ export async function GET(req: Request) {
   if (!key) return NextResponse.json({ enabled: false, photos: [] }, { headers: cache(86400) });
 
   try {
-    const search = await fetch("https://places.googleapis.com/v1/places:searchText", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": key,
-        "X-Goog-FieldMask": "places.id,places.photos,places.rating,places.userRatingCount,places.googleMapsUri,places.websiteUri,places.location",
-      },
-      body: JSON.stringify({ textQuery: `${spot.name}, ${spot.address}, ${city.name}, ${city.state}`, maxResultCount: 1 }),
-    });
-    const json = await search.json();
-    const place = json.places?.[0];
-    if (!place) return NextResponse.json({ enabled: true, photos: [] }, { headers: cache(3600) });
+    // Known Place ID (from `npm run geocode`) → one cheap details call; otherwise search by name.
+    const pid = (placeIds as Record<string, string>)[id];
+    const fields = "photos,rating,userRatingCount,googleMapsUri,websiteUri";
+    let place: any;
+    if (pid) {
+      const r = await fetch(`https://places.googleapis.com/v1/places/${pid}`, { headers: { "X-Goog-Api-Key": key, "X-Goog-FieldMask": fields } });
+      place = await r.json();
+    } else {
+      const search = await fetch("https://places.googleapis.com/v1/places:searchText", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": key,
+          "X-Goog-FieldMask": fields.split(",").map((f) => `places.${f}`).join(","),
+        },
+        body: JSON.stringify({ textQuery: `${spot.name}, ${spot.address}, ${city.name}, ${city.state}`, maxResultCount: 1 }),
+      });
+      place = (await search.json()).places?.[0];
+    }
+    if (!place || place.error) return NextResponse.json({ enabled: true, photos: [] }, { headers: cache(3600) });
 
     const photos = await Promise.all(
       ((place.photos ?? []) as PlacesPhoto[]).slice(0, 6).map(async (p) => {

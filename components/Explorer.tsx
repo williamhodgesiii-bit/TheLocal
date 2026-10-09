@@ -10,6 +10,8 @@ import {
   GENRES,
   GENRE_BY_ID,
   SPOTS,
+  TOWNS,
+  TOWN_BY_ID,
   areaLabelOf,
   deriveAreas,
   priceLabel,
@@ -17,9 +19,10 @@ import {
   type DrinkKind,
   type GenreId,
   type Spot,
+  type TownId,
 } from "@/lib/data";
 import type { RatingSummary } from "@/lib/backend";
-import { CITY_BY_ID, DEFAULT_CITY, HOME_KEY, apState, cityPath, stateName, type City } from "@/lib/regions";
+import { CITY_BY_ID, DEFAULT_CITY, HOME_KEY, HOME_TOWN_KEY, apState, cityPath, stateName, type City } from "@/lib/regions";
 import CityPicker from "./CityPicker";
 import SubmitSpot from "./SubmitSpot";
 import MySubmissions from "./MySubmissions";
@@ -27,13 +30,39 @@ import { useApp } from "./Providers";
 import SpotDetail from "./SpotDetail";
 import Surprise from "./Surprise";
 import Circled from "./Circled";
+import Profile from "./Profile";
+import MapCards from "./MapCards";
+
+type View = "list" | "map" | "me";
+
+function useIsMobile() {
+  const [m, setM] = useState(false);
+  useEffect(() => {
+    const q = window.matchMedia("(max-width: 900px)");
+    const on = () => setM(q.matches);
+    on();
+    q.addEventListener("change", on);
+    return () => q.removeEventListener("change", on);
+  }, []);
+  return m;
+}
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false, loading: () => <div className="leaflet-host map-loading" /> });
 
 type Sort = "popular" | "rating" | "az";
 const SEEN_KEY = "tl.seenApproved";
 
-export default function Explorer({ cityId, initialSpot, initialSpotData }: { cityId?: string; initialSpot?: string; initialSpotData?: Spot }) {
+export default function Explorer({
+  cityId,
+  initialSpot,
+  initialSpotData,
+  initialView = "list",
+}: {
+  cityId?: string;
+  initialSpot?: string;
+  initialSpotData?: Spot;
+  initialView?: View;
+}) {
   const { backend, user, openAuth, requireAuth, saved, toast } = useApp();
   const router = useRouter();
   const [city, setCity] = useState<City>(CITY_BY_ID[cityId ?? initialSpotData?.city ?? DEFAULT_CITY] ?? CITY_BY_ID[DEFAULT_CITY]);
@@ -55,6 +84,11 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
   const [moreFilters, setMoreFilters] = useState(false);
   const [ratings, setRatings] = useState<RatingSummary>({});
   const [userMenu, setUserMenu] = useState(false);
+  const [view, setView] = useState<View>(initialView);
+  const [returnView, setReturnView] = useState<View>("list");
+  const [focusId, setFocusId] = useState<string | null>(null);
+  const [profileKey, setProfileKey] = useState(0);
+  const isMobile = useIsMobile();
   const q = useDeferredValue(query);
   const scrollRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -63,15 +97,21 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
   /* ---------- city ---------- */
   // "/" has no city in the URL: use the member's home city, or ask on first visit
   useEffect(() => {
-    if (cityId || initialSpot) return;
     let home: string | null = null;
+    let town: string | null = null;
     try {
       home = localStorage.getItem(HOME_KEY);
+      town = localStorage.getItem(HOME_TOWN_KEY);
     } catch {
       /* ignore */
     }
+    // start where they eat most, unless the link says otherwise
+    // (a shared link to one place shows it in context, not filtered out by your home town)
+    if (town && TOWN_BY_ID[town as TownId] && !initialSpot && !new URLSearchParams(location.search).get("a")) setArea(`t:${town}`);
+    if (cityId || initialSpot || initialView !== "list") return;
     if (!home) setPicker({ open: true, first: true });
     else if (home !== DEFAULT_CITY && CITY_BY_ID[home]) router.replace(cityPath(CITY_BY_ID[home]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityId, initialSpot, router]);
 
   // back/forward between city routes
@@ -84,13 +124,17 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityId]);
 
-  const pickCity = (c: City) => {
+  const pickCity = (c: City, town: TownId | null = null) => {
     try {
       localStorage.setItem(HOME_KEY, c.id);
+      if (town) localStorage.setItem(HOME_TOWN_KEY, town);
+      else localStorage.removeItem(HOME_TOWN_KEY);
     } catch {
       /* ignore */
     }
     setPicker({ open: false, first: false });
+    setArea(town ? `t:${town}` : "all");
+    setSelectedId(null);
     if (c.id !== city.id) {
       setCity(c);
       setArea("all");
@@ -122,7 +166,7 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
         }
         const fresh = subs.filter((x) => x.status !== "pending" && !seen.includes(x.id));
         fresh.forEach((x) =>
-          toast(x.status === "approved" ? `${x.name} checked out. It's on the map now.` : `${x.name} wasn't approved. Your spots has the reason.`, x.status === "approved" ? "ok" : undefined)
+          toast(x.status === "approved" ? `${x.name} checked out. It's on the map now.` : `${x.name} wasn't approved. Your page has the reason.`, x.status === "approved" ? "ok" : undefined)
         );
         if (fresh.length) localStorage.setItem(SEEN_KEY, JSON.stringify([...seen, ...fresh.map((x) => x.id)]));
       })
@@ -137,6 +181,14 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
   const spotById = useMemo(() => Object.fromEntries(allSpots.map((x) => [x.id, x])) as Record<string, Spot>, [allSpots]);
   const areas = useMemo(() => deriveAreas(city.id, allSpots), [city.id, allSpots]);
   const areaById = useMemo(() => Object.fromEntries(areas.map((a) => [a.id, a])), [areas]);
+  const townOf = useCallback((s: Spot) => areaById[s.area]?.town ?? null, [areaById]);
+  /** area filter: "all", a town ("t:homewood") or one neighborhood */
+  const inScope = useCallback(
+    (s: Spot, a: string = area) => a === "all" || (a.startsWith("t:") ? townOf(s) === a.slice(2) : s.area === a),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [area, townOf]
+  );
+  const activeTown: TownId | null = area.startsWith("t:") ? (area.slice(2) as TownId) : (areaById[area]?.town ?? null);
 
   /* ---------- URL <-> state ---------- */
   useEffect(() => {
@@ -149,6 +201,7 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
     if (a) setArea(a);
     if (d && DRINK_KINDS.some((k) => k.id === d)) setDrink(d);
     if (s) setSelectedId(s);
+    if (location.pathname === "/me") setView("me");
     hydrated.current = true;
   }, []);
 
@@ -159,11 +212,11 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
     if (genre === "drinks" && drink !== "all") p.set("d", drink);
     if (area !== "all") p.set("a", area);
     const sel = selectedId ? spotById[selectedId] : null;
-    const path = sel ? `/spot/${sel.id}` : cityPath(city);
+    const path = sel ? `/spot/${sel.id}` : view === "me" ? "/me" : cityPath(city);
     const qs = p.toString();
     history.replaceState(null, "", qs ? `${path}?${qs}` : path);
     document.title = sel ? `${sel.name} · The Local` : `The Local · ${city.name} restaurants, coffee & bars`;
-  }, [genre, drink, area, selectedId, spotById, city]);
+  }, [genre, drink, area, selectedId, spotById, city, view]);
 
   useEffect(() => {
     backend.ratings().then(setRatings).catch(() => {});
@@ -187,7 +240,7 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
   );
 
   const list = useMemo(() => {
-    const out = allSpots.filter((s) => matchesBase(s) && (area === "all" || s.area === area));
+    const out = allSpots.filter((s) => matchesBase(s) && inScope(s));
     const r = (s: Spot) => ratings[s.id]?.avg ?? 0;
     out.sort((a, b) => {
       if (!!b.sponsored !== !!a.sponsored) return b.sponsored ? 1 : -1;
@@ -196,19 +249,19 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
       return b.pop - a.pop;
     });
     return out;
-  }, [allSpots, matchesBase, area, sort, ratings]);
+  }, [allSpots, matchesBase, inScope, sort, ratings]);
 
   const visible = useMemo(() => new Set(list.map((s) => s.id)), [list]);
 
   const genreCounts = useMemo(() => {
     const c: Record<string, number> = { all: 0 };
     for (const s of allSpots) {
-      if (area !== "all" && s.area !== area) continue;
+      if (!inScope(s)) continue;
       c.all++;
       s.genres.forEach((g) => (c[g] = (c[g] ?? 0) + 1));
     }
     return c;
-  }, [allSpots, area]);
+  }, [allSpots, inScope]);
 
   const areaCounts = useMemo(() => {
     const c: Record<string, number> = { all: 0 };
@@ -216,17 +269,42 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
       if (!matchesBase(s)) continue;
       c.all++;
       c[s.area] = (c[s.area] ?? 0) + 1;
+      const t = townOf(s);
+      if (t) c[`t:${t}`] = (c[`t:${t}`] ?? 0) + 1;
     }
     return c;
-  }, [allSpots, matchesBase]);
+  }, [allSpots, matchesBase, townOf]);
+  const townCounts = useMemo(() => {
+    const c: Record<string, number> = { all: allSpots.length };
+    for (const s of allSpots) {
+      const t = townOf(s);
+      if (t) c[t] = (c[t] ?? 0) + 1;
+    }
+    return c;
+  }, [allSpots, townOf]);
 
   /* ---------- actions ---------- */
-  const select = useCallback((id: string | null) => {
-    setSelectedId(id);
-    setHoveredId(null);
-    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    if (window.innerWidth < 900) window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  const select = useCallback(
+    (id: string | null) => {
+      if (id) {
+        // remember where they came from so Back returns there
+        if (!selectedId) setReturnView(view);
+        setView("list");
+      } else if (selectedId) setView(returnView);
+      setSelectedId(id);
+      setHoveredId(null);
+      setFocusId(null);
+      scrollRef.current?.scrollTo({ top: 0 });
+    },
+    [selectedId, view, returnView]
+  );
+  const goView = (v: View) => {
+    if (v === "me") setProfileKey((k) => k + 1);
+    setSelectedId(null);
+    setFocusId(null);
+    setView(v);
+    scrollRef.current?.scrollTo({ top: 0 });
+  };
 
   const chooseGenre = (g: GenreId | "all") => {
     setGenre((cur) => (cur === g && g !== "all" ? "all" : g));
@@ -267,7 +345,12 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
 
   const selected = selectedId ? spotById[selectedId] ?? null : null;
   const activeGenre = genre === "all" ? null : GENRE_BY_ID[genre];
-  const activeArea = area === "all" ? null : areaById[area] ?? null;
+  const activeArea = area === "all" || area.startsWith("t:") ? null : areaById[area] ?? null;
+  const frame = useMemo(() => {
+    if (activeArea) return { center: activeArea.center, zoom: activeArea.zoom, maxZoom: activeArea.zoom + 0.4 };
+    if (activeTown) return { center: TOWN_BY_ID[activeTown].center, zoom: TOWN_BY_ID[activeTown].zoom, maxZoom: 16 };
+    return { center: city.center, zoom: city.zoom, maxZoom: 15 };
+  }, [activeArea, activeTown, city]);
   const founding = city.status === "founding";
   const openAdd = () => {
     if (requireAuth(`Sign in to add a place in ${city.name}. We check every one before it goes up.`)) setAdding(true);
@@ -280,10 +363,11 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
     setToday(new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }));
   }, []);
 
-  const mapTitle = selected ? selected.name : activeArea ? activeArea.label : city.name;
+  const placeName = activeArea ? activeArea.label : activeTown ? TOWN_BY_ID[activeTown].label : city.name;
+  const mapTitle = selected ? selected.name : placeName;
   const mapSub = selected
     ? `${areaLabelOf(selected)}. ${selected.address}`
-    : `${list.length} ${list.length === 1 ? "place" : "places"}${activeGenre ? `, ${activeGenre.label.toLowerCase()}` : ""}${activeArea ? "" : ", all over town"}`;
+    : `${list.length} ${list.length === 1 ? "place" : "places"}${activeGenre ? `, ${activeGenre.label.toLowerCase()}` : ""}${activeArea || activeTown ? "" : ", all over town"}`;
   const resetAll = () => {
     setGenre("all");
     setArea("all");
@@ -296,7 +380,7 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
   const surpriseOrAdd = () => (allSpots.length ? setSurprise(true) : openAdd());
 
   return (
-    <div className="app">
+    <div className={`app v-${view}${selected ? " has-sel" : ""}`}>
       <header className="masthead">
         <div className="mast-row">
           <button className="brand" onClick={() => (resetAll(), select(null))} aria-label="The Local, home">
@@ -305,9 +389,12 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
               {city.name}, {apState(city.state)}
             </span>
           </button>
+          <button className="town-btn" onClick={() => setPicker({ open: true, first: false })} aria-label="Change part of town">
+            {activeTown ? TOWN_BY_ID[activeTown].label : `All of ${city.name}`} <span aria-hidden>▾</span>
+          </button>
           <nav className="mast-nav">
             <button className="navlink hide-sm" onClick={() => setPicker({ open: true, first: false })}>
-              Change city
+              Change town
             </button>
             <button className="navlink hide-sm" onClick={openAdd}>
               Add a place
@@ -328,6 +415,9 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
                     <motion.div className="user-menu" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}>
                       <span className="um-name">{user.name}</span>
                       <span className="um-mail">{user.email}</span>
+                      <button className="menu-item" onClick={() => (goView("me"), setUserMenu(false))}>
+                        Your page
+                      </button>
                       <button className="menu-item" onClick={() => (setMine(true), setUserMenu(false))}>
                         Places you&apos;ve added
                       </button>
@@ -375,6 +465,17 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
             <AnimatePresence mode="wait" initial={false}>
               {selected ? (
                 <SpotDetail key={selected.id} spot={selected} number={numbers[selected.id]} pool={allSpots} onBack={() => select(null)} onSelect={select} />
+              ) : view === "me" ? (
+                <motion.div key="me" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  {!isMobile && (
+                    <div className="detail-bar">
+                      <button className="textbtn" onClick={() => goView("list")}>
+                        ← Back to the list
+                      </button>
+                    </div>
+                  )}
+                  <Profile spotById={spotById} onOpen={(id) => select(id)} onAdd={openAdd} admin={admin} refreshKey={profileKey} />
+                </motion.div>
               ) : (
                 <motion.div key="browse" className="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
                   <div className="city-bar">
@@ -429,19 +530,37 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
                     <h2 className="menu-head">
                       <span>What part of town?</span>
                     </h2>
-                    <p className="hoods">
-                      {[{ id: "all", label: `Anywhere in ${city.name}` }, ...areas].map((a, i) => (
+                    <p className="hoods towns">
+                      {[{ id: "all", label: "Anywhere" }, ...TOWNS.map((t) => ({ id: `t:${t.id}`, label: t.label }))].map((a, i) => (
                         <span key={a.id} className={(areaCounts[a.id] ?? 0) === 0 && a.id !== "all" ? "zero" : ""}>
-                          <button className="optbtn" onClick={() => chooseArea(a.id)}>
-                            <Circled on={area === a.id} seed={i}>
+                          <button className="optbtn" onClick={() => chooseArea(a.id)} aria-pressed={area === a.id || (a.id === `t:${activeTown}` && !!activeArea)}>
+                            <Circled on={area === a.id || (a.id === `t:${activeTown}` && !!activeArea)} seed={i}>
                               {a.label}
                             </Circled>
-                            <sup>{a.id === "all" ? areaCounts.all : areaCounts[a.id] ?? 0}</sup>
+                            <sup>{areaCounts[a.id] ?? 0}</sup>
                           </button>
                         </span>
                       ))}
                     </p>
-                    {activeArea?.blurb && <p className="hood-blurb">{activeArea.blurb}</p>}
+                    {activeTown && (
+                      <p className="hoods hoods-sub">
+                        {areas
+                          .filter((a) => a.town === activeTown)
+                          .map((a, i) => (
+                            <span key={a.id} className={(areaCounts[a.id] ?? 0) === 0 ? "zero" : ""}>
+                              <button className="optbtn" onClick={() => setArea((cur) => (cur === a.id ? `t:${activeTown}` : a.id))} aria-pressed={area === a.id}>
+                                <Circled on={area === a.id} seed={i + 2}>
+                                  {a.label}
+                                </Circled>
+                                <sup>{areaCounts[a.id] ?? 0}</sup>
+                              </button>
+                            </span>
+                          ))}
+                      </p>
+                    )}
+                    {(activeArea?.blurb || (activeTown && TOWN_BY_ID[activeTown].blurb)) && (
+                      <p className="hood-blurb">{activeArea?.blurb || TOWN_BY_ID[activeTown!].blurb}</p>
+                    )}
                   </section>
 
                   <section className="menu-sec search-sec">
@@ -558,16 +677,34 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
               visible={visible}
               selectedId={selectedId}
               hoveredId={hoveredId}
+              focusId={isMobile && view === "map" ? focusId : null}
+              frame={frame}
+              topPad={isMobile && view === "map" && !selected ? 92 : undefined}
               area={area}
               onSelect={select}
               onHover={setHoveredId}
               onArea={chooseArea}
             />
             <div className="map-caption" aria-live="polite">
-              <span className="cap-kicker">{selected ? `No. ${numbers[selected.id] ?? ""}` : activeArea ? "Neighborhood" : city.nickname ?? stateName(city.state)}</span>
+              <span className="cap-kicker">
+                {selected
+                  ? numbers[selected.id]
+                    ? `No. ${numbers[selected.id]}`
+                    : areaLabelOf(selected)
+                  : activeArea
+                    ? activeArea.town
+                      ? TOWN_BY_ID[activeArea.town].label
+                      : "Neighborhood"
+                    : activeTown
+                      ? `${city.name} area`
+                      : (city.nickname ?? stateName(city.state))}
+              </span>
               <h2 className="cap-title">{mapTitle}</h2>
               <span className="cap-sub">{mapSub}</span>
             </div>
+            {isMobile && view === "map" && !selected && (
+              <MapCards list={list} focusId={focusId} onFocus={setFocusId} onOpen={(id) => select(id)} />
+            )}
             <p className="map-key">
               <i className="k-on" /> numbers match the list <i className="k-off" /> not in your picks
             </p>
@@ -575,9 +712,27 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
         </section>
       </main>
 
-      <button className="fab" onClick={surpriseOrAdd}>
-        Surprise me
-      </button>
+      <nav className="tabbar" aria-label="Sections">
+        <button className={view === "list" && !selected ? "on" : ""} onClick={() => goView("list")}>
+          <TabGlyph k="menu" />
+          Menu
+        </button>
+        <button className={view === "map" && !selected ? "on" : ""} onClick={() => goView("map")}>
+          <TabGlyph k="map" />
+          Map
+        </button>
+        <button className="tab-surprise" onClick={surpriseOrAdd}>
+          <span>Surprise me</span>
+        </button>
+        <button onClick={openAdd}>
+          <TabGlyph k="add" />
+          Add
+        </button>
+        <button className={view === "me" && !selected ? "on" : ""} onClick={() => goView("me")}>
+          <TabGlyph k="me" />
+          {user ? "You" : "Sign in"}
+        </button>
+      </nav>
 
       <Surprise
         open={surprise && allSpots.length > 0}
@@ -596,14 +751,22 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
         open={picker.open}
         firstRun={picker.first}
         current={city}
-        liveCounts={{ [DEFAULT_CITY]: SPOTS.length, ...(city.id !== DEFAULT_CITY ? { [city.id]: allSpots.length } : {}) }}
+        currentTown={activeTown}
+        townCounts={townCounts}
         onPick={pickCity}
         onClose={() => {
-          if (picker.first) pickCity(city);
+          if (picker.first) pickCity(city, null);
           else setPicker({ open: false, first: false });
         }}
       />
-      <SubmitSpot open={adding} onClose={() => setAdding(false)} city={city} areas={areas} spots={allSpots} />
+      <SubmitSpot
+        open={adding}
+        onClose={() => setAdding(false)}
+        onDone={() => setProfileKey((k) => k + 1)}
+        city={city}
+        areas={areas}
+        spots={allSpots}
+      />
       <MySubmissions
         open={mine}
         onClose={() => setMine(false)}
@@ -621,10 +784,39 @@ export default function Explorer({ cityId, initialSpot, initialSpotData }: { cit
   );
 }
 
+/** Small pen-drawn marks for the phone tab bar (no icon set). */
+function TabGlyph({ k }: { k: "menu" | "map" | "add" | "me" }) {
+  const d = {
+    menu: "M4 6h16M4 12h11M4 18h14",
+    map: "M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14",
+    add: "M12 4c.3 5 .1 11 0 16M4 12c5-.3 11-.1 16 0",
+    me: "M12 12a4 4 0 1 0-.1 0M4.5 20c1.5-4 4.4-5.5 7.5-5.5s6 1.5 7.5 5.5",
+  }[k];
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>
+      <path d={d} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** On phones the menu rows scroll sideways; keep the chosen item in view. */
+function useKeepInView(on: boolean) {
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!on || !ref.current || !window.matchMedia("(max-width: 900px)").matches) return;
+    const row = ref.current.closest(".board, .hoods, .subline") as HTMLElement | null;
+    if (!row) return;
+    const b = ref.current;
+    row.scrollTo({ left: b.offsetLeft - (row.clientWidth - b.offsetWidth) / 2, behavior: "smooth" });
+  }, [on]);
+  return ref;
+}
+
 function BoardRow({ label, count, on, seed, onClick }: { label: string; count: number; on: boolean; seed: number; onClick: () => void }) {
+  const ref = useKeepInView(on);
   return (
     <li className={count === 0 ? "zero" : ""}>
-      <button onClick={onClick} aria-pressed={on} className={on ? "on" : ""}>
+      <button ref={ref} onClick={onClick} aria-pressed={on} className={on ? "on" : ""}>
         <Circled on={on} seed={seed}>
           {label}
         </Circled>

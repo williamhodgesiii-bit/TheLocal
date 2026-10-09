@@ -75,6 +75,11 @@ export interface Backend {
   lead(l: Lead): Promise<void>;
   waitlist(email: string, state: string, city: string): Promise<void>;
 
+  /* profile */
+  myReviews(): Promise<Review[]>;
+  myPhotos(): Promise<Photo[]>;
+  updateName(name: string): Promise<User>;
+
   /* community spots */
   listSpots(cityId: string): Promise<Spot[]>;
   getSpot(id: string): Promise<Spot | null>;
@@ -154,6 +159,23 @@ function supabaseBackend(sb: SupabaseClient): Backend {
 
   return {
     mode: "supabase",
+    async myReviews() {
+      const { data: auth } = await sb.auth.getUser();
+      if (!auth.user) return [];
+      const { data } = await sb.from("reviews").select("*").eq("user_id", auth.user.id).order("created_at", { ascending: false });
+      return (data ?? []).map(mapReview);
+    },
+    async myPhotos() {
+      const { data: auth } = await sb.auth.getUser();
+      if (!auth.user) return [];
+      const { data } = await sb.from("photos").select("*").eq("user_id", auth.user.id).order("created_at", { ascending: false });
+      return (data ?? []).map(mapPhoto);
+    },
+    async updateName(name) {
+      const { data, error } = await sb.auth.updateUser({ data: { display_name: name.trim().slice(0, 40) } });
+      if (error) throw error;
+      return toUser(data.user)!;
+    },
     async waitlist(email, state, city) {
       const { error } = await sb.from("waitlist").insert({ email, state, city });
       if (error && !String(error.message).includes("duplicate")) throw error;
@@ -424,6 +446,25 @@ function localBackend(): Backend {
     },
     async lead(l) {
       write(K.leads, [...read<Lead[]>(K.leads, []), { ...l, at: new Date().toISOString() }]);
+    },
+    async myReviews() {
+      const u = current();
+      return u ? read<Review[]>(K.reviews, []).filter((r) => r.userId === u.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)) : [];
+    },
+    async myPhotos() {
+      const u = current();
+      return u ? read<Photo[]>(K.photos, []).filter((p) => p.userId === u.id) : [];
+    },
+    async updateName(name) {
+      const u = current();
+      if (!u) throw new Error("Sign in first.");
+      const clean = name.trim().slice(0, 40) || u.name;
+      write(K.users, read<(User & { hash: string })[]>(K.users, []).map((x) => (x.id === u.id ? { ...x, name: clean } : x)));
+      write(K.reviews, read<Review[]>(K.reviews, []).map((r) => (r.userId === u.id ? { ...r, userName: clean } : r)));
+      const next = { ...u, name: clean };
+      write(K.session, next);
+      emit();
+      return next;
     },
     async waitlist(email, state, city) {
       write(K.waitlist, [...read<unknown[]>(K.waitlist, []), { email, state, city, at: new Date().toISOString() }]);

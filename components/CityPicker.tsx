@@ -2,23 +2,30 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CITIES, STATES, apState, citiesIn, stateName, type City } from "@/lib/regions";
+import { TOWNS, type TownId } from "@/lib/data";
+import { STATES, apState, citiesIn, plannedIn, stateName, type City } from "@/lib/regions";
 import { useApp } from "./Providers";
 
-/** "Where's home?" — first-visit onboarding and the city switcher. */
+/**
+ * "Where do you eat most?" First-visit onboarding and the town switcher.
+ * Today: the Birmingham area, by town. Other cities and states join a waitlist;
+ * opening one is a status change in lib/regions.ts.
+ */
 export default function CityPicker({
   open,
   current,
+  currentTown,
   firstRun,
-  liveCounts,
+  townCounts,
   onPick,
   onClose,
 }: {
   open: boolean;
   current: City;
+  currentTown: TownId | null;
   firstRun: boolean;
-  liveCounts: Record<string, number>;
-  onPick: (c: City) => void;
+  townCounts: Record<string, number>;
+  onPick: (c: City, town: TownId | null) => void;
   onClose: () => void;
 }) {
   const { backend, toast } = useApp();
@@ -26,11 +33,13 @@ export default function CityPicker({
   const [email, setEmail] = useState("");
   const [wantCity, setWantCity] = useState("");
   const [joined, setJoined] = useState(false);
+  const [askOther, setAskOther] = useState(false);
 
   useEffect(() => {
     if (open) {
       setState(current.state);
       setJoined(false);
+      setAskOther(false);
     }
   }, [open, current.state]);
 
@@ -42,7 +51,9 @@ export default function CityPicker({
   }, [open, onClose]);
 
   const cities = citiesIn(state);
-  const openStates = new Set(CITIES.map((c) => c.state));
+  const planned = plannedIn(state);
+  const metro = cities[0];
+  const showWaitlist = !metro || askOther;
 
   return (
     <AnimatePresence>
@@ -52,18 +63,18 @@ export default function CityPicker({
             className="modal city-modal"
             role="dialog"
             aria-modal="true"
-            aria-label="Choose your city"
-            initial={{ y: 30, opacity: 0, rotate: 1 }}
-            animate={{ y: 0, opacity: 1, rotate: 0 }}
-            exit={{ y: 20, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 280, damping: 26 }}
+            aria-label="Where do you eat most?"
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 30, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
             onMouseDown={(e) => e.stopPropagation()}
           >
             <button className="modal-x" onClick={onClose} aria-label="Close">
               ×
             </button>
-            <h2 className="modal-title">{firstRun ? "Where do you live?" : "Pick a city"}</h2>
-            <p className="muted">So we show you the right map. You can change it any time.</p>
+            <h2 className="modal-title">{firstRun ? "Where do you eat most?" : "Pick a part of town"}</h2>
+            <p className="muted">We&apos;ll start the map there. You can switch any time.</p>
 
             <label className="form state-select">
               <span>State</span>
@@ -71,39 +82,50 @@ export default function CityPicker({
                 {STATES.map((s) => (
                   <option key={s.code} value={s.code}>
                     {s.name}
-                    {openStates.has(s.code) ? "" : " (not yet)"}
+                    {citiesIn(s.code).length ? "" : " (not yet)"}
                   </option>
                 ))}
               </select>
             </label>
 
-            {cities.length > 0 ? (
+            {metro && (
               <>
-              <ul className="directory">
-                {cities.map((c) => (
-                  <li key={c.id}>
-                    <button className={c.id === current.id ? "on" : ""} onClick={() => onPick(c)}>
-                      <span className="dir-name">
-                        {c.name}, {apState(c.state)}
-                      </span>
+                <p className="dir-group">{metro.name} area</p>
+                <ul className="directory">
+                  {TOWNS.map((t) => (
+                    <li key={t.id}>
+                      <button className={currentTown === t.id ? "on" : ""} onClick={() => onPick(metro, t.id)}>
+                        <span className="dir-name">
+                          {t.label}, {apState(metro.state)}
+                        </span>
+                        <span className="leader" aria-hidden />
+                        <span className="dir-status live">{townCounts[t.id] ?? 0} places</span>
+                      </button>
+                    </li>
+                  ))}
+                  <li>
+                    <button className={currentTown === null && !firstRun ? "on" : ""} onClick={() => onPick(metro, null)}>
+                      <span className="dir-name">All of it</span>
                       <span className="leader" aria-hidden />
-                      <span className={`dir-status ${c.status}`}>
-                        {c.status === "live"
-                          ? `${liveCounts[c.id] ?? 0} places`
-                          : liveCounts[c.id]
-                            ? `${liveCounts[c.id]} so far, add yours`
-                            : "just getting started"}
-                      </span>
+                      <span className="dir-status">{townCounts.all ?? 0} places</span>
                     </button>
                   </li>
-                ))}
-              </ul>
-              <p className="fine">Places outside Birmingham are added by people who live there, and we check each one.</p>
+                </ul>
+                {!askOther && (
+                  <p className="fine">
+                    {planned.length ? `${planned.slice(0, 3).map((c) => c.name).join(", ")} and more are next. ` : ""}
+                    <button className="textbtn" onClick={() => setAskOther(true)}>
+                      Live somewhere else?
+                    </button>
+                  </p>
+                )}
               </>
-            ) : (
+            )}
+
+            {showWaitlist && (
               <div className="waitlist">
                 {joined ? (
-                  <p>You&apos;re on the {stateName(state)} list. We&apos;ll email you when it opens.</p>
+                  <p>We&apos;ve got you down. We&apos;ll email when your town opens.</p>
                 ) : (
                   <form
                     className="form"
@@ -118,12 +140,12 @@ export default function CityPicker({
                     }}
                   >
                     <p>
-                      <strong>We&apos;re not in {stateName(state)} yet.</strong> We open a state once enough people there ask. Leave your email and we&apos;ll tell you when.
+                      <strong>{metro ? "Tell us where you are." : `We're not in ${stateName(state)} yet.`}</strong> We open a town once enough people there ask.
                     </p>
                     <div className="form-grid">
                       <label>
-                        <span>Your city</span>
-                        <input value={wantCity} onChange={(e) => setWantCity(e.target.value)} placeholder="Your town" maxLength={60} />
+                        <span>Your town</span>
+                        <input value={wantCity} onChange={(e) => setWantCity(e.target.value)} placeholder="Town" maxLength={60} />
                       </label>
                       <label>
                         <span>Email</span>
@@ -133,9 +155,11 @@ export default function CityPicker({
                     <button className="btn btn-green">Let me know</button>
                   </form>
                 )}
-                <button className="textbtn" onClick={() => onPick(CITIES[0])}>
-                  Look around {CITIES[0].name} for now →
-                </button>
+                {!metro && (
+                  <button className="textbtn" onClick={() => setState("AL")}>
+                    Look around Birmingham for now →
+                  </button>
+                )}
               </div>
             )}
           </motion.div>

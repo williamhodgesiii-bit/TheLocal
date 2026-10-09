@@ -18,12 +18,14 @@ export const metadata: Metadata = {
   keywords: ["Birmingham restaurants", "Birmingham AL food", "Homewood restaurants", "Avondale bars", "English Village", "Pepper Place", "local restaurants Birmingham"],
   openGraph: { type: "website", siteName: "The Local", locale: "en_US" },
   twitter: { card: "summary_large_image" },
+  appleWebApp: { capable: true, title: "The Local", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#F4EFE1",
+  themeColor: "#FBF8EF",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

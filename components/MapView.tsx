@@ -14,10 +14,17 @@ type Props = {
   visible: Set<string>;
   selectedId: string | null;
   hoveredId: string | null;
-  area: AreaId | "all";
+  /** card centered in the mobile carousel: pan to it without opening it */
+  focusId?: string | null;
+  /** "all", a town ("t:homewood") or a neighborhood id */
+  area: string;
+  /** where to look when nothing matches */
+  frame: { center: [number, number]; zoom: number; maxZoom: number };
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
   onArea: (id: AreaId) => void;
+  /** extra top padding (px) so pins clear the caption box */
+  topPad?: number;
 };
 
 const TILES = process.env.NEXT_PUBLIC_MAP_TILES || "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png";
@@ -93,7 +100,13 @@ export default function MapView(props: Props) {
     m.on("zoomend resize", density);
     density();
 
-    const ro = new ResizeObserver(() => m.invalidateSize({ animate: false }));
+    let lastW = el.current.clientWidth;
+    const ro = new ResizeObserver(() => {
+      m.invalidateSize({ animate: false });
+      const w = el.current?.clientWidth ?? 0;
+      if (w > 10 && lastW <= 10) setTimeout(() => aim.current(), 30);
+      lastW = w;
+    });
     ro.observe(el.current);
     map.current = m;
     return () => {
@@ -159,7 +172,7 @@ export default function MapView(props: Props) {
     markers.current.forEach((mk, id) => {
       const node = mk.getElement()?.querySelector(".pin");
       if (!node) return;
-      node.classList.toggle("dim", !props.visible.has(id));
+      node.classList.toggle("dim", !props.visible.has(id) && props.selectedId !== id);
       node.classList.toggle("hot", props.hoveredId === id);
       node.classList.toggle("selected", props.selectedId === id);
       const num = node.querySelector(".pin-n");
@@ -167,41 +180,50 @@ export default function MapView(props: Props) {
       mk.setZIndexOffset(props.selectedId === id ? 2000 : props.hoveredId === id ? 1000 : props.visible.has(id) ? 0 : -1000);
     });
     hoods.current.forEach((mk, id) => {
-      mk.getElement()?.classList.toggle("active", props.area === id);
+      const a = props.areas.find((x) => x.id === id);
+      mk.getElement()?.classList.toggle("active", props.area === id || (!!a?.town && props.area === `t:${a.town}`));
       mk.getElement()?.classList.toggle("quiet", props.selectedId !== null);
     });
   }, [props.visible, props.numbers, props.hoveredId, props.selectedId, props.area, props.spots, props.areas]);
 
   // camera
-  useEffect(() => {
+  const aim = useRef<() => void>(() => {});
+  aim.current = () => {
     const m = map.current;
     if (!m) return;
-    const opts = { duration: 1.15, easeLinearity: 0.2 };
+    const size = m.getSize();
+    if (size.x < 10 || size.y < 10) return; // hidden (mobile list tab); re-aimed on resize
+    const opts = { duration: 1.1, easeLinearity: 0.2 };
+    const small = size.x < 600;
+    const top = props.topPad ?? (small ? 96 : 170);
     if (props.selectedId) {
       const s = props.spots.find((x) => x.id === props.selectedId);
-      if (s) m.flyTo(s.coords, 16.6, opts);
+      if (s) m.flyTo(s.coords, small ? 16 : 16.6, opts);
       return;
     }
-    const pts = props.spots.filter((s) => props.visible.has(s.id) && (props.area === "all" || s.area === props.area)).map((s) => s.coords);
-    const area = props.area === "all" ? null : props.areas.find((a) => a.id === props.area) ?? null;
+    if (props.focusId) {
+      const s = props.spots.find((x) => x.id === props.focusId);
+      if (s) m.flyTo(s.coords, Math.max(m.getZoom(), 15), { duration: 0.6 });
+      return;
+    }
+    const pts = props.spots.filter((s) => props.visible.has(s.id)).map((s) => s.coords);
     if (pts.length >= 2) {
-      const small = m.getSize().x < 600;
-      const pad = small ? 36 : 80;
-      // leave headroom for the big neighborhood title in the top-left
+      const pad = small ? 44 : 80;
       m.flyToBounds(L.latLngBounds(pts), {
         ...opts,
-        paddingTopLeft: [pad, small ? 110 : 190],
-        paddingBottomRight: [pad, small ? 30 : 70],
-        maxZoom: area ? area.zoom + 0.4 : 15,
+        paddingTopLeft: [pad, top],
+        paddingBottomRight: [pad, small ? (props.topPad ? 150 : 30) : 70],
+        maxZoom: props.frame.maxZoom,
       });
     } else if (pts.length === 1) {
-      m.flyTo(pts[0], area ? area.zoom : 15.5, opts);
-    } else if (area) {
-      m.flyTo(area.center, area.zoom, opts);
+      m.flyTo(pts[0], Math.min(16, props.frame.maxZoom), opts);
     } else {
-      m.flyTo(props.city.center, props.city.zoom, opts);
+      m.flyTo(props.frame.center, props.frame.zoom, opts);
     }
-  }, [props.selectedId, props.visible, props.area, props.spots, props.areas, props.city]);
+  };
+  useEffect(() => {
+    aim.current();
+  }, [props.selectedId, props.focusId, props.visible, props.area, props.spots, props.frame, props.topPad]);
 
   return <div ref={el} className="leaflet-host" aria-label={`Map of ${props.city.name} restaurants`} />;
 }

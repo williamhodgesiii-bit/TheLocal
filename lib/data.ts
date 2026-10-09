@@ -28,8 +28,20 @@ export interface Genre {
   tagline: string;
 }
 
+export type TownId = "birmingham" | "homewood" | "mountain-brook" | "vestavia-hills";
+
+export interface Town {
+  id: TownId;
+  label: string;
+  center: [number, number];
+  zoom: number;
+  blurb: string;
+}
+
 export interface Area {
   id: AreaId;
+  /** municipality the neighborhood belongs to */
+  town?: TownId;
   label: string;
   center: [number, number];
   zoom: number;
@@ -64,6 +76,8 @@ export interface Spot {
   addedBy?: string;
   /** when our team verified it exists */
   verifiedAt?: string;
+  /** openly licensed photos of this exact place (shown before stock imagery) */
+  photos?: { url: string; kind: "building" | "food"; credit: string; link: string }[];
 }
 
 export const GENRES: Genre[] = [
@@ -88,17 +102,30 @@ export const DRINK_KINDS: { id: DrinkKind; label: string }[] = [
   { id: "bar", label: "Bars & Pubs" },
 ];
 
-export const AREAS: Area[] = [
-  { id: "downtown", label: "Downtown", center: [33.5155, -86.8085], zoom: 15, blurb: "Loft district, Morris Avenue, the old storefronts on Second Avenue North.", labelAt: [33.5212, -86.8165] },
-  { id: "southside", label: "Southside & Five Points", center: [33.5008, -86.7935], zoom: 15.25, blurb: "Five Points South, the fountain, and the restaurants along Highland Avenue.", labelAt: [33.4972, -86.8030] },
-  { id: "lakeview", label: "Lakeview & Pepper Place", center: [33.5150, -86.7925], zoom: 15.5, blurb: "Old warehouses turned into breweries and restaurants. The farmers market runs Saturdays.", labelAt: [33.5098, -86.7838] },
-  { id: "avondale", label: "Avondale", center: [33.5250, -86.7760], zoom: 15.75, blurb: "41st Street South and the park.", labelAt: [33.5292, -86.7738] },
-  { id: "homewood", label: "Homewood", center: [33.4705, -86.8060], zoom: 14.75, blurb: "Over the mountain. 18th Street, SoHo Square and Edgewood.", labelAt: [33.4800, -86.8160] },
-  { id: "englishvillage", label: "English Village", center: [33.4936, -86.7740], zoom: 17, blurb: "A few blocks of Cahaba Road with a bakery on the corner.", labelAt: [33.4978, -86.7742] },
-  { id: "mtnbrook", label: "Mountain Brook Village", center: [33.4846, -86.7534], zoom: 17, blurb: "Cahaba Road shops, a soda fountain, and the pizza place.", labelAt: [33.4803, -86.7534] },
-  { id: "crestline", label: "Crestline Village", center: [33.4936, -86.7322], zoom: 17, blurb: "A small village center with a coffee shop and a couple of restaurants.", labelAt: [33.4978, -86.7322] },
-  { id: "cahaba", label: "Cahaba Heights", center: [33.4620, -86.7275], zoom: 15.75, blurb: "Barbecue and patios off Cahaba Heights Road.", labelAt: [33.4542, -86.7275] },
+/** The towns we cover today. Expansion: add towns here, or whole cities in lib/regions.ts. */
+export const TOWNS: Town[] = [
+  { id: "birmingham", label: "Birmingham", center: [33.512, -86.795], zoom: 13.6, blurb: "Downtown, Southside, Lakeview and Avondale." },
+  { id: "homewood", label: "Homewood", center: [33.4715, -86.806], zoom: 14.6, blurb: "Over the mountain. 18th Street, SoHo, Edgewood and West Homewood." },
+  { id: "mountain-brook", label: "Mountain Brook", center: [33.4885, -86.7535], zoom: 14.4, blurb: "Three villages: Mountain Brook Village, English Village and Crestline." },
+  { id: "vestavia-hills", label: "Vestavia Hills", center: [33.452, -86.765], zoom: 13.6, blurb: "Cahaba Heights, Highway 31 and Rocky Ridge." },
 ];
+
+export const AREAS: Area[] = [
+  { id: "downtown", town: "birmingham", label: "Downtown", center: [33.5155, -86.8085], zoom: 15, blurb: "Loft district, Morris Avenue, the old storefronts on Second Avenue North.", labelAt: [33.5212, -86.8165] },
+  { id: "southside", town: "birmingham", label: "Southside & Five Points", center: [33.5008, -86.7935], zoom: 15.25, blurb: "Five Points South, the fountain, and the restaurants along Highland Avenue.", labelAt: [33.4972, -86.8030] },
+  { id: "lakeview", town: "birmingham", label: "Lakeview & Pepper Place", center: [33.515, -86.7925], zoom: 15.5, blurb: "Old warehouses turned into breweries and restaurants. The farmers market runs Saturdays.", labelAt: [33.5098, -86.7838] },
+  { id: "avondale", town: "birmingham", label: "Avondale", center: [33.525, -86.776], zoom: 15.75, blurb: "41st Street South and the park.", labelAt: [33.5292, -86.7738] },
+  { id: "homewood", town: "homewood", label: "Downtown Homewood", center: [33.4755, -86.8008], zoom: 16, blurb: "18th Street and SoHo Square.", labelAt: [33.4795, -86.8045] },
+  { id: "edgewood", town: "homewood", label: "Edgewood", center: [33.4665, -86.8085], zoom: 16.4, blurb: "A few blocks of Oxmoor Road with two ice cream shops on the same corner.", labelAt: [33.4635, -86.8085] },
+  { id: "west-homewood", town: "homewood", label: "West Homewood", center: [33.466, -86.818], zoom: 14.8, blurb: "Oxmoor Road west of downtown, out toward Patriot Park.", labelAt: [33.4595, -86.8205] },
+  { id: "mtnbrook", town: "mountain-brook", label: "Mountain Brook Village", center: [33.4842, -86.7532], zoom: 16.6, blurb: "Cahaba Road, Culver Road and Lane Parke.", labelAt: [33.4800, -86.7534] },
+  { id: "englishvillage", town: "mountain-brook", label: "English Village", center: [33.4936, -86.774], zoom: 17, blurb: "A few blocks of Cahaba Road with a bakery on the corner.", labelAt: [33.4978, -86.7742] },
+  { id: "crestline", town: "mountain-brook", label: "Crestline Village", center: [33.4936, -86.7322], zoom: 17, blurb: "Church Street, a coffee shop and bookstore, and the original Taco Mama.", labelAt: [33.4978, -86.7322] },
+  { id: "cahaba", town: "vestavia-hills", label: "Cahaba Heights", center: [33.462, -86.7275], zoom: 15.75, blurb: "Barbecue, patios and the Heights Village shops.", labelAt: [33.4542, -86.7275] },
+  { id: "vestavia-31", town: "vestavia-hills", label: "Highway 31", center: [33.448, -86.79], zoom: 14.8, blurb: "Montgomery Highway, from the City Center down past the library.", labelAt: [33.4525, -86.7985] },
+  { id: "rocky-ridge", town: "vestavia-hills", label: "Rocky Ridge", center: [33.4225, -86.7975], zoom: 16, blurb: "A small strip of local spots on Rocky Ridge Road.", labelAt: [33.4192, -86.7975] },
+];
+export const TOWN_BY_ID = Object.fromEntries(TOWNS.map((t) => [t.id, t])) as Record<TownId, Town>;
 
 /* ------------------------------------------------------------------ */
 /* Birmingham's downtown grid is rotated ~35°. Avenues run SW→NE,       */
@@ -364,6 +391,14 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     knownFor: "Greek-and-three & keftedes",
     blurb: "Timothy Hontzas's meat-and-three, with Greek dishes alongside the Southern ones. He's been up for James Beard awards. Lunch line moves fast.",
     tags: ["meat-and-three", "James Beard", "lunch"], pop: 91,
+    photos: [
+      {
+        url: "https://commons.wikimedia.org/wiki/Special:FilePath/Johnny%27s_Greek_And_Three%2C_Homewood%2C_AL.jpg?width=1200",
+        kind: "building",
+        credit: "Paul Lowry, CC BY 2.0",
+        link: "https://commons.wikimedia.org/wiki/File:Johnny%27s_Greek_And_Three,_Homewood,_AL.jpg",
+      },
+    ],
   },
   {
     id: "little-donkey", name: "Little Donkey", genres: ["latin"], area: "homewood",
@@ -387,36 +422,36 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["patio", "groups", "happy hour"], pop: 68,
   },
   {
-    id: "saws-bbq", name: "Saw's BBQ", genres: ["bbq"], area: "homewood",
+    id: "saws-bbq", name: "Saw's BBQ", genres: ["bbq"], area: "edgewood",
     address: "1008 Oxmoor Rd", coords: [33.4655, -86.8098], price: 1,
     knownFor: "Smoked chicken with white sauce",
     blurb: "The first Saw's, a small room on Oxmoor Road. Smoked chicken with white sauce.",
     tags: ["white sauce", "counter service", "original"], pop: 86,
   },
   {
-    id: "gianmarcos", name: "GianMarco's", genres: ["italian", "chefs"], area: "homewood",
+    id: "gianmarcos", name: "GianMarco's", genres: ["italian", "chefs"], area: "edgewood",
     address: "721 Broadway St", coords: [33.4689, -86.8070], price: 3,
     knownFor: "Old-world Italian & a deep wine list",
     blurb: "Family-run Italian with tablecloths, nightly specials and a big wine list.",
     tags: ["date night", "wine", "family-owned"], pop: 82,
   },
   {
-    id: "nabeels", name: "Nabeel's Cafe & Market", genres: ["mediterranean"], area: "homewood",
+    id: "nabeels", name: "Nabeel's Cafe & Market", genres: ["mediterranean"], area: "west-homewood",
     address: "1706 Oxmoor Rd", coords: [33.4610, -86.8172], price: 2,
     knownFor: "Greek market & cafe since 1972",
     blurb: "Greek and Italian grocery with a small cafe in back, open since 1972. Pick up feta and olives on the way out.",
     tags: ["market", "family-owned", "lunch"], pop: 74,
   },
   {
-    id: "seeds-coffee", name: "Seeds Coffee", genres: ["coffee"], area: "homewood",
+    id: "seeds-coffee", name: "Seeds Coffee", genres: ["coffee"], area: "west-homewood",
     address: "174 Oxmoor Rd", coords: [33.4716, -86.8036], price: 1,
     knownFor: "Homewood-roasted espresso",
     blurb: "Roaster in downtown Homewood. Lots of plants, comfortable chairs.",
     tags: ["roaster", "work-friendly"], pop: 64,
   },
   {
-    id: "edgewood-creamery", name: "Edgewood Creamery", genres: ["sweets"], area: "homewood",
-    address: "910 Oxmoor Rd", coords: [33.4664, -86.8086], price: 1,
+    id: "edgewood-creamery", name: "Edgewood Creamery", genres: ["sweets"], area: "edgewood",
+    address: "936 Oxmoor Rd", coords: [33.4661, -86.8091], price: 1,
     knownFor: "Old-fashioned scoops in Edgewood",
     blurb: "Old-fashioned ice cream shop in Edgewood. Get a cone and walk the neighborhood.",
     tags: ["ice cream", "family"], pop: 66,
@@ -491,6 +526,214 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     knownFor: "Latin plates & a heated patio",
     blurb: "Latin American food, a busy bar, and a patio they heat in the winter.",
     tags: ["patio", "cocktails"], pop: 69,
+  },
+  /* ------------------------- HOMEWOOD (added) ------------------------- */
+  {
+    id: "salice", name: "Salice", genres: ["italian"], area: "homewood",
+    address: "1722 28th Ave S", coords: [33.4772, -86.8033], price: 3,
+    knownFor: "Handmade pasta",
+    blurb: "Italian bistro in downtown Homewood, run by chef Rita Bernhardt. It used to be Luca Lagotto; same kitchen, new name and owners.",
+    tags: ["pasta", "date night"], pop: 74,
+  },
+  {
+    id: "zozos-kitchen", name: "ZOZO's Kitchen", genres: ["mediterranean"], area: "homewood",
+    address: "1830 29th Ave S, Suite 115", coords: [33.4742, -86.8016], price: 2,
+    knownFor: "Greek salads and chicken kabobs",
+    blurb: "The Cassimus family started the original Zoe's Kitchen in Homewood. This is them again, independent and family owned, in the same SoHo space.",
+    tags: ["family-owned", "lunch"], pop: 70,
+  },
+  {
+    id: "red-mountain-espresso", name: "Red Mountain Espresso", genres: ["coffee"], area: "homewood",
+    address: "2601 18th St S", coords: [33.4786, -86.7984], price: 1,
+    knownFor: "Espresso on the way to work",
+    blurb: "Coffee bar at the top of 18th Street. Opens early on weekdays.",
+    tags: ["early", "to go"], pop: 60,
+  },
+  {
+    id: "caveat-coffee", name: "Caveat Coffee", genres: ["coffee"], area: "homewood",
+    address: "2832 Linden Ave", coords: [33.4757, -86.8027], price: 1,
+    knownFor: "Pour-overs off the main drag",
+    blurb: "Small coffee shop a block off 18th Street, with a drive-through window if you're in a hurry.",
+    tags: ["drive-through", "quiet"], pop: 58,
+  },
+  {
+    id: "big-spoon-edgewood", name: "Big Spoon Creamery (Edgewood)", genres: ["sweets"], area: "edgewood",
+    address: "927 Oxmoor Rd", coords: [33.4663, -86.8087], price: 1,
+    knownFor: "Ice cream sandwiches",
+    blurb: "The Edgewood shop from the Big Spoon folks, right across the street from Edgewood Creamery. Try both and pick a side.",
+    tags: ["ice cream", "family"], pop: 76,
+  },
+  {
+    id: "el-barrio-homewood", name: "El Barrio", genres: ["latin", "drinks"], drinks: ["cocktails"], area: "west-homewood",
+    address: "195 Oxmoor Rd", coords: [33.4708, -86.8048], price: 2,
+    knownFor: "Mexican-Southern plates and margaritas",
+    blurb: "The downtown Birmingham favorite, now in Homewood's West Row development. Mexican and Southern cooking mixed together.",
+    tags: ["margaritas", "groups"], pop: 75,
+  },
+  {
+    id: "daily-edition", name: "The Daily Edition", genres: ["coffee", "brunch"], area: "west-homewood",
+    address: "186 Oxmoor Rd, Suite 116", coords: [33.4712, -86.8042], price: 1,
+    knownFor: "Coffee and a breakfast sandwich",
+    blurb: "Neighborhood coffee shop in West Homewood. Good for an early meeting.",
+    tags: ["breakfast", "work-friendly"], pop: 60,
+  },
+  {
+    id: "pizzeria-gm", name: "Pizzeria GM", genres: ["italian"], area: "west-homewood",
+    address: "600 Oak Grove Rd", coords: [33.4571, -86.8268], price: 2,
+    knownFor: "Neapolitan-style pies",
+    blurb: "Italian bistro next to Patriot Park from the GianMarco's family. More on the menu than pizza.",
+    tags: ["pizza", "kid-friendly"], pop: 72,
+  },
+
+  /* ---------------------- MOUNTAIN BROOK (added) ---------------------- */
+  {
+    id: "little-betty", name: "Little Betty Steak Bar", genres: ["chefs"], area: "mtnbrook",
+    address: "321 Rele St, Suite E8", coords: [33.4833, -86.7527], price: 4,
+    knownFor: "Steaks with Italian and Japanese touches",
+    blurb: "Steakhouse and bar in Lane Parke. Dressed up but not stiff.",
+    tags: ["steak", "date night", "Lane Parke"], pop: 84,
+  },
+  {
+    id: "seabar", name: "SeaBar", genres: ["seafood", "drinks"], drinks: ["cocktails"], area: "mtnbrook",
+    address: "1011 Jemison Ln", coords: [33.4831, -86.7522], price: 3,
+    knownFor: "Raw bar and crudo",
+    blurb: "Seafood bar next door to Little Betty, from the same group. Sit at the bar and order oysters.",
+    tags: ["oysters", "Lane Parke"], pop: 72,
+  },
+  {
+    id: "charbar-no-7", name: "CharBar No. 7", genres: ["southern"], area: "mtnbrook",
+    address: "900 Jemison Ln", coords: [33.4826, -86.7518], price: 3,
+    knownFor: "Burgers and steaks",
+    blurb: "Lane Parke grill that can go either way: a burger at the bar or a steak dinner.",
+    tags: ["burgers", "patio", "Lane Parke"], pop: 74,
+  },
+  {
+    id: "locanda-brasato", name: "Locanda Brasato", genres: ["italian", "chefs"], area: "mtnbrook",
+    address: "270 Rele St", coords: [33.4838, -86.7533], price: 3,
+    knownFor: "Slow-braised Italian",
+    blurb: "Opened in 2026 in the old Post Office Pies space in Lane Parke, from the owners of Lé Fresca downtown. Braises and long-cooked sauces.",
+    tags: ["new", "pasta", "Lane Parke"], pop: 76,
+  },
+  {
+    id: "rougaroux", name: "The Rougaroux", genres: ["seafood", "southern"], area: "mtnbrook",
+    address: "2716 Culver Rd", coords: [33.4844, -86.7516], price: 2,
+    knownFor: "Gumbo and po'boys",
+    blurb: "Cajun and Creole food in Mountain Brook Village, in the old Sneaky Pete's building. The original is in Forest Park.",
+    tags: ["New Orleans", "lunch"], pop: 74,
+  },
+  {
+    id: "woodys", name: "Woody's Food + Bar", genres: ["drinks", "southern"], drinks: ["bar"], area: "mtnbrook",
+    address: "2721 Cahaba Rd, Suite A", coords: [33.4850, -86.7547], price: 2,
+    knownFor: "Burgers and trivia night",
+    blurb: "New in 2026 in the space that used to be Carrigan's Mountain Brook. Comfort food and a neighborhood bar.",
+    tags: ["new", "trivia", "bar food"], pop: 62,
+  },
+  {
+    id: "abhi", name: "Abhi Eatery & Bar", genres: ["asian"], area: "mtnbrook",
+    address: "2721 Cahaba Rd (upstairs)", coords: [33.4851, -86.7549], price: 3,
+    knownFor: "Pan-Asian small plates",
+    blurb: "Upstairs on Cahaba Road in Mountain Brook Village. Curries, dumplings and a good cocktail list.",
+    tags: ["date night", "cocktails"], pop: 70,
+  },
+  {
+    id: "cala-coffee-mb", name: "Cala Coffee", genres: ["coffee"], area: "mtnbrook",
+    address: "2409 Montevallo Rd", coords: [33.4869, -86.7571], price: 1,
+    knownFor: "House-roasted lattes",
+    blurb: "A Birmingham roaster that started with a cart. This is their newest cafe, in Mountain Brook Village.",
+    tags: ["roaster", "new"], pop: 64,
+  },
+  {
+    id: "golden-age-wine", name: "Golden Age Wine", genres: ["drinks"], drinks: ["wine"], area: "mtnbrook",
+    address: "2828 Culver Rd", coords: [33.4846, -86.7509], price: 2,
+    knownFor: "A bottle shop you can drink in",
+    blurb: "Wine shop with a bar. Pick something off the shelf and have a glass.",
+    tags: ["wine shop", "after work"], pop: 62,
+  },
+  {
+    id: "bongiorno", name: "Bongiorno", genres: ["italian"], area: "crestline",
+    address: "68A Church St", coords: [33.4943, -86.7319], price: 2,
+    knownFor: "Red-sauce Italian since 1988",
+    blurb: "Family-owned Italian in the middle of Crestline Village. Same family, same kind of menu, for more than thirty years.",
+    tags: ["family-owned", "classic"], pop: 70,
+  },
+  {
+    id: "crestline-bagel", name: "Crestline Bagel Co.", genres: ["brunch"], area: "crestline",
+    address: "66-B Church St", coords: [33.4942, -86.7318], price: 1,
+    knownFor: "Bagels and a coffee across the street",
+    blurb: "Bagel shop on Church Street. Get one to go and walk over to the bookstore.",
+    tags: ["breakfast", "to go"], pop: 70,
+  },
+  {
+    id: "taco-mama-crestline", name: "Taco Mama (Crestline)", genres: ["latin"], area: "crestline",
+    address: "63 Church St", coords: [33.4940, -86.7315], price: 1,
+    knownFor: "The original Taco Mama",
+    blurb: "Before there were Taco Mamas all over the state, there was this one on Church Street.",
+    tags: ["tacos", "original", "kid-friendly"], pop: 72,
+  },
+
+  /* ---------------------- VESTAVIA HILLS (added) ---------------------- */
+  {
+    id: "foodbar", name: "FoodBar", genres: ["chefs", "southern"], area: "cahaba",
+    address: "3156 Heights Village", coords: [33.4627, -86.7301], price: 3,
+    knownFor: "Farm-driven Southern plates",
+    blurb: "Chef George McMillian's place in The Heights Village. The menu leans on Alabama farms.",
+    tags: ["date night", "seasonal"], pop: 78,
+  },
+  {
+    id: "brick-and-tin-cahaba", name: "Brick & Tin (Cahaba Heights)", genres: ["southern", "brunch"], area: "cahaba",
+    address: "3151 Green Valley Rd", coords: [33.4612, -86.7268], price: 2,
+    knownFor: "The brisket panini",
+    blurb: "Opened March 2026 in Market Square. Bar, patio and a bakery case, same seasonal menu as downtown.",
+    tags: ["new", "patio", "bakery"], pop: 72,
+  },
+  {
+    id: "mudtown", name: "Mudtown Eat & Drink", genres: ["southern", "drinks"], drinks: ["bar"], area: "cahaba",
+    address: "3144 Green Valley Rd", coords: [33.4609, -86.7273], price: 2,
+    knownFor: "A beer and a burger after the game",
+    blurb: "Cahaba Heights bar and grill where the neighborhood shows up on a Friday.",
+    tags: ["sports", "groups"], pop: 68,
+  },
+  {
+    id: "bistro-v", name: "Bistro V", genres: ["chefs", "drinks"], drinks: ["wine"], area: "vestavia-31",
+    address: "521 Montgomery Hwy, Suite 113", coords: [33.4562, -86.7861], price: 3,
+    knownFor: "French-Southern dinner and a wine list",
+    blurb: "Vestavia Hills' dinner spot for a birthday or an anniversary, in the City Center. Open more than sixteen years.",
+    tags: ["date night", "wine"], pop: 76,
+  },
+  {
+    id: "diplomat-deli", name: "Diplomat Deli", genres: ["southern"], area: "vestavia-31",
+    address: "1425 Montgomery Hwy, Suite 101", coords: [33.4392, -86.7943], price: 1,
+    knownFor: "The Reuben",
+    blurb: "Old-school deli in Park South Plaza. Its Reuben made the state's 100 Dishes to Eat in Alabama list.",
+    tags: ["sandwiches", "lunch", "classic"], pop: 74,
+  },
+  {
+    id: "kool-korner", name: "Kool Korner Sandwiches", genres: ["latin"], area: "vestavia-31",
+    address: "1360 Montgomery Hwy, Suite 106", coords: [33.4406, -86.7935], price: 1,
+    knownFor: "Cuban sandwiches",
+    blurb: "Pressed Cubans and Caribbean plates on Highway 31. Mostly a lunch place, so check hours.",
+    tags: ["sandwiches", "lunch"], pop: 70,
+  },
+  {
+    id: "the-well-co", name: "The Well & Co.", genres: ["coffee"], area: "vestavia-31",
+    address: "1425 Montgomery Hwy", coords: [33.4394, -86.7941], price: 1,
+    knownFor: "Coffee bar inside a home shop",
+    blurb: "Coffee and home goods, started by three friends who met at church. Opened summer 2026.",
+    tags: ["new", "shop"], pop: 56,
+  },
+  {
+    id: "iz-cafe", name: "Iz Cafe", genres: ["brunch", "sweets"], area: "rocky-ridge",
+    address: "2514 Rocky Ridge Rd", coords: [33.4226, -86.7978], price: 1,
+    knownFor: "Soup, sandwich and dessert",
+    blurb: "Longtime lunch spot on Rocky Ridge. Save room for the cake case.",
+    tags: ["lunch", "desserts"], pop: 64,
+  },
+  {
+    id: "napoli", name: "Napoli Italian Restaurant & Pizza", genres: ["italian"], area: "rocky-ridge",
+    address: "2516 Rocky Ridge Rd", coords: [33.4224, -86.7975], price: 2,
+    knownFor: "Pizza and baked pastas",
+    blurb: "Neighborhood Italian next door to Iz Cafe. Good for takeout on a weeknight.",
+    tags: ["pizza", "family"], pop: 60,
   },
 ];
 

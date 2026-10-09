@@ -49,7 +49,7 @@ export default function Providers({ children }: { children: ReactNode }) {
 
   const toast = useCallback((text: string, tone?: Toast["tone"]) => {
     const id = ++tid.current;
-    setToasts((t) => [...t, { id, text, tone }]);
+    setToasts([{ id, text, tone }]); // newest replaces the last; no stacking over content
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200);
   }, []);
 

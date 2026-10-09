@@ -10,6 +10,33 @@ Pick what sounds good and what part of town, and the map of Birmingham follows a
 - **Surprise me**: picks a place, weighted toward the well-loved ones. It can stay inside your current picks.
 - **Keyboard**: `/` search · `↑/↓` browse · `Esc` back · `S` surprise.
 
+## Coverage today
+
+The **Birmingham area**, by town: Birmingham (Downtown, Southside, Lakeview, Avondale), **Homewood** (downtown/SoHo, Edgewood, West Homewood), **Mountain Brook** (Mountain Brook Village and Lane Parke, English Village, Crestline) and **Vestavia Hills** (Cahaba Heights, Highway 31, Rocky Ridge).
+- About 80 locally owned places. They were checked against local news (Homewood Star, Village Living, Vestavia Voice, Bham Now) in October 2026. Known closures were left off: Satterfield's, Sol y Luna, the Lane Parke Post Office Pies, DeVinci's and Iron City Pizza.
+- **Before launch**, run `npm run geocode` with a Google key. It prints any place Google lists as closed, so you can confirm the rest.
+- Other Alabama cities are already defined in `lib/regions.ts` with status `"later"`. To open one, change it to `"founding"` (members add places, staff verify) or `"live"`.
+
+## Phones first
+
+On a phone the site works like an app. A bottom tab bar has **Menu · Map · Surprise me · Add · You**.
+- **Menu**: the choices become rows you swipe sideways.
+- **Map**: full screen, with swipeable place cards that steer the map.
+- **Opening a place**: the place page sits under a strip of map with the pin on it.
+- **Forms**: open as sheets from the bottom.
+- **Home screen**: it can be added as an app (manifest and app icon included).
+- **You** (`/me`): your reviews, photos, the places you've added and their status, and saved places. You can also edit your name and sign out.
+
+## Real photos
+
+Photos come from these sources, in this order:
+1. Member uploads.
+2. Openly licensed photos credited on the page. Johnny's has one, Paul Lowry, CC BY 2.0, via Wikimedia Commons; add more in a spot's `photos` field in `lib/data.ts`.
+3. **Google Places photos** of the building and the food, once `GOOGLE_PLACES_API_KEY` is set. `npm run geocode` also saves each place's Google ID, so photo lookups are a single cheap call.
+4. The drawn storefront and labeled stock photos.
+
+Photos copied off restaurants' websites or Instagram aren't used. They're copyrighted.
+
 ## Community spots & verification
 
 - **Add a spot**: any signed-in member can submit a place they've been to, from the top bar, the "Know a spot we're missing?" card, or a founding city's banner. The form asks for name, genres, price, address and a pin, neighborhood, "known for", a description, optional website, phone and storefront photo, and two confirmations (*I've been here* and *it's independent*).

@@ -190,8 +190,8 @@ export default function SubmitSpot({
                 </motion.p>
                 <h2 className="modal-title">Got it. Thanks.</h2>
                 <p className="muted">
-                  One of us will make sure <strong>{name}</strong> is real, open and locally owned. That usually takes a day or two. You can check on it under
-                  <em> Places you&apos;ve added</em> in your account menu. Once it&apos;s checked, it goes on the {city.name} map with your name on it.
+                  One of us will make sure <strong>{name}</strong> is real, open and locally owned. That usually takes a day or two. You can check on it on your page, under
+                  <em> Added</em>. Once it&apos;s checked, it goes on the map with your name on it.
                 </p>
                 <button className="btn btn-green" onClick={onClose}>
                   Back to the map
@@ -199,7 +199,7 @@ export default function SubmitSpot({
               </div>
             ) : (
               <form onSubmit={submit} className="form submit-form">
-                <h2 className="modal-title">Add a place in {city.name}</h2>
+                <h2 className="modal-title">Add a place</h2>
                 <p className="muted small">Locally owned places only, no chains and no fast food. We check every one before it goes up.</p>
 
                 <fieldset>
