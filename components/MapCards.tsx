@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { areaLabelOf, priceLabel, type Spot } from "@/lib/data";
+import { Thumb } from "./Photo";
 
 /**
  * Mobile map tab: a swipeable strip of cards along the bottom of the map.
@@ -51,7 +52,10 @@ export default function MapCards({
     <div className="map-cards" ref={strip} onScroll={onScroll}>
       {list.map((s, i) => (
         <button key={s.id} data-id={s.id} className={`mcard ${focusId === s.id ? "on" : ""}`} onClick={() => onOpen(s.id)}>
-          <span className="item-no">{i + 1}</span>
+          <span className="mcard-pic">
+            <Thumb spot={s} w={84} />
+            <span className="item-no">{i + 1}</span>
+          </span>
           <span className="mcard-body">
             <span className="mcard-name">{s.name}</span>
             <span className="item-known">{s.knownFor}</span>

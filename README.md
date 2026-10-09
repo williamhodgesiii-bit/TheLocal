@@ -31,9 +31,11 @@ On a phone the site works like an app. A bottom tab bar has **Menu · Map · Sur
 
 Photos come from these sources, in this order:
 1. Member uploads.
-2. Openly licensed photos credited on the page. Johnny's has one, Paul Lowry, CC BY 2.0, via Wikimedia Commons; add more in a spot's `photos` field in `lib/data.ts`.
+2. Openly licensed photos taken at the place itself (Johnny's, Good People), credited on the page. Add more in `PLACE_PHOTOS` in `lib/photos.ts`.
 3. **Google Places photos** of the building and the food, once `GOOGLE_PLACES_API_KEY` is set. `npm run geocode` also saves each place's Google ID, so photo lookups are a single cheap call.
-4. The drawn storefront and labeled stock photos.
+4. The drawn storefront, plus **stock photos of the dishes each place is known for**. About 50 photos were hand-picked from Wikimedia Commons, all licensed for commercial use (CC0, public domain, CC BY, CC BY-SA). Each place is mapped to its own dishes in `lib/photos.ts`: white sauce chicken at Saw's, shrimp and grits at Dyron's, a Cubano at Kool Korner. Member-added places fall back to their kind of food. Stock photos carry a yellow **stock** tag and credit their photographer. Every one is listed on `/credits`.
+
+Images are served at sizes that fit the screen (`srcset`), load lazily, and fade in once decoded. On a phone the food photos are a strip you swipe sideways. The viewer shows each photo whole, not cropped, and you can swipe between them.
 
 Photos copied off restaurants' websites or Instagram aren't used. They're copyrighted.
 
@@ -78,7 +80,7 @@ npm run dev
 
 All spots live in `lib/data.ts`. Each spot has a name, genres, area, address, price, "known for", a blurb, tags and a popularity score. Birmingham's rotated street grid is encoded there, so grid addresses (`onAveN(2013, 2)` = 2013 2nd Ave N) place themselves on the map. Pins are approximate until you run `npm run geocode`. **Before launch, check every spot is still open and the details are right.**
 
-Photos without a member or Google image fall back to two things. The storefront gets a procedurally drawn illustration, unique per spot. Food slots get representative Unsplash photography, labeled "Representative".
+Photos without a member or Google image fall back to two things. The storefront gets a procedurally drawn illustration, unique per spot. Food slots get labeled stock photos of that place's dishes (`lib/photos.ts`).
 
 ## Monetization built in
 

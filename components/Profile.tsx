@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { areaLabelOf, priceLabel, type Spot } from "@/lib/data";
 import type { Photo, Review, Submission } from "@/lib/backend";
 import { useApp } from "./Providers";
+import PhotoImg from "./Photo";
 import { Stars } from "./Stars";
 
 type Tab = "reviews" | "photos" | "added" | "saved";
@@ -157,8 +158,7 @@ export default function Profile({
               {photos.map((p) => (
                 <button key={p.id} className="snap snap-sm" onClick={() => onOpen(p.spotId)}>
                   <span className="snap-img">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.url} alt={`Your photo at ${spotById[p.spotId]?.name ?? "a place"}`} loading="lazy" />
+                    <PhotoImg src={p.url} alt={`Your photo at ${spotById[p.spotId]?.name ?? "a place"}`} />
                   </span>
                   <span className="snap-cap">{spotById[p.spotId]?.name ?? ""}</span>
                 </button>

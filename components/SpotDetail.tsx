@@ -5,17 +5,32 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { track } from "@vercel/analytics";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { GENRE_BY_ID, areaLabelOf, distanceKm, mapsUrl, priceLabel, type Spot } from "@/lib/data";
 import { hash } from "@/lib/images";
-import { representativePhotos } from "@/lib/images";
-import type { Photo, PhotoKind } from "@/lib/backend";
+import { PLACE_PHOTOS, commonsPage, commonsSrc, commonsSrcSet, dishesFor, shortDish } from "@/lib/photos";
+import type { Photo as MemberPhoto, PhotoKind } from "@/lib/backend";
 import { useApp } from "./Providers";
 import Storefront from "./Storefront";
 import Reviews from "./Reviews";
+import Photo from "./Photo";
 
 type GPhoto = { url: string; author: string; authorUri: string | null };
 type Places = { enabled: boolean; photos: GPhoto[]; rating?: number | null; ratingCount?: number | null; website?: string | null };
-type Slide = { key: string; kind: "svg" | "img"; url?: string; label: string; credit?: string; link?: string };
+type Slide = { key: string; kind: "svg" | "img"; url?: string; file?: string; label: string; alt: string; credit?: string; link?: string; stock?: boolean };
+
+const NONE: (typeof PLACE_PHOTOS)[string] = [];
+const fromCommons = (file: string, label: string, alt: string, author: string, license: string, stock = false): Slide => ({
+  key: file,
+  kind: "img",
+  url: commonsSrc(file, 960),
+  file,
+  label,
+  alt,
+  credit: `${author}, ${license}`,
+  link: commonsPage(file),
+  stock,
+});
 
 export default function SpotDetail({
   spot,
@@ -31,7 +46,7 @@ export default function SpotDetail({
   onSelect: (id: string) => void;
 }) {
   const { backend, requireAuth, toast, saved, toggleSaved } = useApp();
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photos, setPhotos] = useState<MemberPhoto[]>([]);
   const [places, setPlaces] = useState<Places | null>(null);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -56,28 +71,41 @@ export default function SpotDetail({
   }, [spot.id, backend]);
 
   // Building first, then food, the way you size a place up from the sidewalk.
+  // Real pictures of this place always beat stock; stock is labeled as such.
+  const real = PLACE_PHOTOS[spot.id] ?? NONE;
   const hero: Slide = useMemo(() => {
     const b = photos.find((p) => p.kind === "building");
-    if (b) return { key: b.id, kind: "img", url: b.url, label: "Out front", credit: `photo by ${b.userName}` };
+    if (b) return { key: b.id, kind: "img", url: b.url, label: "Out front", alt: `${spot.name} from the street`, credit: `photo by ${b.userName}` };
+    const r = real[0];
+    if (r) return fromCommons(r.file, r.caption, `${spot.name}: ${r.caption.toLowerCase()}`, r.author, r.license);
     const cc = spot.photos?.find((p) => p.kind === "building");
-    if (cc) return { key: cc.url, kind: "img", url: cc.url, label: "Out front", credit: cc.credit, link: cc.link };
+    if (cc) return { key: cc.url, kind: "img", url: cc.url, label: "Out front", alt: `${spot.name} from the street`, credit: cc.credit, link: cc.link };
     const gp = places?.photos?.[0];
-    if (gp) return { key: gp.url, kind: "img", url: gp.url, label: "Out front", credit: `via Google, ${gp.author}` };
-    return { key: "svg", kind: "svg", label: "Our sketch of the front" };
-  }, [photos, places, spot.photos]);
+    if (gp) return { key: gp.url, kind: "img", url: gp.url, label: "Out front", alt: `${spot.name}`, credit: `via Google, ${gp.author}` };
+    return { key: "svg", kind: "svg", label: "Our sketch of the front", alt: `Drawing of ${spot.name}` };
+  }, [photos, places, spot, real]);
 
   const food: Slide[] = useMemo(() => {
     const out: Slide[] = [];
     photos
       .filter((p) => p.url !== hero.url)
-      .forEach((p) => out.push({ key: p.id, kind: "img", url: p.url, label: p.caption || (p.kind === "food" ? "On the table" : p.kind === "vibe" ? "Inside" : "Out front"), credit: `photo by ${p.userName}` }));
+      .forEach((p) => {
+        const label = p.caption || (p.kind === "food" ? "On the table" : p.kind === "vibe" ? "Inside" : "Out front");
+        out.push({ key: p.id, kind: "img", url: p.url, label, alt: `${label} at ${spot.name}`, credit: `photo by ${p.userName}` });
+      });
+    real
+      .filter((r) => r.file !== hero.file)
+      .forEach((r) => out.push(fromCommons(r.file, r.caption, `${spot.name}: ${r.caption.toLowerCase()}`, r.author, r.license)));
     places?.photos?.slice(hero.key === places.photos[0]?.url ? 1 : 0).forEach((p) =>
-      out.push({ key: p.url, kind: "img", url: p.url, label: "Photo", credit: `via Google, ${p.author}` })
+      out.push({ key: p.url, kind: "img", url: p.url, label: "Photo", alt: `${spot.name}`, credit: `via Google, ${p.author}` })
     );
+    // the dishes it's known for, in stock photos, until members fill the wall
     if (out.length < 3)
-      representativePhotos(spot, 3 - out.length).forEach((u, i) => out.push({ key: u + i, kind: "img", url: u, label: "Stock photo", credit: "Unsplash, not taken here" }));
+      dishesFor(spot)
+        .slice(0, 3 - out.length)
+        .forEach((d) => out.push(fromCommons(d.file, shortDish(d), `Stock photo of ${d.dish}, not taken at ${spot.name}`, d.author, d.license, true)));
     return out;
-  }, [photos, places, hero, spot]);
+  }, [photos, places, hero, spot, real]);
 
   const slides = useMemo(() => [hero, ...food], [hero, food]);
 
@@ -211,7 +239,7 @@ export default function SpotDetail({
       {/* building, then food */}
       <div className="snaps">
         <figure className="snap snap-hero" onClick={() => setLightbox(0)}>
-          <div className="snap-img">{hero.kind === "svg" ? <Storefront spot={spot} /> : <Img src={hero.url!} alt={`${spot.name} from the street`} spot={spot} />}</div>
+          <div className="snap-img">{hero.kind === "svg" ? <Storefront spot={spot} /> : <SlideImg s={hero} spot={spot} sizes="(max-width: 900px) 100vw, 460px" eager />}</div>
           <figcaption>
             {hero.label}
             {hero.credit &&
@@ -227,16 +255,23 @@ export default function SpotDetail({
               ))}
           </figcaption>
         </figure>
-        <div className="snap-row">
-          {food.slice(0, 4).map((x, i) => (
-            <figure key={x.key} className="snap snap-sm" onClick={() => setLightbox(i + 1)}>
+        <div className="snap-row" data-count={Math.min(food.length, 6)}>
+          {food.slice(0, 6).map((x, i) => (
+            <figure key={x.key} className={`snap snap-sm ${x.stock ? "is-stock" : ""}`} onClick={() => setLightbox(i + 1)}>
               <div className="snap-img">
-                <Img src={x.url!} alt={x.label} spot={spot} />
+                <SlideImg s={x} spot={spot} sizes="(max-width: 900px) 46vw, 150px" />
+                {x.stock && <span className="stock-tag">stock</span>}
               </div>
               <figcaption>{x.label}</figcaption>
             </figure>
           ))}
         </div>
+        {food.some((x) => x.stock) && (
+          <p className="stock-note">
+            Marked <span className="stock-tag">stock</span>: what they&rsquo;re known for, photographed somewhere else. Swapped out as members post the real thing.{" "}
+            <Link href="/credits">Photo credits</Link>
+          </p>
+        )}
         <p className="snap-add">
           Been here? <button className="textbtn" onClick={() => startUpload(hero.kind === "svg" ? "building" : "food")} disabled={uploading}>
             {uploading ? "uploading…" : hero.kind === "svg" ? "Add a real photo of the front" : "Add your photos"}
@@ -307,49 +342,105 @@ function safeUrl(u?: string) {
   }
 }
 
-function Img({ src, alt, spot }: { src: string; alt: string; spot: Spot }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
-    const g = GENRE_BY_ID[spot.genres[0]];
-    return (
-      <span className="img-fallback" style={{ ["--c" as string]: g.color }}>
-        <span>{g.label}</span>
-      </span>
-    );
-  }
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={alt} loading="lazy" decoding="async" onError={() => setFailed(true)} />;
+function SlideImg({ s, spot, sizes, eager }: { s: Slide; spot: Spot; sizes: string; eager?: boolean }) {
+  return (
+    <Photo
+      src={s.url!}
+      srcSet={s.file ? commonsSrcSet(s.file) : undefined}
+      sizes={s.file ? sizes : undefined}
+      alt={s.alt}
+      genre={spot.genres[0]}
+      eager={eager}
+    />
+  );
 }
 
 function Lightbox({ slides, index, spot, onIndex, onClose }: { slides: Slide[]; index: number; spot: Spot; onIndex: (n: number) => void; onClose: () => void }) {
   const n = slides.length;
   const s = slides[index];
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const go = useCallback((d: number) => onIndex((index + d + n) % n), [index, n, onIndex]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") onIndex((index + 1) % n);
-      if (e.key === "ArrowLeft") onIndex((index - 1 + n) % n);
+      if (e.key === "ArrowRight") go(1);
+      if (e.key === "ArrowLeft") go(-1);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [index, n, onIndex, onClose]);
-  return (
-    <motion.div className="lightbox" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [go, onClose]);
+  // warm the neighbors so swiping feels instant
+  useEffect(() => {
+    [slides[(index + 1) % n], slides[(index - 1 + n) % n]].forEach((x) => {
+      if (x?.url) new Image().src = x.url;
+    });
+  }, [index, n, slides]);
+  // portaled: the detail panel animates with a transform, which would trap a fixed overlay inside it
+  return createPortal(
+    <motion.div
+      className="lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Photos of ${spot.name}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      onTouchStart={(e) => (touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY })}
+      onTouchEnd={(e) => {
+        const t = touch.current;
+        touch.current = null;
+        if (!t) return;
+        const dx = e.changedTouches[0].clientX - t.x;
+        const dy = e.changedTouches[0].clientY - t.y;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) go(dx < 0 ? 1 : -1);
+        else if (dy > 90 && Math.abs(dy) > Math.abs(dx) * 1.4) onClose();
+      }}
+    >
       <button className="icon-btn lb-x" aria-label="Close">
         <X size={20} />
       </button>
-      <button className="icon-btn lb-prev" aria-label="Previous" onClick={(e) => (e.stopPropagation(), onIndex((index - 1 + n) % n))}>
-        <ChevronLeft size={22} />
-      </button>
-      <motion.figure key={s.key} initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} onClick={(e) => e.stopPropagation()}>
-        {s.kind === "svg" ? <Storefront spot={spot} /> : <Img src={s.url!} alt={s.label} spot={spot} />}
+      {n > 1 && (
+        <button className="icon-btn lb-prev" aria-label="Previous" onClick={(e) => (e.stopPropagation(), go(-1))}>
+          <ChevronLeft size={22} />
+        </button>
+      )}
+      <motion.figure key={s.key} initial={{ scale: 0.97, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.18 }} onClick={(e) => e.stopPropagation()}>
+        <div className="lb-frame">{s.kind === "svg" ? <Storefront spot={spot} /> : <Photo src={s.url!} srcSet={s.file ? commonsSrcSet(s.file) : undefined} sizes="100vw" alt={s.alt} genre={spot.genres[0]} eager />}</div>
         <figcaption>
-          {s.label} {s.credit && <span className="credit">· {s.credit}</span>} <span className="lb-count">{index + 1} of {n}</span>
+          <span>
+            {s.stock ? "Stock photo: " : ""}
+            {s.label}
+            {s.credit && (
+              <span className="credit">
+                {" · "}
+                {s.link ? (
+                  <a href={s.link} target="_blank" rel="noreferrer">
+                    {s.credit}
+                  </a>
+                ) : (
+                  s.credit
+                )}
+              </span>
+            )}
+            {s.stock && <span className="credit"> · not taken at {spot.name}</span>}
+          </span>
+          <span className="lb-count">
+            {index + 1} of {n}
+          </span>
         </figcaption>
       </motion.figure>
-      <button className="icon-btn lb-next" aria-label="Next" onClick={(e) => (e.stopPropagation(), onIndex((index + 1) % n))}>
-        <ChevronRight size={22} />
-      </button>
-    </motion.div>
+      {n > 1 && (
+        <button className="icon-btn lb-next" aria-label="Next" onClick={(e) => (e.stopPropagation(), go(1))}>
+          <ChevronRight size={22} />
+        </button>
+      )}
+    </motion.div>,
+    document.body
   );
 }

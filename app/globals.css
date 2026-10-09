@@ -1995,7 +1995,7 @@ label.check input {
   display: grid;
   place-items: center;
   padding: 50px 70px;
-  background: rgba(20, 18, 15, 0.9);
+  background: rgba(20, 18, 15, 0.95);
 }
 .lightbox figure {
   position: relative;
@@ -2905,6 +2905,326 @@ label.check input {
   .lb-next {
     top: auto !important;
     bottom: 14px;
+  }
+}
+
+/* ---------------------------------------------------------------- photos */
+/* every image fades up from the paper once it has actually decoded */
+.ph {
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.ph-in {
+  opacity: 1;
+}
+.snap-img,
+.thumb,
+.lb-frame {
+  background-color: #e3dcc8;
+  background-image: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  background-size: 250% 100%;
+  animation: develop 1.6s linear infinite;
+}
+.snap-img:has(.ph-in),
+.thumb:has(.ph-in),
+.lb-frame:has(.ph-in) {
+  animation: none;
+  background-image: none;
+}
+@keyframes develop {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+/* images fill their box absolutely so a tall original can never stretch an aspect-ratio frame */
+.snap-img {
+  display: block;
+}
+.snap-img > img,
+.thumb > img,
+.lb-frame > img {
+  position: absolute;
+  inset: 0;
+}
+.snap-img > img {
+  /* food reads best slightly warm, like a print */
+  filter: saturate(1.04) contrast(1.02);
+}
+
+/* menu line thumbnails */
+.item-btn {
+  grid-template-columns: 24px minmax(0, 1fr) 58px;
+  gap: 12px;
+}
+.thumb {
+  position: relative;
+  display: block;
+  width: 58px;
+  height: 58px;
+  overflow: hidden;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 8px -4px rgba(0, 0, 0, 0.3);
+  transform: rotate(2deg);
+  transition: transform 0.2s;
+}
+.item:nth-child(even) .thumb {
+  transform: rotate(-1.5deg);
+}
+.item-btn:hover .thumb,
+.item.hot .thumb {
+  transform: rotate(0) scale(1.04);
+}
+.thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.thumb .img-fallback span {
+  font-size: 8px;
+  letter-spacing: 0.04em;
+}
+
+/* the food row under the hero */
+.snap-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.snap-row[data-count="1"] {
+  grid-template-columns: minmax(0, 0.5fr);
+}
+.snap-row[data-count="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.snap-sm .snap-img {
+  aspect-ratio: 4 / 5;
+}
+.snap-sm figcaption {
+  font-size: 16px;
+}
+.stock-tag {
+  display: inline-block;
+  padding: 1px 5px 2px;
+  font-family: var(--f-sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: var(--ink);
+  background: var(--note);
+  border: 1px solid rgba(34, 32, 28, 0.25);
+}
+.snap-img .stock-tag {
+  position: absolute;
+  left: 5px;
+  bottom: 5px;
+  z-index: 1;
+  transform: rotate(-2deg);
+}
+.stock-note {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.stock-note .stock-tag {
+  font-size: 9px;
+  vertical-align: 1px;
+}
+.stock-note a {
+  color: var(--ink-2);
+}
+
+/* viewer: whole photo, never cropped */
+.lightbox figure {
+  display: flex;
+  flex-direction: column;
+  width: min(1100px, 100%);
+  aspect-ratio: auto;
+  background: transparent;
+  overflow: visible;
+}
+.lb-frame {
+  position: relative;
+  height: min(76vh, 780px);
+  height: min(76dvh, 780px);
+  background-color: #1d1b18;
+  background-image: none;
+}
+.lightbox .lb-frame img,
+.lightbox .lb-frame > svg {
+  object-fit: contain;
+}
+.lightbox .lb-frame > svg {
+  object-fit: cover;
+}
+.lightbox figcaption {
+  position: static;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 2px 0;
+  background: none;
+  line-height: 1.4;
+}
+.lightbox figcaption a {
+  color: #fff;
+}
+.lightbox .credit {
+  opacity: 0.75;
+}
+.lb-count {
+  float: none;
+  flex: none;
+}
+
+/* photo credits page */
+.credits {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 28px 22px 80px;
+}
+.credits h1 {
+  font-family: var(--f-serif);
+  font-weight: 400;
+  font-size: 40px;
+  margin: 8px 0 6px;
+}
+.credits > p {
+  max-width: 640px;
+  color: var(--ink-2);
+}
+.credits .menu-head {
+  margin-top: 44px;
+}
+.credit-grid {
+  list-style: none;
+  padding: 0;
+  margin: 26px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 22px 18px;
+}
+.credit-grid .snap {
+  cursor: default;
+}
+.credit-grid .snap-img {
+  aspect-ratio: 4 / 3;
+}
+.credit-grid figcaption {
+  white-space: normal;
+  font-family: var(--f-sans);
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.credit-grid figcaption strong {
+  display: block;
+  font-family: var(--f-pen);
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.credit-grid figcaption a {
+  color: var(--ink-2);
+}
+
+@media (max-width: 900px) {
+  .item-btn {
+    grid-template-columns: 24px minmax(0, 1fr) 64px;
+  }
+  .thumb {
+    width: 64px;
+    height: 64px;
+  }
+  /* food photos become a swipeable strip of prints */
+  .snap-row,
+  .snap-row[data-count] {
+    display: flex;
+    gap: 14px;
+    margin: 16px -16px 0;
+    padding: 6px 16px 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 16px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .snap-row::-webkit-scrollbar {
+    display: none;
+  }
+  .snap-row .snap-sm {
+    flex: 0 0 44%;
+    min-width: 0; /* a long nowrap caption must not widen the print */
+    scroll-snap-align: start;
+  }
+  .snap-row[data-count="1"] .snap-sm,
+  .snap-row[data-count="2"] .snap-sm {
+    flex-basis: calc(50% - 7px);
+  }
+  .snap:hover {
+    transform: none;
+  }
+  .snap-sm:nth-child(odd) {
+    transform: rotate(1.2deg);
+  }
+  .snap-sm:nth-child(even) {
+    transform: rotate(-1deg);
+  }
+  .mcard {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 12px;
+    padding: 10px 12px 10px 10px;
+    align-items: center;
+  }
+  .mcard-pic {
+    position: relative;
+    display: block;
+  }
+  .mcard-pic .thumb {
+    width: 76px;
+    height: 76px;
+    transform: none;
+    border-width: 0;
+    box-shadow: none;
+  }
+  .mcard-pic .item-no {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    margin: 0;
+    box-shadow: 0 0 0 2px var(--card);
+  }
+  .lightbox figure {
+    width: 100%;
+  }
+  .lb-frame {
+    height: min(68vh, 640px);
+    height: min(68dvh, 640px);
+  }
+  .lightbox figcaption {
+    padding: 10px 4px 0;
+    font-size: 12.5px;
+  }
+  .credits h1 {
+    font-size: 32px;
+  }
+  .credit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 12px;
+  }
+}
+@media (max-width: 360px) {
+  .thumb {
+    width: 52px;
+    height: 52px;
+  }
+  .item-btn {
+    grid-template-columns: 22px minmax(0, 1fr) 52px;
+    gap: 10px;
   }
 }
 

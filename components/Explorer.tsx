@@ -32,6 +32,7 @@ import Surprise from "./Surprise";
 import Circled from "./Circled";
 import Profile from "./Profile";
 import MapCards from "./MapCards";
+import { Thumb } from "./Photo";
 
 type View = "list" | "map" | "me";
 
@@ -654,7 +655,7 @@ export default function Explorer({
                   <footer className="side-foot">
                     <p>Locally owned places only. If it has a drive-thru or a corporate HQ out of state, it&apos;s not on here.</p>
                     <p>
-                      Map pins are close, not exact. Something closed or wrong? <Link href="/partners#contact">Let us know</Link>.
+                      Map pins are close, not exact. Something closed or wrong? <Link href="/partners#contact">Let us know</Link>. <Link href="/credits">Photo credits</Link>.
                     </p>
                     <p>
                       © {new Date().getFullYear()} The Local, {city.name}, {apState(city.state)}
@@ -865,6 +866,7 @@ function SpotRow({
               {spot.sponsored && <span className="paid">Paid listing</span>}
             </span>
           </span>
+          <Thumb spot={spot} />
         </button>
       </li>
       {ad && (
