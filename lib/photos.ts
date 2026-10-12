@@ -124,7 +124,6 @@ const SPOT_DISHES: Record<string, DishKey[]> = {
   trimtab: ["beer-flight", "beer-sampler"],
   "ghost-train": ["beer-sampler", "beer-flight"],
   "saws-soul-kitchen": ["white-sauce", "soul-plate", "mac-cheese"],
-  "post-office-pies": ["pizza-napoletana", "pizza-margherita"],
   "avondale-brewing": ["beer-flight", "beer-sampler"],
   "big-spoon": ["ice-cream-sandwich", "cone"],
   "cahaba-brewing": ["beer-sampler", "beer-flight"],

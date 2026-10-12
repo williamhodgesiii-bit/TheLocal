@@ -356,13 +356,6 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["white sauce", "counter service"], pop: 87,
   },
   {
-    id: "post-office-pies", name: "Post Office Pies", genres: ["italian"], area: "avondale",
-    address: "209 41st St S", coords: onStS(209, 41), price: 2,
-    knownFor: "Wood-fired pies in the old post office",
-    blurb: "Wood-fired pizza in Avondale's old post office. Get the garlic knots.",
-    tags: ["pizza", "groups", "kid-friendly"], pop: 85,
-  },
-  {
     id: "avondale-brewing", name: "Avondale Brewing Co.", genres: ["drinks"], drinks: ["brewery"], area: "avondale",
     address: "201 41st St S", coords: onStS(201, 41), price: 1,
     knownFor: "Backyard stage & Miss Fancy's Tripel",

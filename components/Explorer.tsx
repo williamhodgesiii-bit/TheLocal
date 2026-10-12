@@ -174,11 +174,24 @@ export default function Explorer({
       .catch(() => {});
   }, [user, backend, toast]);
 
+  // exact pins and closures from Google, once a key is set on the server (see /api/pins)
+  const [google, setGoogle] = useState<{ pins: Record<string, [number, number]>; closed: string[] } | null>(null);
+  useEffect(() => {
+    fetch("/api/pins")
+      .then((r) => r.json())
+      .then((j) => j.enabled && Object.keys(j.pins ?? {}).length > 0 && setGoogle({ pins: j.pins, closed: j.closed ?? [] }))
+      .catch(() => {});
+  }, []);
+
   const allSpots = useMemo(() => {
-    const seed = city.id === DEFAULT_CITY ? SPOTS : [];
+    const closed = new Set(google?.closed ?? []);
+    const seed =
+      city.id === DEFAULT_CITY
+        ? SPOTS.filter((x) => !closed.has(x.id) || x.id === initialSpot).map((x) => (google?.pins[x.id] ? { ...x, coords: google.pins[x.id] } : x))
+        : [];
     const seedIds = new Set(seed.map((x) => x.id));
     return [...seed, ...community.filter((x) => x.city === city.id && !seedIds.has(x.id))];
-  }, [city.id, community]);
+  }, [city.id, community, google, initialSpot]);
   const spotById = useMemo(() => Object.fromEntries(allSpots.map((x) => [x.id, x])) as Record<string, Spot>, [allSpots]);
   const areas = useMemo(() => deriveAreas(city.id, allSpots), [city.id, allSpots]);
   const areaById = useMemo(() => Object.fromEntries(areas.map((a) => [a.id, a])), [areas]);
@@ -657,7 +670,7 @@ export default function Explorer({
                   <footer className="side-foot">
                     <p>Locally owned places only. If it has a drive-thru or a corporate HQ out of state, it&apos;s not on here.</p>
                     <p>
-                      Map pins are close, not exact. Something closed or wrong? <Link href="/partners#contact">Let us know</Link>. <Link href="/credits">Photo credits</Link>.
+                      {google ? "" : "Map pins are close, not exact. "}Something closed or wrong? <Link href="/partners#contact">Let us know</Link>. <Link href="/credits">Photo credits</Link>.
                     </p>
                     <p>
                       © {new Date().getFullYear()} The Local, {city.name}, {apState(city.state)}

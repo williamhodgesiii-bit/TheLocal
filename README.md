@@ -13,8 +13,8 @@ Pick what sounds good and what part of town, and the map of Birmingham follows a
 ## Coverage today
 
 The **Birmingham area**, by town: Birmingham (Downtown, Southside, Lakeview, Avondale), **Homewood** (downtown/SoHo, Edgewood, West Homewood), **Mountain Brook** (Mountain Brook Village and Lane Parke, English Village, Crestline) and **Vestavia Hills** (Cahaba Heights, Highway 31, Rocky Ridge).
-- About 80 locally owned places. They were checked against local news (Homewood Star, Village Living, Vestavia Voice, Bham Now) in October 2026. Known closures were left off: Satterfield's, Sol y Luna, the Lane Parke Post Office Pies, DeVinci's and Iron City Pizza.
-- **Before launch**, run `npm run geocode` with a Google key. It prints any place Google lists as closed, so you can confirm the rest.
+- 78 locally owned places. They were checked against local news (Homewood Star, Village Living, Vestavia Voice, Bham Now) in October 2026. Known closures were left off: Satterfield's, Sol y Luna, Post Office Pies (both locations), DeVinci's and Iron City Pizza.
+- **Exact pins and closures**: once `GOOGLE_PLACES_API_KEY` is set on Vercel, `/api/pins` looks every place up on Google, moves each pin to its real spot (only if the match is within 3 km), and drops any place Google marks *permanently* closed. Closed-for-the-night and temporarily closed places stay. Results are cached for a week. `npm run geocode` still works if you'd rather commit the locations.
 - Other Alabama cities are already defined in `lib/regions.ts` with status `"later"`. To open one, change it to `"founding"` (members add places, staff verify) or `"live"`.
 
 ## Phones first
@@ -64,7 +64,7 @@ On first visit, people pick a home state and city, and the choice is remembered.
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - In Supabase → Auth, you can turn off "Confirm email" for instant sign-ups.
-3. Optional: add `GOOGLE_PLACES_API_KEY` (Places API "New") for real storefront and food photos, the Google rating and the website link on every spot. Run `npm run geocode` once with the key to snap every pin to its exact location. This writes `lib/geo-overrides.json`.
+3. Optional: add `GOOGLE_PLACES_API_KEY` (Places API "New") for real storefront and food photos, the Google rating and the website link on every spot. Pins snap to their exact locations automatically once the key is set (see `/api/pins`).
 4. Optional: set `NEXT_PUBLIC_SITE_URL` to your domain for the sitemap and OG tags.
 
 See `.env.example`.
@@ -78,7 +78,7 @@ npm run dev
 
 ## Editing the guide
 
-All spots live in `lib/data.ts`. Each spot has a name, genres, area, address, price, "known for", a blurb, tags and a popularity score. Birmingham's rotated street grid is encoded there, so grid addresses (`onAveN(2013, 2)` = 2013 2nd Ave N) place themselves on the map. Pins are approximate until you run `npm run geocode`. **Before launch, check every spot is still open and the details are right.**
+All spots live in `lib/data.ts`. Each spot has a name, genres, area, address, price, "known for", a blurb, tags and a popularity score. Birmingham's rotated street grid is encoded there, so grid addresses (`onAveN(2013, 2)` = 2013 2nd Ave N) place themselves on the map. Pins are approximate until a Google key is set, then exact. **Before launch, check every spot is still open and the details are right.**
 
 Photos without a member or Google image fall back to two things. The storefront gets a procedurally drawn illustration, unique per spot. Food slots get labeled stock photos of that place's dishes (`lib/photos.ts`).
 
