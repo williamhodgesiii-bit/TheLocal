@@ -493,7 +493,10 @@ select {
 .hoods sup {
   font-size: 10px;
   color: var(--muted);
-  margin-left: 2px;
+  margin-left: 3px;
+}
+.optbtn[aria-pressed="true"] sup {
+  margin-left: 10px; /* clears the pen circle */
 }
 .hoods .zero {
   opacity: 0.4;
@@ -508,12 +511,22 @@ select {
 .search-sec {
   padding-top: 16px;
 }
+.lookup-row {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+}
 .lookup {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: baseline;
   gap: 8px;
   border-bottom: 1px solid var(--ink);
-  margin-bottom: 8px;
+}
+.filters-btn {
+  flex: none;
+  font-size: 14px;
 }
 .lookup input {
   flex: 1;
@@ -827,7 +840,7 @@ select {
 }
 .check-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.25fr) minmax(0, 0.6fr);
 }
 .check-grid > div {
   display: flex;
@@ -836,8 +849,8 @@ select {
   border-bottom: 1px solid var(--rule);
   font-size: 14.5px;
 }
-.check-grid > div:nth-child(odd) {
-  border-right: 1px solid var(--rule);
+.check-grid > div + div {
+  border-left: 1px solid var(--rule);
 }
 .g-rate {
   color: var(--muted);
@@ -1408,6 +1421,9 @@ select {
   white-space: nowrap;
   text-shadow: 0 0 3px #efe9d9, 0 0 3px #efe9d9;
 }
+.leaflet-host .crowded {
+  visibility: hidden;
+}
 .leaflet-host.compact .hood:not(.active),
 .leaflet-host.compact .landmark span,
 .leaflet-host.compact .ridge-label {
@@ -1544,6 +1560,7 @@ select {
 }
 label.check,
 .form label.check {
+  display: flex;
   flex-direction: row;
   align-items: center;
   gap: 8px;
@@ -2721,8 +2738,8 @@ label.check input {
     padding: 14px 0 0;
   }
   .menu-head {
-    margin: 0 16px 4px;
-    font-size: 16px;
+    margin: 0 16px 0;
+    font-size: 15px;
   }
   .board {
     display: flex;
@@ -2759,6 +2776,9 @@ label.check input {
     margin: 4px 0 0 3px;
     font-size: 10.5px;
   }
+  .board button.on .board-n {
+    margin-left: 10px; /* clears the pen circle */
+  }
   .subline {
     display: flex;
     overflow-x: auto;
@@ -2785,8 +2805,14 @@ label.check input {
     padding: 0 8px;
   }
   .hood-blurb {
-    margin: 2px 16px 0;
-    font-size: 13px;
+    display: none; /* the map caption carries it on phones */
+  }
+  /* rows that scroll sideways fade at the edge so it's clear there's more */
+  .board,
+  .hoods {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+    padding-right: 44px;
   }
   .search-sec {
     padding: 8px 16px 0;
@@ -2824,6 +2850,24 @@ label.check input {
   }
   .guest-check {
     margin: 14px 12px 0;
+  }
+  .check-row,
+  .check-grid > div {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .check-row {
+    grid-template-columns: 84px minmax(0, 1fr);
+  }
+  .check-name h1 {
+    font-size: 25px;
+  }
+  .check-order .pen {
+    font-size: 24px;
+  }
+  .check-foot {
+    padding: 7px 12px 8px;
+    font-size: 12.5px;
   }
   .snaps,
   .reviews,

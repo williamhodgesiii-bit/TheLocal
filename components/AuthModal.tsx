@@ -95,7 +95,7 @@ export default function AuthModal({ open, reason, onClose }: { open: boolean; re
               </button>
             </form>
             {backend.mode === "local" && (
-              <p className="fine">Test mode: accounts, reviews and photos only save on this device until the database is hooked up.</p>
+              <p className="fine">Preview: your account, reviews and photos are saved on this device only.</p>
             )}
           </motion.div>
         </motion.div>

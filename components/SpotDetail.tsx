@@ -188,7 +188,9 @@ export default function SpotDetail({
       <div className="guest-check">
         <div className="check-top">
           <span className="check-title">Guest Check</span>
-          <span className="check-no">No. {checkNo}</span>
+          <span className="check-no" title={number ? "Same number as its pin on the map" : undefined}>
+            No. {number ?? checkNo}
+          </span>
         </div>
         <div className="check-row check-name">
           <span className="cl">Place</span>
@@ -200,16 +202,12 @@ export default function SpotDetail({
             <span>{areaLabelOf(spot)}</span>
           </div>
           <div>
-            <span className="cl">Price</span>
-            <span>{priceLabel(spot.price)}</span>
-          </div>
-          <div>
             <span className="cl">Kind</span>
             <span>{spot.genres.map((x) => GENRE_BY_ID[x].short).join(", ")}</span>
           </div>
           <div>
-            <span className="cl">On the map</span>
-            <span>{number ? `No. ${number}` : "–"}</span>
+            <span className="cl">Price</span>
+            <span>{priceLabel(spot.price)}</span>
           </div>
         </div>
         <div className="check-row">
@@ -268,8 +266,7 @@ export default function SpotDetail({
         </div>
         {food.some((x) => x.stock) && (
           <p className="stock-note">
-            Marked <span className="stock-tag">stock</span>: what they&rsquo;re known for, photographed somewhere else. Swapped out as members post the real thing.{" "}
-            <Link href="/credits">Photo credits</Link>
+            <span className="stock-tag">stock</span> photos show the dish, not this kitchen. <Link href="/credits">Credits</Link>
           </p>
         )}
         <p className="snap-add">

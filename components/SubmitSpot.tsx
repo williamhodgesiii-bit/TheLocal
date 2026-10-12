@@ -158,7 +158,7 @@ export default function SubmitSpot({
       onDone?.();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "That didn't go through. Try again?");
-      toast("Submission failed", "err");
+      toast("That didn't go through. Try again?", "err");
     } finally {
       setBusy(false);
     }

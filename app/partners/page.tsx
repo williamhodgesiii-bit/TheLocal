@@ -94,7 +94,7 @@ export default function Partners({ searchParams }: { searchParams: { spot?: stri
 
       <section id="contact" className="contact">
         <h2>Get in touch</h2>
-        <p className="muted">Tell us about your place, or tell us if a listing is closed or wrong. We get back to everyone within a business day.</p>
+        <p className="muted">Tell us about your place, or tell us if a listing is closed or wrong.</p>
         <PartnerForm spot={searchParams.spot} />
       </section>
     </div>

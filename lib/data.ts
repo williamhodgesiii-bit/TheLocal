@@ -157,7 +157,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     id: "helen", name: "Helen", genres: ["chefs"], area: "downtown",
     address: "2013 2nd Ave N", coords: onAveN(2013, 2), price: 4,
     knownFor: "Hearth-fired steaks & seafood",
-    blurb: "Rob McDaniel's place on Second Avenue. Long, narrow brick room, most everything cooked over the hearth. It's in the Michelin guide, so book ahead.",
+    blurb: "Rob McDaniel's place on Second Avenue. Long, narrow brick room, most everything cooked over the hearth. It's on the Michelin list, so book ahead.",
     tags: ["date night", "live fire", "Michelin"], pop: 92,
   },
   {
@@ -177,14 +177,14 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
   {
     id: "the-essential", name: "The Essential", genres: ["brunch", "chefs"], area: "downtown",
     address: "2018 Morris Ave", coords: grid(20.18, -0.4), price: 3,
-    knownFor: "Pastry-forward brunch",
+    knownFor: "Brunch, and the pastry case",
     blurb: "Brunch and lunch on Morris Avenue, on the cobblestone stretch. Look at the pastry case before you order.",
     tags: ["brunch", "pastries", "Morris Ave"], pop: 84,
   },
   {
     id: "brick-and-tin", name: "Brick & Tin", genres: ["southern", "brunch"], area: "downtown",
     address: "214 20th St N", coords: onStN(214, 20), price: 2,
-    knownFor: "Farm-driven sandwiches & salads",
+    knownFor: "Seasonal sandwiches & salads",
     blurb: "Lunch counter with a menu that changes with the season. Sandwiches, salads, and baked goods by the register.",
     tags: ["lunch", "seasonal", "counter service"], pop: 70,
   },
@@ -212,7 +212,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
   {
     id: "paper-doll", name: "Paper Doll", genres: ["drinks"], drinks: ["cocktails"], area: "downtown",
     address: "2320 1st Ave N", coords: onAveN(2320, 1), price: 3,
-    knownFor: "Romantic craft cocktails",
+    knownFor: "Cocktails in a dim, velvet room",
     blurb: "Dim, velvet-heavy cocktail bar on First Avenue North. Good for a date. Happy hour is a deal.",
     tags: ["cocktails", "date night", "happy hour"], pop: 72,
   },
@@ -233,7 +233,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
   {
     id: "carrigans", name: "Carrigan's Public House", genres: ["drinks", "southern"], drinks: ["bar"], area: "downtown",
     address: "2430 Morris Ave", coords: grid(24.3, -0.4), price: 2,
-    knownFor: "Patio pints & elevated pub fare",
+    knownFor: "Patio pints & pub food",
     blurb: "Pub food and a long bar on Morris Avenue. The patio fills up when it's nice out.",
     tags: ["patio", "groups", "pub"], pop: 70,
   },
@@ -271,7 +271,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     id: "surin-west", name: "Surin West", genres: ["asian"], area: "southside",
     address: "1918 11th Ave S", coords: onAveS(1918, 11), price: 2,
     knownFor: "Thai curries & sushi",
-    blurb: "Thai food and a sushi bar in Five Points. Been around a long time for good reason.",
+    blurb: "Thai food and a sushi bar in Five Points, with tables out on the patio.",
     tags: ["Thai", "sushi", "patio"], pop: 73,
   },
   {
@@ -315,7 +315,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     id: "ovenbird", name: "Ovenbird", genres: ["chefs"], area: "lakeview",
     address: "2805 2nd Ave S", coords: onAveS(2805, 2), price: 3,
     knownFor: "Live-fire small plates",
-    blurb: "Chris Hastings's live-fire small plates restaurant at Pepper Place. Order a bunch and share.",
+    blurb: "Chris Hastings's live-fire small plates at Pepper Place. Michelin gave it a Bib Gourmand in 2025. Order a bunch and share.",
     tags: ["small plates", "live fire", "Pepper Place"], pop: 89,
   },
   {
@@ -373,7 +373,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     id: "big-spoon", name: "Big Spoon Creamery", genres: ["sweets"], area: "avondale",
     address: "4000 3rd Ave S", coords: onAveS(4000, 3), price: 1,
     knownFor: "Small-batch ice cream sandwiches",
-    blurb: "Small-batch ice cream in the MAKEbhm building. Recently named one of the best ice cream shops in the country.",
+    blurb: "Small-batch ice cream in the MAKEbhm building. The sandwiches are the thing to get.",
     tags: ["ice cream", "family"], pop: 83,
   },
   {
@@ -675,7 +675,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
   {
     id: "foodbar", name: "FoodBar", genres: ["chefs", "southern"], area: "cahaba",
     address: "3156 Heights Village", coords: [33.4627, -86.7301], price: 3,
-    knownFor: "Farm-driven Southern plates",
+    knownFor: "Southern plates off Alabama farms",
     blurb: "Chef George McMillian's place in The Heights Village. The menu leans on Alabama farms.",
     tags: ["date night", "seasonal"], pop: 78,
   },

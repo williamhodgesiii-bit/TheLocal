@@ -354,7 +354,7 @@ export default function Explorer({
   }, [activeArea, activeTown, city]);
   const founding = city.status === "founding";
   const openAdd = () => {
-    if (requireAuth(`Sign in to add a place in ${city.name}. We check every one before it goes up.`)) setAdding(true);
+    if (requireAuth(`Sign in to add a place in ${city.name}.`)) setAdding(true);
   };
   const filtersOn = prices.length > 0 || savedOnly || sort !== "popular";
 
@@ -565,18 +565,20 @@ export default function Explorer({
                   </section>
 
                   <section className="menu-sec search-sec">
-                    <label className="lookup">
-                      <span className="sr-only">Search</span>
-                      <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Looking for something? Oysters, patio, biscuits" />
-                      {query && (
-                        <button className="textbtn" onClick={() => setQuery("")}>
-                          clear
-                        </button>
-                      )}
-                    </label>
-                    <button className="textbtn" onClick={() => setMoreFilters((v) => !v)} aria-expanded={moreFilters}>
-                      {moreFilters ? "Fewer options" : filtersOn ? "Options (on)" : "More options"}
-                    </button>
+                    <div className="lookup-row">
+                      <label className="lookup">
+                        <span className="sr-only">Search</span>
+                        <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Oysters, patio, biscuits…" />
+                        {query && (
+                          <button className="textbtn" onClick={() => setQuery("")}>
+                            clear
+                          </button>
+                        )}
+                      </label>
+                      <button className={`textbtn filters-btn ${filtersOn ? "on" : ""}`} onClick={() => setMoreFilters((v) => !v)} aria-expanded={moreFilters}>
+                        {filtersOn ? "Price & order ●" : "Price & order"}
+                      </button>
+                    </div>
                     {moreFilters && (
                       <div className="more">
                         <p>
@@ -648,7 +650,7 @@ export default function Explorer({
 
                   <button className="write-in" onClick={openAdd}>
                     <span className="wi-title">Missing a place?</span>
-                    <span>Write it in. We check every one before it goes up, and you get the credit.</span>
+                    <span>Write it in. We check it, then it goes up with your name on it.</span>
                   </button>
 
                   <Newsletter city={city} />
@@ -900,7 +902,7 @@ function Newsletter({ city }: { city: City }) {
       }}
     >
       <h3>The Thursday List</h3>
-      <p>Five places in {city.name} worth your time, one email a week. That&apos;s it.</p>
+      <p>Five places in {city.name} to try, in your inbox every Thursday.</p>
       {done ? (
         <p className="nl-done">You&apos;re on it. See you Thursday.</p>
       ) : (

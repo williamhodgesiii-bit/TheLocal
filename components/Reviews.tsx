@@ -146,7 +146,7 @@ export default function Reviews({ spot }: { spot: Spot }) {
         </div>
       ) : reviews.length === 0 ? (
         <div className="empty-reviews">
-          <p>Nobody&apos;s written this one up yet. If you&apos;ve been, you&apos;d be first.</p>
+          <p>No reviews yet. If you&apos;ve been, write the first one.</p>
         </div>
       ) : (
         <ul className="review-list">

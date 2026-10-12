@@ -52,6 +52,52 @@ export default function MapView(props: Props) {
   const cb = useRef(props);
   cb.current = props;
 
+  /**
+   * Labels never sit on pins or on each other. Pins win, then the active
+   * neighborhood, then other neighborhoods, then the ridge and landmarks.
+   * Whatever doesn't fit is hidden until the camera moves.
+   */
+  const raf = useRef(0);
+  const declutter = useRef(() => {
+    cancelAnimationFrame(raf.current);
+    raf.current = requestAnimationFrame(() => {
+      const root = el.current;
+      if (!root) return;
+      const pad = (r: DOMRect, n: number) => ({ l: r.left - n, r: r.right + n, t: r.top - n, b: r.bottom + n });
+      type Box = ReturnType<typeof pad>;
+      const hit = (a: Box, b: Box) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+      const taken: Box[] = [];
+      root.querySelectorAll<HTMLElement>(".pin:not(.dim) .pin-dot, .pin.selected .pin-label, .pin.hot .pin-label").forEach((n) => {
+        const r = n.getBoundingClientRect();
+        if (r.width) taken.push(pad(r, 3));
+      });
+      const labels = [
+        ...root.querySelectorAll<HTMLElement>(".hood.active button"),
+        ...root.querySelectorAll<HTMLElement>(".hood:not(.active) button"),
+        ...root.querySelectorAll<HTMLElement>(".ridge-label span, .landmark span"),
+      ];
+      // try the spot itself, then a little above or below it, before giving up
+      const nudges: [number, number][] = [[0, 0], [0, 16], [0, -16], [0, 30], [0, -30], [-44, 0], [44, 0], [-44, 22], [44, -22], [0, 46], [0, -46]];
+      for (const n of labels) {
+        n.style.translate = "";
+        const r = n.getBoundingClientRect();
+        if (!r.width) continue;
+        const base = pad(r, 2);
+        let placed: Box | null = null;
+        for (const [dx, dy] of nudges) {
+          const box = { l: base.l + dx, r: base.r + dx, t: base.t + dy, b: base.b + dy };
+          if (!taken.some((t) => hit(box, t))) {
+            placed = box;
+            if (dx || dy) n.style.translate = `${dx}px ${dy}px`;
+            break;
+          }
+        }
+        n.classList.toggle("crowded", !placed);
+        if (placed) taken.push(placed);
+      }
+    });
+  });
+
   // init once
   useEffect(() => {
     if (!el.current || map.current) return;
@@ -99,6 +145,7 @@ export default function MapView(props: Props) {
     const density = () => el.current?.classList.toggle("compact", m.getSize().x < 700 && m.getZoom() < 14.2);
     m.on("zoomend resize", density);
     density();
+    m.on("moveend zoomend resize", () => declutter.current());
 
     let lastW = el.current.clientWidth;
     const ro = new ResizeObserver(() => {
@@ -184,6 +231,10 @@ export default function MapView(props: Props) {
       mk.getElement()?.classList.toggle("active", props.area === id || (!!a?.town && props.area === `t:${a.town}`));
       mk.getElement()?.classList.toggle("quiet", props.selectedId !== null);
     });
+  }, [props.visible, props.numbers, props.hoveredId, props.selectedId, props.area, props.spots, props.areas]);
+
+  useEffect(() => {
+    declutter.current();
   }, [props.visible, props.numbers, props.hoveredId, props.selectedId, props.area, props.spots, props.areas]);
 
   // camera
