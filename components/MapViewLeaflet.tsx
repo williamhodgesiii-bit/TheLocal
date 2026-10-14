@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { LANDMARKS, RED_MOUNTAIN } from "@/lib/data";
 import { OSM_CREDIT, OSM_TILES } from "@/lib/map-style-load";
-import { LANDMARK_SVG, declutter as declutterIn, esc, pinHtml, zoomKey, type MapProps } from "./map-shared";
+import { LANDMARK_SVG, Recenter, declutter as declutterIn, esc, pinHtml, zoomKey, type MapProps } from "./map-shared";
 
 /**
  * Fallback map for devices that can't draw vector maps (no WebGL): Leaflet with
@@ -17,6 +17,9 @@ export default function MapViewLeaflet(props: MapProps) {
   const hoods = useRef<Map<string, L.Marker>>(new Map());
   const cb = useRef(props);
   cb.current = props;
+  const [moved, setMoved] = useState(false);
+  /** true while the camera is moving on its own (framing picks), so that doesn't count as "moved" */
+  const auto = useRef(false);
 
   /**
    * Labels never sit on pins or on each other. Pins win, then the active
@@ -36,9 +39,9 @@ export default function MapViewLeaflet(props: MapProps) {
       center: cb.current.city.center,
       zoom: cb.current.city.zoom,
       zoomControl: false,
-      dragging: false,
-      // zoom by scroll wheel, double-click, pinch, the +/- buttons or the +/- keys;
-      // the camera still follows the menu, and any new pick re-frames the map
+      // drag with the mouse or a finger; zoom by scroll wheel, double-click, pinch, the +/- buttons
+      // or the +/- keys. Any new pick (or Recenter) frames the map again.
+      dragging: true,
       scrollWheelZoom: true,
       wheelPxPerZoomLevel: 90,
       doubleClickZoom: true,
@@ -49,7 +52,7 @@ export default function MapViewLeaflet(props: MapProps) {
       maxZoom: 19,
       zoomSnap: 0,
       zoomDelta: 0.75,
-      inertia: false,
+      inertia: true,
       attributionControl: true,
     });
     m.attributionControl.setPrefix(false);
@@ -78,6 +81,9 @@ export default function MapViewLeaflet(props: MapProps) {
     m.on("zoomend resize", density);
     density();
     m.on("moveend zoomend resize", () => declutter.current());
+    m.on("dragstart", () => setMoved(true));
+    m.on("zoomstart", () => !auto.current && setMoved(true));
+    m.on("moveend", () => (auto.current = false));
 
     let lastW = el.current.clientWidth;
     const ro = new ResizeObserver(() => {
@@ -198,8 +204,11 @@ export default function MapViewLeaflet(props: MapProps) {
   aim.current = () => {
     const m = map.current;
     if (!m) return;
+    m.invalidateSize({ animate: false }); // the box may have just changed size (phone: Map tab → place strip)
     const size = m.getSize();
     if (size.x < 10 || size.y < 10) return; // hidden (mobile list tab); re-aimed on resize
+    setMoved(false);
+    auto.current = true;
     // the first view jumps straight into place: one set of tiles to load, not two
     const first = !aimed.current;
     aimed.current = true;
@@ -231,9 +240,17 @@ export default function MapViewLeaflet(props: MapProps) {
       m.flyTo(props.frame.center, props.frame.zoom, opts);
     }
   };
+  // re-frame only when the picks really change (a ratings refresh re-sorts, same places)
+  const visibleKey = useMemo(() => [...props.visible].sort().join(","), [props.visible]);
+  const spotsKey = useMemo(() => props.spots.map((s) => `${s.id}${s.coords}`).join("|"), [props.spots]);
   useEffect(() => {
     aim.current();
-  }, [props.selectedId, props.focusId, props.visible, props.area, props.spots, props.frame, props.topPad]);
+  }, [props.selectedId, props.focusId, visibleKey, props.area, spotsKey, props.frame, props.topPad]);
 
-  return <div ref={el} className="leaflet-host" aria-label={`Map of ${props.city.name} restaurants`} />;
+  return (
+    <>
+      <div ref={el} className="leaflet-host" aria-label={`Map of ${props.city.name} restaurants`} />
+      <Recenter show={moved} onClick={() => aim.current()} />
+    </>
+  );
 }

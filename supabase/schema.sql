@@ -1,4 +1,4 @@
--- The Local — Supabase schema
+-- The Plate Next Door — Supabase schema
 -- Run in Supabase → SQL Editor. Then set NEXT_PUBLIC_SUPABASE_URL and
 -- NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel. Without them the site runs in
 -- on-device demo mode.

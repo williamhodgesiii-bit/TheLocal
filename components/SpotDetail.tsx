@@ -7,6 +7,7 @@ import { track } from "@vercel/analytics";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { GENRE_BY_ID, areaLabelOf, distanceKm, mapsUrl, priceLabel, type Spot } from "@/lib/data";
+import { BRAND } from "@/lib/brand";
 import { hash } from "@/lib/images";
 import { PLACE_PHOTOS, commonsPage, commonsSrc, commonsSrcSet, dishesFor, shortDish } from "@/lib/photos";
 import type { Photo as MemberPhoto, PhotoKind } from "@/lib/backend";
@@ -241,7 +242,7 @@ export default function SpotDetail({
               {spot.verifiedAt ? ` ${new Date(spot.verifiedAt).toLocaleDateString(undefined, { month: "long", year: "numeric" })}` : ""}.
             </>
           ) : (
-            <>Picked and checked by The Local.</>
+            <>Picked and checked by {BRAND}.</>
           )}
           {spot.sponsored && <span className="paid">Paid listing</span>}
         </p>

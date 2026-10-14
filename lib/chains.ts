@@ -1,4 +1,4 @@
-/** National chains & fast food. The Local only lists independent spots. Submissions matching these are blocked. */
+/** National chains & fast food. The Plate Next Door only lists independent spots. Submissions matching these are blocked. */
 const CHAINS = [
   "mcdonald's", "burger king", "wendy's", "chick-fil-a", "chick fil a", "taco bell", "kfc", "popeyes", "sonic drive-in", "arby's",
   "subway", "jimmy john's", "jersey mike's", "firehouse subs", "zaxby's", "raising cane's", "whataburger", "hardee's", "krystal",

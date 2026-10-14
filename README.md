@@ -1,11 +1,13 @@
-# The Local — Birmingham's independent food & drink map
+# The Plate Next Door — Birmingham's locally owned food & drink map
 
-Pick what sounds good and what part of town, and the map of Birmingham follows along. Locally owned places only: no fast food, no chains.
+**Skip the chains. Eat next door.** Pick what sounds good and where you're eating, and the map of Birmingham follows along. Locally owned places only: no fast food, no chains. *Neighbors feeding neighbors.*
 
-**The look**: the site is built to look like things you'd find around town, not a template. The left side is a diner menu with dotted leaders, and your choices get circled in ballpoint pen. A restaurant's page is a green guest check with taped-up snapshots and reviews in handwriting. The map is a printed city map whose numbered pins match the menu. Surprise Me prints a kitchen ticket. The header reads like a newspaper masthead with an AP-style dateline. Fonts: Yellowtail (sign script), Young Serif, Libre Franklin and Nanum Pen Script, all self-hosted.
+**The brand**: the mark is a diner plate with a red band and a front door on it (`components/Brand.tsx`); the name, the line under it and the sign-off live in `lib/brand.ts`, so the voice is the same on every page, the share image and the app icon.
 
-- **Left 30%**: kinds of food (Southern, BBQ, Italian, Seafood, Latin, Asian, Greek, Special occasion, Brunch, Coffee, Sweets, and **Drinks** with cocktails, breweries, wine and bars), neighborhoods (Downtown, Southside & Five Points, Lakeview & Pepper Place, Avondale, Homewood, English Village, Mountain Brook Village, Crestline, Cahaba Heights), search, price and sort.
-- **Right 70%**: a map you can't pan or zoom. The camera follows your choices. Pins and neighborhood names can still be clicked.
+**The look**: the site is built to look like things you'd find around town, not a template. A restaurant's page is a green guest check with taped-up snapshots and reviews in handwriting. The map is a printed city map whose numbered pins match the list. Surprise Me prints a kitchen ticket. The header reads like a newspaper masthead with an AP-style dateline. Fonts: Yellowtail (sign script), Young Serif, Libre Franklin and Nanum Pen Script, all self-hosted.
+
+- **The browse bar** (same on computers and phones), top to bottom: one search box; **what sounds good**, every kind of food on its own little plate (Southern, BBQ, Italian, Seafood, Latin, Asian, Greek, Special occasion, Brunch, Coffee, Sweets, and **Drinks** with cocktails, breweries, wine and bars); then three buttons that always show their current value: **Where** (a town, then a neighborhood), **Price**, and **Saved**. Under it: how many places match, *Clear all*, and the sort.
+- **The map**: drag it with the mouse or one finger, zoom with the wheel, a pinch, double-click, the +/− buttons or keys. The camera frames your picks; once you move it yourself, **Recenter** brings it back.
 - **Restaurant page**: building photo first, then food photos, then member reviews. Members can upload photos. Also directions, save, share and nearby places.
 - **Surprise me**: picks a place, weighted toward the well-loved ones. It can stay inside your current picks.
 - **Keyboard**: `/` search · `↑/↓` browse · `Esc` back · `S` surprise.
@@ -20,8 +22,8 @@ The **Birmingham area**, by town: Birmingham (Downtown, Southside, Lakeview, Avo
 
 ## Phones first
 
-On a phone the site works like an app. A bottom tab bar has **Menu · Map · Surprise me · Add · You**.
-- **Menu**: the choices become rows you swipe sideways.
+On a phone the site works like an app. A bottom tab bar has **Explore · Map · Surprise · You**.
+- **Explore**: the same browse bar; the plates swipe sideways, and the bar tucks away while you scroll down the list and comes back when you scroll up. Where and Price open as sheets from the bottom.
 - **Map**: full screen, with swipeable place cards that steer the map.
 - **Opening a place**: the place page sits under a strip of map with the pin on it.
 - **Forms**: open as sheets from the bottom.
@@ -45,7 +47,7 @@ Photos copied off restaurants' websites or Instagram aren't used. They're copyri
 - **Add a spot**: any signed-in member can submit a place they've been to, from the top bar, the "Know a spot we're missing?" card, or a founding city's banner. The form asks for name, genres, price, address and a pin, neighborhood, "known for", a description, optional website, phone and storefront photo, and two confirmations (*I've been here* and *it's independent*).
 - **Guardrails before submit**: names that match a national chain or fast-food list are flagged (`lib/chains.ts`). Spots already on the map are flagged as duplicates by name and distance. "Find it" looks up the address (Google Places with a key, otherwise OpenStreetMap). A member can have at most 10 submissions pending at once.
 - **Verification desk** (`/admin`): staff see each submission next to an editable pin map, plus lookup tools: the Google listing status (*operational* or *closed permanently*), search, maps, the website and a tap-to-call link. Staff can fix any field. **Certify & publish** stays locked until four checks are ticked: it exists and is open, the location is correct, it's independent, and the content is appropriate. Staff can also decline with a reason.
-- **After approval**: the spot goes live on its city map with "Added by {member} · verified by The Local". The member's storefront photo becomes the building photo. The member gets a notice next visit and can track every status under **Your spots**, with *Verified contributor* and *Founding Local* badges.
+- **After approval**: the spot goes live on its city map with "Added by {member} · verified by The Plate Next Door". The member's storefront photo becomes the building photo. The member gets a notice next visit and can track every status on their page.
 - **Staff in production**: run this after the member signs up:
   `insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';`
 

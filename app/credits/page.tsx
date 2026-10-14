@@ -3,10 +3,12 @@ import Link from "next/link";
 import Photo from "@/components/Photo";
 import { LIBRARY, PLACE_PHOTOS, commonsPage, commonsSrc, commonsSrcSet, licenseUrl, type StockPhoto } from "@/lib/photos";
 import { SPOT_BY_ID } from "@/lib/data";
+import { Logo } from "@/components/Brand";
+import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "Photo credits",
-  description: "Who took the photos on The Local, and the licenses they're shared under.",
+  description: `Who took the photos on ${BRAND}, and the licenses they're shared under.`,
 };
 
 type Row = { key: string; file: string; title: string; author: string; license: StockPhoto["license"] };
@@ -23,7 +25,9 @@ export default function Credits() {
         <Link href="/" className="textbtn">
           ← Back to the map
         </Link>
-        <span className="brand-script">The Local</span>
+        <Link href="/" className="brand" aria-label={`${BRAND}, home`}>
+          <Logo size={36} />
+        </Link>
       </header>
       <p className="cap-kicker">Photo credits</p>
       <h1>Who took the pictures</h1>

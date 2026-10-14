@@ -175,7 +175,7 @@ export default function Profile({
           ) : (
             <>
               {subs.length === 0 ? (
-                <Empty text="Know a place that should be on here? Write it in. We check it's real and locally owned, then it goes up with your name on it." />
+                <Empty text="Know a plate next door we're missing? Write it in. We check it's real and locally owned, then it goes up with your name on it." />
               ) : (
                 <ul className="sub-list">
                   {subs.map((s) => (

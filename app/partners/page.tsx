@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PartnerForm from "@/components/PartnerForm";
+import { Logo } from "@/components/Brand";
+import { BRAND, NEWSLETTER } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "For restaurants",
-  description: "Claim your listing on The Local for free, or pay to be featured in your neighborhood.",
+  description: `Claim your listing on ${BRAND} for free, or pay to be featured in your neighborhood.`,
 };
 
 const TIERS = [
@@ -30,7 +32,7 @@ const TIERS = [
     price: "$99",
     per: "a month",
     pitch: "Own your part of town.",
-    perks: ["Everything in Featured", "Top of your neighborhood on the map", "Comes up more often in Surprise Me (marked)", "A write-up in the Thursday List email", "A call with us every quarter"],
+    perks: ["Everything in Featured", "Top of your neighborhood on the map", "Comes up more often in Surprise Me (marked)", `A write-up in ${NEWSLETTER}, our Thursday email`, "A call with us every quarter"],
   },
 ];
 
@@ -41,15 +43,17 @@ export default function Partners({ searchParams }: { searchParams: { spot?: stri
         <Link href="/" className="textbtn">
           ← Back to the map
         </Link>
-        <span className="brand-script">The Local</span>
+        <Link href="/" className="brand" aria-label={`${BRAND}, home`}>
+          <Logo size={36} />
+        </Link>
       </header>
 
       <section className="partners-hero">
         <p className="cap-kicker">For restaurants, bars and coffee shops</p>
-        <h1>Get your place in front of people deciding where to eat tonight.</h1>
+        <h1>Be the plate next door.</h1>
         <p>
-          The Local only lists places that are locally owned. No chains, no fast food. A basic listing is free. If you want to be seen first in your
-          neighborhood or your kind of food, there are two paid options.
+          Your neighbors are deciding where to eat tonight. {BRAND} only lists places that are locally owned: no chains, no fast food. A basic listing is
+          free. If you want to be seen first in your neighborhood or your kind of food, there are two paid options.
         </p>
       </section>
 
@@ -88,7 +92,7 @@ export default function Partners({ searchParams }: { searchParams: { spot?: stri
         </div>
         <div>
           <h3 className="small-head">Other ways to work with us</h3>
-          <p>Sponsor the Thursday List email, take over a neighborhood for a week, list an event, or add reservation and delivery links to your page.</p>
+          <p>Sponsor {NEWSLETTER}, take over a neighborhood for a week, list an event, or add reservation and delivery links to your page.</p>
         </div>
       </section>
 

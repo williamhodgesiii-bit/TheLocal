@@ -33,6 +33,38 @@ export const LANDMARK_SVG: Record<string, string> = {
 
 export const esc = (s: string) => s.replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`);
 
+/**
+ * Click handler for things printed on the map (pins, neighborhood names). The map can be
+ * dragged from anywhere, pins included, so a press that travels is a drag, not a tap.
+ */
+export function onTap(node: HTMLElement, fn: () => void) {
+  let x = 0;
+  let y = 0;
+  node.addEventListener("pointerdown", (e) => {
+    x = e.clientX;
+    y = e.clientY;
+  });
+  node.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (Math.hypot(e.clientX - x, e.clientY - y) > 6) return;
+    fn();
+  });
+}
+
+/** Shown once someone has dragged or zoomed the map: puts it back on their picks. */
+export function Recenter({ show, onClick }: { show: boolean; onClick: () => void }) {
+  return (
+    <button type="button" className={`recenter ${show ? "show" : ""}`} onClick={onClick} aria-label="Recenter the map on your picks" tabIndex={show ? 0 : -1} aria-hidden={!show}>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
+        <circle cx="12" cy="12" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+        <circle cx="12" cy="12" r="2.2" fill="currentColor" />
+        <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+      <span>Recenter</span>
+    </button>
+  );
+}
+
 export const pinHtml = (name: string) => `<div class="pin"><span class="pin-dot"><b class="pin-n"></b></span><span class="pin-label">${esc(name)}</span></div>`;
 
 /** Is a key press meant for the map (+/-) rather than a text field? */

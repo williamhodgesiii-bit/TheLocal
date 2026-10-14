@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Explorer from "@/components/Explorer";
 import { OPEN_CITIES, findCity, stateName } from "@/lib/regions";
+import { BRAND, MANTRA } from "@/lib/brand";
 
 export function generateStaticParams() {
   return OPEN_CITIES.map((c) => ({ state: c.state.toLowerCase(), city: c.slug }));
@@ -13,7 +14,7 @@ export function generateMetadata({ params }: { params: { state: string; city: st
   const title = `${c.name}, ${stateName(c.state)} restaurants, coffee & bars`;
   return {
     title,
-    description: `Locally owned restaurants, coffee shops and bars in ${c.name}. No chains, no fast food. Added by people who live there and checked by The Local.`,
+    description: `${MANTRA} Locally owned restaurants, coffee shops and bars in ${c.name}, added by people who live there and checked by ${BRAND}.`,
     alternates: { canonical: `/${params.state}/${params.city}` },
     openGraph: { title, url: `/${params.state}/${params.city}` },
   };

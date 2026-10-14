@@ -10,6 +10,7 @@ import { looksLikeChain } from "@/lib/chains";
 import type { Submission, SubmissionStatus } from "@/lib/backend";
 import { CITY_BY_ID, DEFAULT_CITY } from "@/lib/regions";
 import { useApp } from "./Providers";
+import { Logo } from "./Brand";
 
 const PinPicker = dynamic(() => import("./PinPicker"), { ssr: false, loading: () => <div className="pin-picker" /> });
 
@@ -52,7 +53,7 @@ export default function AdminQueue() {
           ← Back to the map
         </Link>
         <span>
-          <span className="brand-script">The Local</span> <span className="cap-kicker" style={{ display: "inline" }}>verification desk</span>
+          <Logo size={32} /> <span className="cap-kicker" style={{ display: "inline" }}>verification desk</span>
         </span>
       </header>
 

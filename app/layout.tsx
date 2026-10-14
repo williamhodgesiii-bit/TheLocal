@@ -10,16 +10,16 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import { MAP_STYLES } from "@/lib/map-styles";
 import { siteUrl } from "@/lib/site";
+import { BRAND, MANTRA } from "@/lib/brand";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
-  title: { default: "The Local · Birmingham restaurants, coffee & bars", template: "%s · The Local" },
-  description:
-    "Locally owned restaurants, coffee shops and bars in Birmingham, Ala., by neighborhood: Downtown, Homewood, English Village, Avondale and more. No chains, no fast food.",
+  title: { default: `${BRAND} · Birmingham's locally owned restaurants, coffee & bars`, template: `%s · ${BRAND}` },
+  description: `${MANTRA} Locally owned restaurants, coffee shops and bars in Birmingham, Homewood, Mountain Brook and Vestavia Hills, by neighborhood. No chains, no fast food.`,
   keywords: ["Birmingham restaurants", "Birmingham AL food", "Homewood restaurants", "Avondale bars", "English Village", "Pepper Place", "local restaurants Birmingham"],
-  openGraph: { type: "website", siteName: "The Local", locale: "en_US" },
+  openGraph: { type: "website", siteName: BRAND, locale: "en_US" },
   twitter: { card: "summary_large_image" },
-  appleWebApp: { capable: true, title: "The Local", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "The Plate", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

@@ -50,7 +50,7 @@ export async function GET(req: Request) {
     const box = [lng - 0.35, lat + 0.3, lng + 0.35, lat - 0.3].join(",");
     const r = await fetch(
       `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=4&addressdetails=0&bounded=1&viewbox=${box}&q=${encodeURIComponent(`${q}, ${city.name}, ${stateName(city.state)}`)}`,
-      { headers: { "User-Agent": "TheLocal/1.0 (independent restaurant guide)", "Accept-Language": "en" } }
+      { headers: { "User-Agent": "ThePlateNextDoor/1.0 (independent restaurant guide)", "Accept-Language": "en" } }
     );
     const j = await r.json();
     const results: Result[] = (Array.isArray(j) ? j : []).map((p: any) => ({

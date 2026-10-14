@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SPOT_BY_ID } from "@/lib/data";
 import { useApp } from "./Providers";
+import { NEWSLETTER } from "@/lib/brand";
 
 export default function PartnerForm({ spot }: { spot?: string }) {
   const { backend, toast } = useApp();
@@ -59,7 +60,7 @@ export default function PartnerForm({ spot }: { spot?: string }) {
             <option value="neighbor">Free listing (claim my page)</option>
             <option value="regular">Featured, $39 a month</option>
             <option value="institution">Front page, $99 a month</option>
-            <option value="newsletter">Sponsor the Thursday List</option>
+            <option value="newsletter">Sponsor {NEWSLETTER}</option>
             <option value="correction">A listing is closed or wrong</option>
           </select>
         </label>

@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { AREA_BY_ID, SPOTS, TOWN_BY_ID, distanceKm } from "../lib/data";
 
 const OUT = join(__dirname, "../lib/geo-overrides.json");
-const UA = "TheLocalBham/1.0 (+https://github.com/williamhodgesiii-bit/thelocal)";
+const UA = "ThePlateNextDoor/1.0 (+https://github.com/williamhodgesiii-bit/thelocal)";
 // a pin only moves if OpenStreetMap's answer is this close to where we already had it
 const MAX_MOVE_KM = 3;
 // Birmingham metro, so a same-named street elsewhere in Alabama can't match

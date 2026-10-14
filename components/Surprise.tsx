@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { track } from "@vercel/analytics";
 import { GENRE_BY_ID, areaLabelOf, priceLabel, type Spot } from "@/lib/data";
+import { BRAND } from "@/lib/brand";
 
 function weightedPick(pool: Spot[], avoid?: string) {
   const list = pool.length > 1 && avoid ? pool.filter((s) => s.id !== avoid) : pool;
@@ -96,6 +97,7 @@ export default function Surprise({
                     onAnimationComplete={() => setPrinted(true)}
                     aria-live="polite"
                   >
+                    <p className="t-brand">{BRAND}</p>
                     <div className="t-row t-head">
                       <span>Ticket {String(100 + ((ticket * 37) % 900))}</span>
                       <span>{time}</span>
@@ -113,7 +115,7 @@ export default function Surprise({
                     <div className="t-rule" />
                     <div className="t-row">
                       <span>{pick.genres.map((g) => GENRE_BY_ID[g].short).join(", ")}</span>
-                      <span>thank you</span>
+                      <span>thanks, neighbor</span>
                     </div>
                   </motion.div>
                 )}

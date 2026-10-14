@@ -55,7 +55,7 @@ export default function AuthModal({ open, reason, onClose }: { open: boolean; re
               ×
             </button>
             <h2 className="modal-title">{tab === "up" ? "Make an account" : "Sign in"}</h2>
-            <p className="muted">{reason ?? "You need one to write reviews, post photos and add places. It's free."}</p>
+            <p className="muted">{reason ?? "Join your neighbors: write reviews, post photos and add the places you love. It's free."}</p>
 
             <div className="seg">
               <button className={tab === "up" ? "on" : ""} onClick={() => setTab("up")} type="button">

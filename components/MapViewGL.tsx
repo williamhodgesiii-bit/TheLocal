@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl, { type LngLatLike, type Map as GLMap, type Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { LANDMARKS, RED_MOUNTAIN } from "@/lib/data";
 import { BLANK_STYLE, OFM_CREDIT, OSM_CREDIT, RASTER_STYLE, loadStyle, type Style } from "@/lib/map-style-load";
-import { LANDMARK_SVG, declutter, esc, pinHtml, zoomKey, type MapProps } from "./map-shared";
+import { LANDMARK_SVG, Recenter, declutter, esc, onTap, pinHtml, zoomKey, type MapProps } from "./map-shared";
 
 /**
  * The main map, drawn and moved by MapLibre itself, so pinching, scrolling and
  * flying are redrawn every frame and stay sharp at any zoom (vector tiles).
  *
- * The camera follows the menu: pick a kind of food or a part of town and it frames
- * the matches. You can zoom (pinch, scroll wheel, double-click, the +/- buttons or keys),
- * but not drag it around; any new pick re-frames it.
+ * The camera follows the browse bar: pick a kind of food or a part of town and it frames
+ * the matches. Drag it around (mouse or one finger) and zoom (pinch, scroll wheel,
+ * double-click, the +/- buttons or keys); "Recenter" or any new pick frames it again.
  */
 
 // Our zoom numbers are Leaflet's (256px tiles); MapLibre counts from 512px tiles, one level lower.
@@ -38,8 +38,8 @@ class ZoomButtons {
     this.el.className = "maplibregl-ctrl zoom-ctl";
     this.el.innerHTML = '<button type="button" aria-label="Zoom in" title="Zoom in (+)">+</button><button type="button" aria-label="Zoom out" title="Zoom out (−)">−</button>';
     const [inB, outB] = this.el.querySelectorAll("button");
-    inB.onclick = () => map.zoomIn({ duration: 250 });
-    outB.onclick = () => map.zoomOut({ duration: 250 });
+    inB.onclick = () => map.zoomIn({ duration: 250 }, { user: true });
+    outB.onclick = () => map.zoomOut({ duration: 250 }, { user: true });
     return this.el;
   }
   onRemove() {
@@ -54,6 +54,8 @@ export default function MapViewGL(props: MapProps) {
   const hoods = useRef<Map<string, Marker>>(new Map());
   const cb = useRef(props);
   cb.current = props;
+  /** the visitor moved the map themselves, so offer a way back to their picks */
+  const [moved, setMoved] = useState(false);
 
   const raf = useRef(0);
   const tidy = () => {
@@ -71,7 +73,7 @@ export default function MapViewGL(props: MapProps) {
       zoom: Z(cb.current.city.zoom),
       minZoom: 9,
       maxZoom: 18.5,
-      dragPan: false,
+      dragPan: true, // mouse drag and one-finger drag, with a little glide at the end
       dragRotate: false,
       pitchWithRotate: false,
       touchPitch: false,
@@ -88,6 +90,12 @@ export default function MapViewGL(props: MapProps) {
     });
     m.touchZoomRotate.disableRotation();
     m.addControl(new ZoomButtons(), "bottom-right");
+    // drags, wheel turns and pinches carry the browser event; our buttons and keys pass { user: true }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const byHand = (e: any) => (e.originalEvent || e.user) && setMoved(true);
+    m.on("dragstart", byHand);
+    m.on("zoomstart", byHand); // pinch, double-click, our buttons and keys
+    m.on("wheel", () => setMoved(true)); // the wheel's own zoom events don't carry the browser event
     map.current = m;
     (el.current as HTMLDivElement & { __map?: GLMap }).__map = m; // handy for tests and debugging
 
@@ -201,10 +209,7 @@ export default function MapViewGL(props: MapProps) {
       }
       const mk = marker(m, s.coords, "pin-wrap", pinHtml(s.name), 10);
       const node = mk.getElement();
-      node.addEventListener("click", (e) => {
-        e.stopPropagation();
-        cb.current.onSelect(s.id);
-      });
+      onTap(node, () => cb.current.onSelect(s.id)); // a drag that starts on a pin moves the map, it doesn't open the place
       node.addEventListener("mouseenter", () => cb.current.onHover(s.id));
       node.addEventListener("mouseleave", () => cb.current.onHover(null));
       pins.current.set(s.id, mk);
@@ -218,10 +223,7 @@ export default function MapViewGL(props: MapProps) {
     hoods.current.clear();
     for (const a of props.areas) {
       const mk = marker(m, a.labelAt, "hood", `<button type="button">${esc(a.label)}</button>`, 1);
-      mk.getElement().addEventListener("click", (e) => {
-        e.stopPropagation();
-        cb.current.onArea(a.id);
-      });
+      onTap(mk.getElement(), () => cb.current.onArea(a.id));
       hoods.current.set(a.id, mk);
     }
   }, [props.areas]);
@@ -259,7 +261,7 @@ export default function MapViewGL(props: MapProps) {
       e.preventDefault();
       const base = target !== null && m.isZooming() ? target : m.getZoom();
       target = Math.max(m.getMinZoom(), Math.min(m.getMaxZoom(), base + d * 0.75));
-      m.easeTo({ zoom: target, duration: 250 });
+      m.easeTo({ zoom: target, duration: 250 }, { user: true });
       m.once("zoomend", () => (target = null));
     };
     window.addEventListener("keydown", onKey);
@@ -276,34 +278,44 @@ export default function MapViewGL(props: MapProps) {
     const w = box.clientWidth;
     const h = box.clientHeight;
     if (w < 10 || h < 10) return; // hidden (phone list tab); re-aimed when shown
+    // the box may have just changed size (phone: Map tab → the short strip over a place).
+    // A fly works out where the middle is when it starts, so resize first.
+    const c = m.getCanvas();
+    if (Math.abs(c.clientWidth - w) > 1 || Math.abs(c.clientHeight - h) > 1) m.resize();
+    setMoved(false);
     // the first view jumps straight into place: one set of tiles to load, not two
     const first = !aimed.current;
     aimed.current = true;
     const dur = first ? 0 : 1100;
     const small = w < 600;
+    // MapLibre keeps the last padding it was given, so every move below sets its own:
+    // otherwise the Map tab's room for the caption and cards would push a place
+    // opened from there off the top of the short map strip
+    const side = Math.min(small ? 44 : 80, Math.max(0, (w - 60) / 2));
+    let top = props.topPad ?? (small ? 96 : 170);
+    let bottom = small ? (props.topPad ? 150 : 30) : 70;
+    // padding can never eat the whole map (tiny screens, landscape phones)
+    const room = h - 60;
+    if (top + bottom > room) {
+      const k = Math.max(0, room) / (top + bottom);
+      top *= k;
+      bottom *= k;
+    }
+    const framed = { top, bottom, left: side, right: side };
+    const none = { top: 0, bottom: 0, left: 0, right: 0 };
     if (props.selectedId) {
       const s = props.spots.find((x) => x.id === props.selectedId);
-      if (s) m.flyTo({ center: ll(s.coords), zoom: Z(small ? 16 : 16.6), duration: dur });
+      if (s) m.flyTo({ center: ll(s.coords), zoom: Z(small ? 16 : 16.6), duration: dur, padding: none });
       return;
     }
     if (props.focusId) {
+      // the card under the map steers it: keep the pin between the caption and the cards
       const s = props.spots.find((x) => x.id === props.focusId);
-      if (s) m.flyTo({ center: ll(s.coords), zoom: Math.max(m.getZoom(), Z(15)), duration: first ? 0 : 600 });
+      if (s) m.flyTo({ center: ll(s.coords), zoom: Math.max(m.getZoom(), Z(15)), duration: first ? 0 : 600, padding: framed });
       return;
     }
     const pts = props.spots.filter((s) => props.visible.has(s.id)).map((s) => s.coords);
     if (pts.length >= 2) {
-      const side = small ? 44 : 80;
-      let top = props.topPad ?? (small ? 96 : 170);
-      let bottom = small ? (props.topPad ? 150 : 30) : 70;
-      // padding can never eat the whole map (tiny screens, landscape phones)
-      const room = h - 60;
-      if (top + bottom > room) {
-        const k = Math.max(0, room) / (top + bottom);
-        top *= k;
-        bottom *= k;
-      }
-      const sidePad = Math.min(side, Math.max(0, (w - 60) / 2));
       const lats = pts.map((p) => p[0]);
       const lngs = pts.map((p) => p[1]);
       m.fitBounds(
@@ -311,17 +323,26 @@ export default function MapViewGL(props: MapProps) {
           [Math.min(...lngs), Math.min(...lats)],
           [Math.max(...lngs), Math.max(...lats)],
         ],
-        { padding: { top, bottom, left: sidePad, right: sidePad }, maxZoom: Z(props.frame.maxZoom), duration: dur }
+        { padding: framed, maxZoom: Z(props.frame.maxZoom), duration: dur }
       );
     } else if (pts.length === 1) {
-      m.flyTo({ center: ll(pts[0]), zoom: Z(Math.min(16, props.frame.maxZoom)), duration: dur });
+      m.flyTo({ center: ll(pts[0]), zoom: Z(Math.min(16, props.frame.maxZoom)), duration: dur, padding: framed });
     } else {
-      m.flyTo({ center: ll(props.frame.center), zoom: Z(props.frame.zoom), duration: dur });
+      m.flyTo({ center: ll(props.frame.center), zoom: Z(props.frame.zoom), duration: dur, padding: framed });
     }
   };
+  // re-frame only when what's picked really changes: a ratings refresh re-sorts the list
+  // (a new Set, same places) and must not yank the map back from where someone dragged it
+  const visibleKey = useMemo(() => [...props.visible].sort().join(","), [props.visible]);
+  const spotsKey = useMemo(() => props.spots.map((s) => `${s.id}${s.coords}`).join("|"), [props.spots]);
   useEffect(() => {
     aim.current();
-  }, [props.selectedId, props.focusId, props.visible, props.area, props.spots, props.frame, props.topPad]);
+  }, [props.selectedId, props.focusId, visibleKey, props.area, spotsKey, props.frame, props.topPad]);
 
-  return <div ref={el} className="leaflet-host gl-host" aria-label={`Map of ${props.city.name} restaurants`} />;
+  return (
+    <>
+      <div ref={el} className="leaflet-host gl-host" aria-label={`Map of ${props.city.name} restaurants`} />
+      <Recenter show={moved} onClick={() => aim.current()} />
+    </>
+  );
 }
