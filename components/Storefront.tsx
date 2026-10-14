@@ -35,7 +35,7 @@ function Storefront({ spot, mini = false }: { spot: Spot; mini?: boolean }) {
   const arched = (h >>> 13) % 2 === 0;
   const lights = isDrinks || spot.tags.some((t) => /patio|live music/.test(t));
   const uid = `sf-${spot.id}${mini ? "-m" : ""}`;
-  const name = spot.name.toUpperCase();
+  const name = (spot.sign ?? spot.name).toUpperCase();
   const fs = Math.min(46, 420 / (name.length * 0.5));
   const signW = 440;
   const textLen = name.length * fs * 0.5 > signW - 30 ? signW - 30 : undefined;

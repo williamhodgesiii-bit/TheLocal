@@ -14,7 +14,8 @@ Pick what sounds good and what part of town, and the map of Birmingham follows a
 
 The **Birmingham area**, by town: Birmingham (Downtown, Southside, Lakeview, Avondale), **Homewood** (downtown/SoHo, Edgewood, West Homewood), **Mountain Brook** (Mountain Brook Village and Lane Parke, English Village, Crestline) and **Vestavia Hills** (Cahaba Heights, Highway 31, Rocky Ridge).
 - 78 locally owned places. They were checked against local news (Homewood Star, Village Living, Vestavia Voice, Bham Now) in October 2026. Known closures were left off: Satterfield's, Sol y Luna, Post Office Pies (both locations), DeVinci's and Iron City Pizza.
-- **Exact pins and closures**: once `GOOGLE_PLACES_API_KEY` is set on Vercel, `/api/pins` looks every place up on Google, moves each pin to its real spot (only if the match is within 3 km), and drops any place Google marks *permanently* closed. Closed-for-the-night and temporarily closed places stay. Results are cached for a week. `npm run geocode` still works if you'd rather commit the locations.
+- **Exact pins, free**: a GitHub Action (`.github/workflows/pins.yml`) looks every place up on OpenStreetMap, which needs no key and no card. It saves the results to `lib/geo-overrides.json` and commits them, and Vercel redeploys. It runs whenever `lib/data.ts` changes, on the 1st of each month, and from the Actions tab (**Map pins → Run workflow**). A pin only moves if the match is within 3 km of where it was.
+- **Optional Google key** (`GOOGLE_PLACES_API_KEY`, paid after Google's free allowance): adds Google photos and ratings, refines pins further, and drops places Google marks *permanently* closed (never closed-for-the-night or temporarily closed). See `/api/pins`.
 - Other Alabama cities are already defined in `lib/regions.ts` with status `"later"`. To open one, change it to `"founding"` (members add places, staff verify) or `"live"`.
 
 ## Phones first
@@ -78,7 +79,7 @@ npm run dev
 
 ## Editing the guide
 
-All spots live in `lib/data.ts`. Each spot has a name, genres, area, address, price, "known for", a blurb, tags and a popularity score. Birmingham's rotated street grid is encoded there, so grid addresses (`onAveN(2013, 2)` = 2013 2nd Ave N) place themselves on the map. Pins are approximate until a Google key is set, then exact. **Before launch, check every spot is still open and the details are right.**
+All spots live in `lib/data.ts`. Each spot has a name, genres, area, address, price, "known for", a blurb, tags and a popularity score. Birmingham's rotated street grid is encoded there, so grid addresses (`onAveN(2013, 2)` = 2013 2nd Ave N) place themselves on the map. Pins start as estimates and are replaced by OpenStreetMap lookups (see the Map pins Action). **Before launch, check every spot is still open and the details are right.**
 
 Photos without a member or Google image fall back to two things. The storefront gets a procedurally drawn illustration, unique per spot. Food slots get labeled stock photos of that place's dishes (`lib/photos.ts`).
 

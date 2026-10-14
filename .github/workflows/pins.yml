@@ -1,0 +1,43 @@
+# Exact map pins for free (OpenStreetMap, no key). Looks every place up, saves the
+# results to lib/geo-overrides.json and commits them; Vercel redeploys on its own.
+# Runs when the guide changes, on the 1st of each month, or by hand from the Actions tab.
+name: Map pins
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 9 1 * *"
+  push:
+    branches: [main]
+    paths: ["lib/data.ts", "scripts/pins-free.ts"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: map-pins
+  cancel-in-progress: true
+
+jobs:
+  pins:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Look up every place on OpenStreetMap
+        run: npx -y tsx@4.19.2 scripts/pins-free.ts
+      - name: Save the new pins
+        run: |
+          if git diff --quiet lib/geo-overrides.json; then
+            echo "Pins unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/geo-overrides.json
+          git commit -m "Update map pins from OpenStreetMap"
+          git pull --rebase origin main
+          git push

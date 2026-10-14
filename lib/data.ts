@@ -77,6 +77,8 @@ export interface Spot {
   /** when our team verified it exists */
   verifiedAt?: string;
   /** openly licensed photos of this exact place (shown before stock imagery) */
+  /** shorter text for the sign on the drawn storefront, when the full name is too long */
+  sign?: string;
   photos?: { url: string; kind: "building" | "food"; credit: string; link: string }[];
 }
 
@@ -443,7 +445,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["roaster", "work-friendly"], pop: 64,
   },
   {
-    id: "edgewood-creamery", name: "Edgewood Creamery", genres: ["sweets"], area: "edgewood",
+    id: "edgewood-creamery", name: "Edgewood Creamery", sign: "Wood Creamery", genres: ["sweets"], area: "edgewood",
     address: "936 Oxmoor Rd", coords: [33.4661, -86.8091], price: 1,
     knownFor: "Old-fashioned scoops in Edgewood",
     blurb: "Old-fashioned ice cream shop in Edgewood. Get a cone and walk the neighborhood.",
@@ -733,6 +735,9 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
 const ov = overrides as Record<string, [number, number]>;
 /** Editorially curated Birmingham launch guide. Community spots come from the backend. */
 export const SPOTS: Spot[] = RAW_SPOTS.map((s) => ({ ...s, city: "birmingham-al", coords: ov[s.id] ?? s.coords }));
+
+/** true once most pins come from a lookup (OpenStreetMap or Google) instead of our estimates */
+export const PINS_EXACT = Object.keys(ov).length > SPOTS.length / 2;
 
 export const SPOT_BY_ID: Record<string, Spot> = Object.fromEntries(SPOTS.map((s) => [s.id, s]));
 export const GENRE_BY_ID = Object.fromEntries(GENRES.map((g) => [g.id, g])) as Record<GenreId, Genre>;

@@ -9,6 +9,7 @@ import {
   DRINK_KINDS,
   GENRES,
   GENRE_BY_ID,
+  PINS_EXACT,
   SPOTS,
   TOWNS,
   TOWN_BY_ID,
@@ -670,7 +671,7 @@ export default function Explorer({
                   <footer className="side-foot">
                     <p>Locally owned places only. If it has a drive-thru or a corporate HQ out of state, it&apos;s not on here.</p>
                     <p>
-                      {google ? "" : "Map pins are close, not exact. "}Something closed or wrong? <Link href="/partners#contact">Let us know</Link>. <Link href="/credits">Photo credits</Link>.
+                      {google || PINS_EXACT ? "" : "Map pins are close, not exact. "}Something closed or wrong? <Link href="/partners#contact">Let us know</Link>. <Link href="/credits">Photo credits</Link>.
                     </p>
                     <p>
                       © {new Date().getFullYear()} The Local, {city.name}, {apState(city.state)}
