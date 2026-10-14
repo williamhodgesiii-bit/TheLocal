@@ -104,16 +104,23 @@ export default function MapView(props: Props) {
       zoom: cb.current.city.zoom,
       zoomControl: false,
       dragging: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
+      // zoom by scroll wheel, double-click, pinch, the +/- buttons or the +/- keys;
+      // the camera still follows the menu, and any new pick re-frames the map
+      scrollWheelZoom: true,
+      wheelPxPerZoomLevel: 90,
+      doubleClickZoom: true,
+      touchZoom: true,
       boxZoom: false,
       keyboard: false,
-      touchZoom: false,
+      minZoom: 10,
+      maxZoom: 19,
       zoomSnap: 0,
+      zoomDelta: 0.75,
       inertia: false,
       attributionControl: true,
     });
     m.attributionControl.setPrefix(false);
+    L.control.zoom({ position: "bottomright", zoomInTitle: "Zoom in (+)", zoomOutTitle: "Zoom out (−)" }).addTo(m);
     addBasemap(m, "print");
 
     if (cb.current.city.id === "birmingham-al") {
@@ -229,14 +236,46 @@ export default function MapView(props: Props) {
     declutter.current();
   }, [props.visible, props.numbers, props.hoveredId, props.selectedId, props.area, props.spots, props.areas]);
 
+  // + and - zoom the map from anywhere on the page (not while typing). Presses made
+  // while a zoom is still animating add up and apply when it lands, so none are lost.
+  useEffect(() => {
+    let pending = 0;
+    const flush = () => {
+      const m = map.current;
+      if (!m || !pending) return;
+      const z = Math.max(m.getMinZoom(), Math.min(m.getMaxZoom(), m.getZoom() + pending * 0.75));
+      pending = 0;
+      m.setZoom(z);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const m = map.current;
+      const t = e.target as HTMLElement;
+      if (!m || e.metaKey || e.ctrlKey || e.altKey || t?.closest?.("input, textarea, select, [contenteditable]")) return;
+      if (m.getSize().x < 10) return; // map hidden (phone list tab)
+      if (e.key === "+" || e.key === "=") pending++;
+      else if (e.key === "-" || e.key === "_") pending--;
+      else return;
+      e.preventDefault();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((m as any)._animatingZoom) m.once("zoomend", flush);
+      else flush();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // camera
+  const aimed = useRef(false);
   const aim = useRef<() => void>(() => {});
   aim.current = () => {
     const m = map.current;
     if (!m) return;
     const size = m.getSize();
     if (size.x < 10 || size.y < 10) return; // hidden (mobile list tab); re-aimed on resize
-    const opts = { duration: 1.1, easeLinearity: 0.2 };
+    // the first view jumps straight into place: one set of tiles to load, not two
+    const first = !aimed.current;
+    aimed.current = true;
+    const opts = first ? { animate: false, duration: 0 } : { duration: 1.1, easeLinearity: 0.2 };
     const small = size.x < 600;
     const top = props.topPad ?? (small ? 96 : 170);
     if (props.selectedId) {

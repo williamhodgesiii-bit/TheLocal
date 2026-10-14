@@ -8,6 +8,7 @@ import "@fontsource/nanum-pen-script/400.css";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import { MAP_STYLES } from "@/lib/map-styles";
 import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -31,6 +32,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {/* start the map's style download (and its connection) before the map code arrives */}
+        <link rel="preconnect" href={new URL(MAP_STYLES.print).origin} crossOrigin="anonymous" />
+        <link rel="preload" href={MAP_STYLES.print} as="fetch" crossOrigin="anonymous" />
+      </head>
       <body>
         <Providers>{children}</Providers>
         <Analytics />

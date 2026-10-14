@@ -1235,6 +1235,42 @@ select {
   color: var(--ink-2) !important;
 }
 
+/* zoom buttons, printed like the rest of the map */
+.leaflet-host .leaflet-control-zoom {
+  margin: 0 12px 26px 0;
+  border: 1px solid var(--ink) !important;
+  border-radius: 0;
+  box-shadow: 3px 3px 0 rgba(34, 32, 28, 0.12);
+  overflow: hidden;
+}
+.leaflet-host .leaflet-control-zoom a {
+  width: 34px;
+  height: 34px;
+  line-height: 32px;
+  border-radius: 0 !important;
+  background: var(--card);
+  color: var(--ink);
+  font: 400 20px/32px var(--f-serif);
+  border-bottom: 1px solid var(--line-2);
+}
+.leaflet-host .leaflet-control-zoom a:last-child {
+  border-bottom: 0;
+}
+.leaflet-host .leaflet-control-zoom a:hover {
+  background: var(--paper);
+  color: var(--red);
+}
+.leaflet-host .leaflet-control-zoom a.leaflet-disabled {
+  color: var(--muted);
+  opacity: 0.5;
+}
+/* phones pinch instead, and the place cards live down there */
+@media (hover: none) and (pointer: coarse) {
+  .leaflet-host .leaflet-control-zoom {
+    display: none;
+  }
+}
+
 .map-caption {
   position: absolute;
   z-index: 500;
