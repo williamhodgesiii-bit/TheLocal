@@ -185,6 +185,19 @@ export default function SpotDetail({
         </div>
       </div>
 
+      {/* phones: name, the basics and what to order, before anything else */}
+      <header className="m-head">
+        <h1>{spot.name}</h1>
+        <p className="m-meta">
+          {spot.genres.map((x) => GENRE_BY_ID[x].short).join(", ")} · {areaLabelOf(spot)} · {priceLabel(spot.price)}
+          {places?.rating ? <span className="g-rate"> · Google {places.rating.toFixed(1)}</span> : null}
+          {spot.sponsored && <span className="paid">Paid listing</span>}
+        </p>
+        <p className="m-order">
+          <span className="cl">Order</span> <span className="pen">{spot.knownFor}</span>
+        </p>
+      </header>
+
       <div className="guest-check">
         <div className="check-top">
           <span className="check-title">Guest Check</span>
@@ -280,25 +293,26 @@ export default function SpotDetail({
       <section className="detail-body">
         <p className="lede">{spot.blurb}</p>
         <p className="tags">{spot.tags.join(" · ")}</p>
-        <div className="actions">
-          <a className="btn btn-green" href={mapsUrl(spot)} target="_blank" rel="noreferrer" onClick={() => track("directions", { id: spot.id })}>
-            Directions
-          </a>
-          {spot.phone && (
-            <a className="btn btn-line" href={`tel:${spot.phone.replace(/[^0-9+]/g, "")}`}>
-              Call
-            </a>
-          )}
-          {website && (
-            <a className="btn btn-line" href={website} target="_blank" rel="noreferrer nofollow ugc" onClick={() => track("website", { id: spot.id })}>
-              Website
-            </a>
-          )}
-          <button className="btn btn-line" onClick={() => startUpload("vibe")}>
-            Add a photo
-          </button>
-        </div>
       </section>
+
+      <div className="actions detail-actions">
+        <a className="btn btn-green" href={mapsUrl(spot)} target="_blank" rel="noreferrer" onClick={() => track("directions", { id: spot.id })}>
+          Directions
+        </a>
+        {spot.phone && (
+          <a className="btn btn-line" href={`tel:${spot.phone.replace(/[^0-9+]/g, "")}`}>
+            Call
+          </a>
+        )}
+        {website && (
+          <a className="btn btn-line" href={website} target="_blank" rel="noreferrer nofollow ugc" onClick={() => track("website", { id: spot.id })}>
+            Website
+          </a>
+        )}
+        <button className="btn btn-line act-photo" onClick={() => startUpload("vibe")}>
+          Add a photo
+        </button>
+      </div>
 
       <Reviews spot={spot} />
 

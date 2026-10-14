@@ -105,6 +105,9 @@ export default function Profile({
           {user.email}
           {verified > 0 && ` · ${verified} place${verified === 1 ? "" : "s"} you added ${verified === 1 ? "is" : "are"} on the map`}
         </p>
+        <button className="btn btn-line profile-add" onClick={onAdd}>
+          + Add a place you love
+        </button>
       </header>
 
       <nav className="profile-tabs" aria-label="Your things">

@@ -67,7 +67,7 @@ export default function Explorer({
   initialSpotData?: Spot;
   initialView?: View;
 }) {
-  const { backend, user, openAuth, requireAuth, saved, toast } = useApp();
+  const { backend, user, openAuth, requireAuth, saved, toggleSaved, toast } = useApp();
   const router = useRouter();
   const [city, setCity] = useState<City>(CITY_BY_ID[cityId ?? initialSpotData?.city ?? DEFAULT_CITY] ?? CITY_BY_ID[DEFAULT_CITY]);
   const [community, setCommunity] = useState<Spot[]>(initialSpotData ? [initialSpotData] : []);
@@ -82,6 +82,8 @@ export default function Explorer({
   const [prices, setPrices] = useState<number[]>([]);
   const [sort, setSort] = useState<Sort>("popular");
   const [savedOnly, setSavedOnly] = useState(false);
+  /** phone: the Filters sheet (part of town, price, order) */
+  const [sheet, setSheet] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(initialSpot ?? null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [surprise, setSurprise] = useState(false);
@@ -517,7 +519,19 @@ export default function Explorer({
                     </section>
                   )}
 
-                  <section className="menu-sec">
+                  <PhoneTools
+                    query={query}
+                    setQuery={setQuery}
+                    genre={genre}
+                    chooseGenre={chooseGenre}
+                    genreCounts={genreCounts}
+                    drink={drink}
+                    setDrink={setDrink}
+                    filters={(activeArea ? 1 : 0) + (prices.length ? 1 : 0) + (sort !== "popular" ? 1 : 0) + (savedOnly ? 1 : 0)}
+                    openFilters={() => setSheet(true)}
+                  />
+
+                  <section className="menu-sec genre-sec">
                     <h2 className="menu-head">
                       <span>What sounds good?</span>
                     </h2>
@@ -543,7 +557,7 @@ export default function Explorer({
                     )}
                   </section>
 
-                  <section className="menu-sec">
+                  <section className="menu-sec town-sec">
                     <h2 className="menu-head">
                       <span>What part of town?</span>
                     </h2>
@@ -632,7 +646,7 @@ export default function Explorer({
                       {list.length} {list.length === 1 ? "place" : "places"}
                       {savedOnly ? ", saved by you" : ""}
                     </span>
-                    {(genre !== "all" || area !== "all" || query || filtersOn) && (
+                    {(genre !== "all" || (area !== "all" && !(isMobile && area.startsWith("t:"))) || query || filtersOn) && (
                       <button className="textbtn" onClick={resetAll}>
                         Start over
                       </button>
@@ -724,6 +738,47 @@ export default function Explorer({
             {isMobile && view === "map" && !selected && (
               <MapCards list={list} focusId={focusId} onFocus={setFocusId} onOpen={(id) => select(id)} />
             )}
+            {isMobile && selected && (
+              <div className="m-float">
+                <button className="m-round" onClick={() => select(null)} aria-label="Back to the list">
+                  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
+                    <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                <span className="m-float-r">
+                  <button
+                    className={`m-round ${saved.includes(selected.id) ? "on" : ""}`}
+                    onClick={() => toggleSaved(selected.id)}
+                    aria-pressed={saved.includes(selected.id)}
+                    aria-label={saved.includes(selected.id) ? "Saved. Tap to remove" : "Save"}
+                  >
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
+                      <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" fill={saved.includes(selected.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  <button
+                    className="m-round"
+                    aria-label="Share"
+                    onClick={async () => {
+                      const url = `${location.origin}/spot/${selected.id}`;
+                      try {
+                        if (navigator.share) await navigator.share({ title: selected.name, text: `${selected.name}: ${selected.knownFor}`, url });
+                        else {
+                          await navigator.clipboard.writeText(url);
+                          toast("Link copied");
+                        }
+                      } catch {
+                        /* dismissed */
+                      }
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
+                      <path d="M12 15V4M8 8l4-4 4 4M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </span>
+              </div>
+            )}
             <p className="map-key">
               <i className="k-on" /> numbers match the list <i className="k-off" /> not in your picks
             </p>
@@ -731,27 +786,50 @@ export default function Explorer({
         </section>
       </main>
 
+      {/* four calm tabs; adding a place lives on your page and at the end of the list */}
       <nav className="tabbar" aria-label="Sections">
-        <button className={view === "list" && !selected ? "on" : ""} onClick={() => goView("list")}>
+        <button className={view === "list" && !selected ? "on" : ""} onClick={() => goView("list")} aria-current={view === "list" && !selected ? "page" : undefined}>
           <TabGlyph k="menu" />
-          Menu
+          Explore
         </button>
-        <button className={view === "map" && !selected ? "on" : ""} onClick={() => goView("map")}>
+        <button className={view === "map" && !selected ? "on" : ""} onClick={() => goView("map")} aria-current={view === "map" && !selected ? "page" : undefined}>
           <TabGlyph k="map" />
           Map
         </button>
         <button className="tab-surprise" onClick={surpriseOrAdd}>
-          <span>Surprise me</span>
+          <TabGlyph k="spark" />
+          Surprise
         </button>
-        <button onClick={openAdd}>
-          <TabGlyph k="add" />
-          Add
-        </button>
-        <button className={view === "me" && !selected ? "on" : ""} onClick={() => goView("me")}>
+        <button className={view === "me" && !selected ? "on" : ""} onClick={() => goView("me")} aria-current={view === "me" && !selected ? "page" : undefined}>
           <TabGlyph k="me" />
           {user ? "You" : "Sign in"}
         </button>
       </nav>
+
+      <FilterSheet
+        open={sheet}
+        onClose={() => setSheet(false)}
+        count={list.length}
+        towns={[{ id: "all", label: "Anywhere" }, ...TOWNS.map((t) => ({ id: `t:${t.id}`, label: t.label }))]}
+        hoods={activeTown ? areas.filter((a) => a.town === activeTown).map((a) => ({ id: a.id, label: a.label })) : []}
+        area={area}
+        activeTown={activeTown}
+        areaCounts={areaCounts}
+        chooseArea={(id) => setArea(id)}
+        prices={prices}
+        setPrices={setPrices}
+        sort={sort}
+        setSort={setSort}
+        savedOnly={savedOnly}
+        setSavedOnly={setSavedOnly}
+        savedCount={saved.length}
+        clear={() => {
+          setArea(activeTown ? `t:${activeTown}` : "all");
+          setPrices([]);
+          setSort("popular");
+          setSavedOnly(false);
+        }}
+      />
 
       <Surprise
         open={surprise && allSpots.length > 0}
@@ -804,9 +882,10 @@ export default function Explorer({
 }
 
 /** Small pen-drawn marks for the phone tab bar (no icon set). */
-function TabGlyph({ k }: { k: "menu" | "map" | "add" | "me" }) {
+function TabGlyph({ k }: { k: "menu" | "map" | "add" | "me" | "spark" }) {
   const d = {
     menu: "M4 6h16M4 12h11M4 18h14",
+    spark: "M12 3.5c.6 3.9 1.9 5.9 5.6 6.6-3.7.8-5 2.8-5.6 6.7-.6-3.9-1.9-5.9-5.6-6.7 3.7-.7 5-2.7 5.6-6.6ZM18.5 15.5c.3 1.6.8 2.4 2.2 2.7-1.4.3-1.9 1.1-2.2 2.7-.3-1.6-.8-2.4-2.2-2.7 1.4-.3 1.9-1.1 2.2-2.7Z",
     map: "M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14",
     add: "M12 4c.3 5 .1 11 0 16M4 12c5-.3 11-.1 16 0",
     me: "M12 12a4 4 0 1 0-.1 0M4.5 20c1.5-4 4.4-5.5 7.5-5.5s6 1.5 7.5 5.5",
@@ -818,12 +897,214 @@ function TabGlyph({ k }: { k: "menu" | "map" | "add" | "me" }) {
   );
 }
 
+/**
+ * Phones: one search bar and one row of chips, the way people already use food apps.
+ * Part of town, price and order live behind Filters, so the list starts near the top.
+ */
+function PhoneTools({
+  query,
+  setQuery,
+  genre,
+  chooseGenre,
+  genreCounts,
+  drink,
+  setDrink,
+  filters,
+  openFilters,
+}: {
+  query: string;
+  setQuery: (q: string) => void;
+  genre: GenreId | "all";
+  chooseGenre: (g: GenreId | "all") => void;
+  genreCounts: Record<string, number>;
+  drink: DrinkKind | "all";
+  setDrink: (d: DrinkKind | "all") => void;
+  filters: number;
+  openFilters: () => void;
+}) {
+  return (
+    <div className="m-tools">
+      <label className="m-search">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
+          <path d="M10.5 18a7.5 7.5 0 1 1 5.3-2.2L21 21" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+        <span className="sr-only">Search</span>
+        <input type="search" enterKeyHint="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search dishes, places, patios" />
+        {query && (
+          <button type="button" className="m-clear" onClick={() => setQuery("")} aria-label="Clear search">
+            ×
+          </button>
+        )}
+      </label>
+      <div className="m-chips" role="toolbar" aria-label="Kind of food">
+        <button type="button" className={`m-chip m-chip-filter ${filters ? "on" : ""}`} onClick={openFilters} aria-label={filters ? `Filters, ${filters} on` : "Filters"}>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
+            <path d="M4 7h10M18 7h2M4 17h4M12 17h8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            <circle cx="16" cy="7" r="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+            <circle cx="10" cy="17" r="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+          </svg>
+          Filters{filters ? <b>{filters}</b> : null}
+        </button>
+        <ChipButton on={genre === "all"} onClick={() => chooseGenre("all")}>
+          All
+        </ChipButton>
+        {GENRES.filter((g) => (genreCounts[g.id] ?? 0) > 0 || genre === g.id).map((g) => (
+          <ChipButton key={g.id} on={genre === g.id} onClick={() => chooseGenre(g.id)}>
+            {g.short}
+          </ChipButton>
+        ))}
+      </div>
+      {genre === "drinks" && (
+        <div className="m-chips m-sub" role="toolbar" aria-label="Kind of drinks">
+          {[{ id: "all" as const, label: "Any" }, ...DRINK_KINDS].map((k) => (
+            <ChipButton key={k.id} small on={drink === k.id} onClick={() => setDrink(k.id)}>
+              {k.label}
+            </ChipButton>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChipButton({ on, onClick, small, children }: { on: boolean; onClick: () => void; small?: boolean; children: React.ReactNode }) {
+  const ref = useKeepInView(on);
+  return (
+    <button ref={ref} type="button" className={`m-chip ${small ? "m-chip-sm" : ""} ${on ? "on" : ""}`} aria-pressed={on} onClick={onClick}>
+      {children}
+    </button>
+  );
+}
+
+/** Phones: everything that isn't "what kind of food" in one sheet, with a clear way out. */
+function FilterSheet(p: {
+  open: boolean;
+  onClose: () => void;
+  count: number;
+  towns: { id: string; label: string }[];
+  hoods: { id: string; label: string }[];
+  area: string;
+  activeTown: TownId | null;
+  areaCounts: Record<string, number>;
+  chooseArea: (id: AreaId | "all") => void;
+  prices: number[];
+  setPrices: (f: (x: number[]) => number[]) => void;
+  sort: Sort;
+  setSort: (s: Sort) => void;
+  savedOnly: boolean;
+  setSavedOnly: (v: boolean) => void;
+  savedCount: number;
+  clear: () => void;
+}) {
+  const townOn = (id: string) => p.area === id || (id === `t:${p.activeTown}` && !p.area.startsWith("t:") && p.area !== "all");
+  return (
+    <AnimatePresence>
+      {p.open && (
+        <motion.div className="overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={p.onClose}>
+          <motion.div
+            className="modal filter-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Filters"
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 30, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="fs-head">
+              <h2 className="modal-title">Filters</h2>
+              <button className="modal-x" onClick={p.onClose} aria-label="Close">
+                ×
+              </button>
+            </div>
+            <div className="fs-body">
+              <section>
+                <h3>Part of town</h3>
+                <div className="fs-chips">
+                  {p.towns.map((t) => (
+                    <button key={t.id} type="button" className={`m-chip ${townOn(t.id) ? "on" : ""}`} aria-pressed={townOn(t.id)} onClick={() => p.chooseArea(t.id)}>
+                      {t.label}
+                      {t.id !== "all" && <span className="m-chip-n">{p.areaCounts[t.id] ?? 0}</span>}
+                    </button>
+                  ))}
+                </div>
+                {p.hoods.length > 0 && (
+                  <div className="fs-chips fs-sub">
+                    {p.hoods.map((h) => (
+                      <button
+                        key={h.id}
+                        type="button"
+                        className={`m-chip m-chip-sm ${p.area === h.id ? "on" : ""}`}
+                        aria-pressed={p.area === h.id}
+                        onClick={() => p.chooseArea(p.area === h.id ? `t:${p.activeTown}` : h.id)}
+                      >
+                        {h.label}
+                        <span className="m-chip-n">{p.areaCounts[h.id] ?? 0}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
+              <section>
+                <h3>Price</h3>
+                <div className="fs-chips">
+                  {[1, 2, 3, 4].map((n) => {
+                    const on = p.prices.includes(n);
+                    return (
+                      <button key={n} type="button" className={`m-chip ${on ? "on" : ""}`} aria-pressed={on} onClick={() => p.setPrices((x) => (on ? x.filter((y) => y !== n) : [...x, n]))}>
+                        {priceLabel(n)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+              <section>
+                <h3>Order by</h3>
+                <div className="fs-chips">
+                  {(
+                    [
+                      ["popular", "Most loved"],
+                      ["rating", "Member ratings"],
+                      ["az", "A to Z"],
+                    ] as [Sort, string][]
+                  ).map(([k, l]) => (
+                    <button key={k} type="button" className={`m-chip ${p.sort === k ? "on" : ""}`} aria-pressed={p.sort === k} onClick={() => p.setSort(k)}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </section>
+              {p.savedCount > 0 && (
+                <section>
+                  <label className="check fs-saved">
+                    <input type="checkbox" checked={p.savedOnly} onChange={(e) => p.setSavedOnly(e.target.checked)} />
+                    Only places I&apos;ve saved ({p.savedCount})
+                  </label>
+                </section>
+              )}
+            </div>
+            <div className="fs-foot">
+              <button type="button" className="textbtn" onClick={p.clear}>
+                Clear all
+              </button>
+              <button type="button" className="btn btn-green" onClick={p.onClose}>
+                {p.count === 0 ? "No matches" : `Show ${p.count} ${p.count === 1 ? "place" : "places"}`}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 /** On phones the menu rows scroll sideways; keep the chosen item in view. */
 function useKeepInView(on: boolean) {
   const ref = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!on || !ref.current || !window.matchMedia("(max-width: 900px)").matches) return;
-    const row = ref.current.closest(".board, .hoods, .subline") as HTMLElement | null;
+    const row = ref.current.closest(".board, .hoods, .subline, .m-chips") as HTMLElement | null;
     if (!row) return;
     const b = ref.current;
     row.scrollTo({ left: b.offsetLeft - (row.clientWidth - b.offsetWidth) / 2, behavior: "smooth" });

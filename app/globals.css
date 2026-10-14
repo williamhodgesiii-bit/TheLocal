@@ -3369,6 +3369,558 @@ label.check input {
   }
 }
 
+/* ---------------------------------------------------------------- phone toolbar, chips, filters
+   Phones get the pattern people already know from food and map apps: one search bar,
+   one row of chips, everything else behind Filters. Desktop keeps the diner menu. */
+.m-tools,
+.m-head {
+  display: none;
+}
+.detail-actions {
+  margin: 16px 22px 0;
+}
+.profile-add {
+  margin-top: 14px;
+}
+.m-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 15px;
+  border: 1px solid var(--line-2);
+  border-radius: 19px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 14.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.m-chip.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--card);
+}
+.m-chip-sm {
+  height: 34px;
+  padding: 0 13px;
+  font-size: 13.5px;
+}
+.m-chip-n {
+  font-size: 12px;
+  color: var(--muted);
+}
+.m-chip.on .m-chip-n {
+  color: rgba(251, 248, 239, 0.7);
+}
+.m-chip-filter b {
+  display: inline-grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.m-chip-filter.on {
+  background: #fff;
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.filter-sheet {
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  max-height: min(86vh, 720px);
+  max-height: min(86dvh, 720px);
+}
+.fs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.fs-head .modal-title {
+  margin: 0;
+}
+.fs-head .modal-x {
+  position: static;
+}
+.fs-body {
+  overflow-y: auto;
+  padding: 6px 20px 10px;
+  -webkit-overflow-scrolling: touch;
+}
+.fs-body section {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.fs-body section:last-child {
+  border-bottom: 0;
+}
+.fs-body h3 {
+  margin: 0 0 12px;
+  font-family: var(--f-serif);
+  font-weight: 400;
+  font-size: 18px;
+}
+.fs-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fs-sub {
+  margin-top: 10px;
+}
+.fs-saved {
+  font-size: 15px !important;
+}
+.fs-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: var(--card);
+}
+.fs-foot .btn {
+  flex: 1;
+  max-width: 260px;
+  min-height: 48px;
+  font-size: 15.5px;
+}
+
+@media (max-width: 900px) {
+  /* --- header: logo left, the town as a tappable pill */
+  .masthead {
+    padding: max(8px, env(safe-area-inset-top)) 16px 8px;
+  }
+  .brand-script {
+    font-size: 29px;
+  }
+  .town-btn {
+    align-items: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid var(--line-2);
+    border-radius: 19px;
+    background: #fff;
+    font-family: var(--f-sans);
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+
+  /* --- browse: the diner-menu blocks give way to the toolbar */
+  .menu > .genre-sec,
+  .menu > .town-sec,
+  .menu > .search-sec {
+    display: none;
+  }
+  .m-tools {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    padding: 14px 0 12px;
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+  }
+  .m-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+    margin: 0 16px;
+    padding: 0 8px 0 16px;
+    border: 1px solid var(--line-2);
+    border-radius: 24px;
+    background: #fff;
+    color: var(--muted);
+    box-shadow: 0 1px 3px rgba(34, 32, 28, 0.06);
+  }
+  .m-search:focus-within {
+    border-color: var(--ink);
+  }
+  .m-search input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--ink);
+    font-size: 16px; /* 16px+ keeps iOS from zooming the page on focus */
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .m-search input::placeholder {
+    color: var(--muted);
+  }
+  .m-search input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .m-clear {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-size: 22px;
+    line-height: 1;
+  }
+  .m-chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 12px 16px 0;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .m-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .m-sub {
+    padding-top: 10px;
+  }
+
+  /* --- results count, quiet */
+  .list-head {
+    margin: 18px 20px 6px;
+    padding: 0;
+    border: 0;
+    font-variant-caps: normal;
+    letter-spacing: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  /* --- list rows: photo, name, one hook, one line of facts */
+  .item-btn {
+    position: relative;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 0;
+  }
+  .item + .item .item-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 118px;
+    right: 0;
+    border-top: 1px solid var(--line);
+  }
+  .item-btn:hover,
+  .item.hot .item-btn {
+    background: none;
+  }
+  .item-btn:active {
+    background: rgba(34, 32, 28, 0.04);
+  }
+  .item-btn .thumb {
+    order: -1;
+    width: 84px;
+    height: 84px;
+    border: 0;
+    border-radius: 12px;
+    box-shadow: none;
+    transform: none !important;
+  }
+  .item-no {
+    position: absolute;
+    top: 7px;
+    left: 13px;
+    z-index: 1;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    font-size: 11px;
+    box-shadow: 0 0 0 2px var(--card);
+  }
+  .item-body {
+    gap: 3px;
+  }
+  .item-line {
+    gap: 10px;
+    justify-content: space-between;
+  }
+  .item-line .leader {
+    display: none;
+  }
+  .item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 18px;
+    line-height: 1.25;
+  }
+  .item-price {
+    flex: none;
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+  .item-known,
+  .item-meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .item-known {
+    font-size: 14.5px;
+  }
+  .item-meta {
+    font-size: 13.5px;
+  }
+
+  /* --- the in-list ad and the end of the list, with room to breathe */
+  .classified {
+    margin: 14px 20px;
+  }
+  .classified a {
+    border: 1px dashed var(--line-2);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .write-in {
+    margin: 28px 20px 0;
+    width: calc(100% - 40px);
+    border-radius: 12px;
+  }
+  .classified,
+  .notice,
+  .newsletter {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+  .newsletter {
+    margin-top: 28px;
+  }
+  .side-foot {
+    padding: 24px 20px 20px;
+  }
+
+  /* --- map tab: a slim caption, no legend */
+  .map-caption {
+    padding: 8px 12px 9px;
+    max-width: 72%;
+  }
+  .map-caption .cap-kicker {
+    display: none;
+  }
+  .cap-title {
+    font-size: 18px;
+  }
+
+  /* --- bottom bar: four equal tabs, Surprise in red but not shouting */
+  .tabbar {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .tabbar button {
+    min-height: 56px;
+    gap: 3px;
+    font-size: 11.5px;
+  }
+  .tabbar .tab-surprise {
+    color: var(--red);
+  }
+  .tabbar .tab-surprise svg {
+    color: var(--red);
+  }
+
+  /* --- a place: name and the basics first, then actions, photos, the story, reviews */
+  .detail {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 28px;
+  }
+  .detail > .detail-bar {
+    order: 0;
+  }
+  .detail > .guest-check {
+    display: none;
+  }
+  .detail > .m-head {
+    display: block;
+    order: 1;
+    padding: 18px 20px 0;
+  }
+  .detail > .detail-actions {
+    order: 2;
+  }
+  .detail > .snaps {
+    order: 3;
+  }
+  .detail > .detail-body {
+    order: 4;
+  }
+  .detail > .reviews {
+    order: 5;
+  }
+  .detail > .nearby {
+    order: 6;
+  }
+  .detail > .claim {
+    order: 7;
+  }
+  .m-head h1 {
+    margin: 0;
+    font-family: var(--f-serif);
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 1.12;
+  }
+  .m-meta {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+  .m-order {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 14px 0 0;
+    padding: 10px 14px 9px;
+    border-radius: 12px;
+    background: var(--check);
+  }
+  .m-order .pen {
+    font-size: 23px;
+    line-height: 1.05;
+  }
+  .detail-actions {
+    display: flex;
+    gap: 8px;
+    margin: 16px 20px 0;
+  }
+  .detail-actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 46px;
+    border-radius: 12px;
+    font-size: 14.5px;
+  }
+  .detail-actions .act-photo {
+    display: none; /* the photo strip has its own "add your photos" */
+  }
+  .snaps {
+    margin: 22px 20px 0;
+  }
+  .snap-hero {
+    padding: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: none;
+    transform: none;
+    background: none;
+  }
+  .snap-hero::before {
+    display: none;
+  }
+  .snap-hero .snap-img {
+    border-radius: 14px;
+  }
+  .snap-hero figcaption,
+  .snap-sm figcaption {
+    padding: 6px 2px 0;
+    font-family: var(--f-sans);
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .snap-row .snap-sm,
+  .snap-row .snap-sm:nth-child(odd),
+  .snap-row .snap-sm:nth-child(even) {
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    transform: none;
+  }
+  .snap-sm .snap-img {
+    border-radius: 12px;
+  }
+  .snap-add,
+  .stock-note {
+    font-size: 13px;
+  }
+  .detail-body {
+    padding: 26px 20px 0;
+  }
+  .lede {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .reviews,
+  .nearby,
+  .claim {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+  .reviews {
+    margin-top: 32px;
+  }
+  .nearby {
+    margin-top: 28px;
+  }
+
+  /* --- an open place: a shorter map strip with Back / Save / Share floating on it */
+  .has-sel .mapwrap {
+    height: 24vh;
+    min-height: 160px;
+  }
+  .has-sel .sidebar {
+    top: max(24vh, 160px);
+  }
+  .detail > .detail-bar {
+    display: none;
+  }
+  .m-float {
+    position: absolute;
+    z-index: 600;
+    top: 10px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+  .m-float-r {
+    display: flex;
+    gap: 10px;
+  }
+  .m-round {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(251, 248, 239, 0.96);
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.12);
+    pointer-events: auto;
+  }
+  .m-round.on {
+    color: var(--red);
+  }
+  .m-round:active {
+    transform: scale(0.94);
+  }
+
+  /* --- Filters opens as a sheet from the bottom */
+  .filter-sheet {
+    border-radius: 18px 18px 0 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
