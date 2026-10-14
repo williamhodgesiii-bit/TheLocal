@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import L from "leaflet";
-import { addBasemap } from "@/lib/basemap";
+import { OSM_CREDIT, OSM_TILES } from "@/lib/map-style-load";
 
 
 /** Small interactive map for dropping/dragging a pin. (The main map stays non-interactive.) */
@@ -25,8 +25,9 @@ export default function PinPicker({
 
   useEffect(() => {
     if (!el.current || map.current) return;
-    const m = L.map(el.current, { center: value ?? center, zoom: value ? 17 : zoom, zoomControl: true, attributionControl: false, scrollWheelZoom: false });
-    addBasemap(m, "detail");
+    const m = L.map(el.current, { center: value ?? center, zoom: value ? 17 : zoom, zoomControl: true, attributionControl: true, scrollWheelZoom: false });
+    m.attributionControl.setPrefix(false);
+    L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_CREDIT }).addTo(m);
     m.on("click", (e: L.LeafletMouseEvent) => cb.current([+e.latlng.lat.toFixed(6), +e.latlng.lng.toFixed(6)]));
     const ro = new ResizeObserver(() => m.invalidateSize());
     ro.observe(el.current);

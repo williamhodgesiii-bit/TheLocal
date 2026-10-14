@@ -50,6 +50,8 @@ function useIsMobile() {
 }
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false, loading: () => <div className="leaflet-host map-loading" /> });
+// start downloading the map engine with the page instead of after it renders
+if (typeof window !== "undefined") import("./MapViewGL").catch(() => {});
 
 type Sort = "popular" | "rating" | "az";
 const SEEN_KEY = "tl.seenApproved";
