@@ -732,7 +732,8 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
   },
 ];
 
-const ov = overrides as Record<string, [number, number]>;
+// JSON types its pairs as number[]; every entry the pin scripts write is [lat, lng]
+const ov = overrides as unknown as Record<string, [number, number]>;
 /** Editorially curated Birmingham launch guide. Community spots come from the backend. */
 export const SPOTS: Spot[] = RAW_SPOTS.map((s) => ({ ...s, city: "birmingham-al", coords: ov[s.id] ?? s.coords }));
 
