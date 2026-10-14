@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import L from "leaflet";
+import { addBasemap } from "@/lib/basemap";
 
-const TILES = process.env.NEXT_PUBLIC_MAP_TILES || "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
 /** Small interactive map for dropping/dragging a pin. (The main map stays non-interactive.) */
 export default function PinPicker({
@@ -26,7 +26,7 @@ export default function PinPicker({
   useEffect(() => {
     if (!el.current || map.current) return;
     const m = L.map(el.current, { center: value ?? center, zoom: value ? 17 : zoom, zoomControl: true, attributionControl: false, scrollWheelZoom: false });
-    L.tileLayer(TILES, { subdomains: "abcd", maxZoom: 19 }).addTo(m);
+    addBasemap(m, "detail");
     m.on("click", (e: L.LeafletMouseEvent) => cb.current([+e.latlng.lat.toFixed(6), +e.latlng.lng.toFixed(6)]));
     const ro = new ResizeObserver(() => m.invalidateSize());
     ro.observe(el.current);

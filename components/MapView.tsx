@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import { LANDMARKS, RED_MOUNTAIN, type Area, type AreaId, type Spot } from "@/lib/data";
 import type { City } from "@/lib/regions";
+import { addBasemap } from "@/lib/basemap";
 
 type Props = {
   city: City;
@@ -27,9 +28,6 @@ type Props = {
   topPad?: number;
 };
 
-const TILES = process.env.NEXT_PUBLIC_MAP_TILES || "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png";
-const LABELS_ENV = process.env.NEXT_PUBLIC_MAP_LABEL_TILES;
-const LABELS = LABELS_ENV === "none" ? "" : LABELS_ENV || "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png";
 
 const LANDMARK_SVG: Record<string, string> = {
   vulcan:
@@ -116,13 +114,7 @@ export default function MapView(props: Props) {
       attributionControl: true,
     });
     m.attributionControl.setPrefix(false);
-    L.tileLayer(TILES, {
-      subdomains: "abcd",
-      maxZoom: 19,
-      detectRetina: true,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    }).addTo(m);
-    if (LABELS) L.tileLayer(LABELS, { subdomains: "abcd", maxZoom: 19, className: "label-tiles" }).addTo(m);
+    addBasemap(m, "print");
 
     if (cb.current.city.id === "birmingham-al") {
       // Red Mountain ridge — the over-the-mountain divide
