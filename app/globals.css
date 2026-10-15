@@ -597,8 +597,11 @@ select {
   border-radius: 1px;
   background: var(--red);
 }
-.b-plate.zero {
-  opacity: 0.42;
+.b-plate.zero .plate {
+  opacity: 0.45;
+}
+.b-plate.zero .b-plate-label {
+  color: var(--muted);
 }
 .b-arrow {
   display: none;
@@ -930,7 +933,7 @@ select {
   padding-top: 12px;
   border-top: 2px solid var(--ink);
 }
-.newsletter h3 {
+.newsletter h2 {
   font-family: var(--f-serif);
   font-weight: 400;
   font-size: 19px;
@@ -1632,6 +1635,17 @@ select {
 .pin-wrap {
   background: none;
   border: 0;
+}
+/* keyboard: tab onto a pin and its name shows */
+.pin-wrap:focus {
+  outline: none;
+}
+.pin-wrap:focus-visible .pin-dot {
+  outline: 2px solid var(--pen);
+  outline-offset: 2px;
+}
+.pin-wrap:focus-visible .pin-label {
+  opacity: 1;
 }
 .pin {
   position: absolute;

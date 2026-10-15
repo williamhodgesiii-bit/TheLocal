@@ -267,7 +267,7 @@ export default function SpotDetail({
               ))}
           </figcaption>
         </figure>
-        <div className="snap-row" data-count={Math.min(food.length, 6)}>
+        <div className="snap-row" data-count={Math.min(food.length, 6)} tabIndex={0} role="region" aria-label="Food photos">
           {food.slice(0, 6).map((x, i) => (
             <figure key={x.key} className={`snap snap-sm ${x.stock ? "is-stock" : ""}`} onClick={() => setLightbox(i + 1)}>
               <div className="snap-img">
@@ -318,7 +318,7 @@ export default function SpotDetail({
       <Reviews spot={spot} />
 
       <section className="nearby">
-        <h3 className="small-head">Close by</h3>
+        <h2 className="small-head">Close by</h2>
         <ul>
           {nearby.map(({ s, d }) => (
             <li key={s.id}>

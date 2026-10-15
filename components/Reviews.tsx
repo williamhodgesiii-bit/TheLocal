@@ -77,7 +77,7 @@ export default function Reviews({ spot }: { spot: Spot }) {
   return (
     <section className="reviews">
       <div className="reviews-head">
-        <h3 className="small-head">What people are saying</h3>
+        <h2 className="small-head">What people are saying</h2>
         <button className="textbtn" onClick={open}>
           {mine ? "Edit yours" : "Write one"}
         </button>

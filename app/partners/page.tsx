@@ -38,7 +38,7 @@ const TIERS = [
 
 export default function Partners({ searchParams }: { searchParams: { spot?: string } }) {
   return (
-    <div className="partners">
+    <main className="partners">
       <header className="partners-top">
         <Link href="/" className="textbtn">
           ← Back to the map
@@ -101,6 +101,6 @@ export default function Partners({ searchParams }: { searchParams: { spot?: stri
         <p className="muted">Tell us about your place, or tell us if a listing is closed or wrong.</p>
         <PartnerForm spot={searchParams.spot} />
       </section>
-    </div>
+    </main>
   );
 }

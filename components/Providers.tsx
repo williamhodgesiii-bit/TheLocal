@@ -7,6 +7,11 @@ import AuthModal from "./AuthModal";
 
 type Toast = { id: number; text: string; tone?: "ok" | "err" };
 
+/** how a visit went, Beli-style: three honest choices instead of five stars */
+export type Verdict = "loved" | "liked" | "meh";
+/** places you've eaten at: the Plate Passport */
+export type BeenMap = Record<string, { at: string; verdict?: Verdict }>;
+
 type Ctx = {
   backend: Backend;
   user: User | null;
@@ -15,6 +20,9 @@ type Ctx = {
   toast: (text: string, tone?: Toast["tone"]) => void;
   saved: string[];
   toggleSaved: (id: string) => void;
+  been: BeenMap;
+  /** stamp a place (optionally with how it went); null takes the stamp back */
+  markBeen: (id: string, verdict?: Verdict | null) => void;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
@@ -25,6 +33,7 @@ export const useApp = () => {
 };
 
 const SAVED_KEY = "tl.saved";
+const BEEN_KEY = "tl.been";
 
 export default function Providers({ children }: { children: ReactNode }) {
   const backend = useMemo(() => getBackend(), []);
@@ -32,6 +41,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<{ open: boolean; reason?: string }>({ open: false });
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
+  const [been, setBeen] = useState<BeenMap>({});
   const tid = useRef(0);
 
   useEffect(() => {
@@ -42,6 +52,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       setSaved(JSON.parse(localStorage.getItem(SAVED_KEY) || "[]"));
+      setBeen(JSON.parse(localStorage.getItem(BEEN_KEY) || "{}"));
     } catch {
       /* private mode */
     }
@@ -78,9 +89,23 @@ export default function Providers({ children }: { children: ReactNode }) {
     [saved, toast]
   );
 
+  const markBeen = useCallback((id: string, verdict?: Verdict | null) => {
+    setBeen((cur) => {
+      const next = { ...cur };
+      if (verdict === null) delete next[id];
+      else next[id] = { at: cur[id]?.at ?? new Date().toISOString(), verdict: verdict ?? cur[id]?.verdict };
+      try {
+        localStorage.setItem(BEEN_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
+
   const value = useMemo(
-    () => ({ backend, user, requireAuth, openAuth, toast, saved, toggleSaved }),
-    [backend, user, requireAuth, openAuth, toast, saved, toggleSaved]
+    () => ({ backend, user, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen }),
+    [backend, user, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen]
   );
 
   return (

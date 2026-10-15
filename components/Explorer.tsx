@@ -50,8 +50,6 @@ function useIsMobile() {
 }
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false, loading: () => <div className="leaflet-host map-loading" /> });
-// start downloading the map engine with the page instead of after it renders
-if (typeof window !== "undefined") import("./MapViewGL").catch(() => {});
 
 type Sort = "popular" | "rating" | "az";
 const SEEN_KEY = "tl.seenApproved";
@@ -94,6 +92,10 @@ export default function Explorer({
   const [focusId, setFocusId] = useState<string | null>(null);
   const [profileKey, setProfileKey] = useState(0);
   const isMobile = useIsMobile();
+  // The map engine is the heaviest thing on the page. Computers show the map right away; phones
+  // start on the list, so there it loads when the Map tab or a place opens (and quietly in the
+  // background once the list is up, so it's ready by then).
+  const [mapOn, setMapOn] = useState(false);
   const q = useDeferredValue(query);
   const scrollRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -367,6 +369,14 @@ export default function Explorer({
   }, [list, selectedId, hoveredId, surprise, select]);
 
   const selected = selectedId ? spotById[selectedId] ?? null : null;
+  useEffect(() => {
+    if (mapOn) return;
+    const phone = window.matchMedia("(max-width: 900px)").matches;
+    if (!phone || view === "map" || selectedId) return setMapOn(true);
+    const idle = (cb: () => void) => (typeof window.requestIdleCallback === "function" ? window.requestIdleCallback(cb, { timeout: 6000 }) : setTimeout(cb, 3500)); // Safari has no requestIdleCallback
+    const t = window.setTimeout(() => idle(() => import("./MapViewGL").catch(() => {})), 2500);
+    return () => window.clearTimeout(t);
+  }, [mapOn, view, selectedId]);
   const activeGenre = genre === "all" ? null : GENRE_BY_ID[genre];
   const activeArea = area === "all" || area.startsWith("t:") ? null : areaById[area] ?? null;
   const frame = useMemo(() => {
@@ -645,23 +655,27 @@ export default function Explorer({
 
         <section className="mapwrap">
           <div className="map-plate">
-            <MapView
-              key={city.id}
-              city={city}
-              areas={areas}
-              spots={allSpots}
-              numbers={numbers}
-              visible={visible}
-              selectedId={selectedId}
-              hoveredId={hoveredId}
-              focusId={isMobile && view === "map" ? focusId : null}
-              frame={frame}
-              topPad={isMobile && view === "map" && !selected ? 92 : undefined}
-              area={area}
-              onSelect={select}
-              onHover={setHoveredId}
-              onArea={chooseArea}
-            />
+            {mapOn ? (
+              <MapView
+                key={city.id}
+                city={city}
+                areas={areas}
+                spots={allSpots}
+                numbers={numbers}
+                visible={visible}
+                selectedId={selectedId}
+                hoveredId={hoveredId}
+                focusId={isMobile && view === "map" ? focusId : null}
+                frame={frame}
+                topPad={isMobile && view === "map" && !selected ? 92 : undefined}
+                area={area}
+                onSelect={select}
+                onHover={setHoveredId}
+                onArea={chooseArea}
+              />
+            ) : (
+              <div className="leaflet-host map-loading" />
+            )}
             <div className="map-caption" aria-live="polite">
               <span className="cap-kicker">
                 {selected
@@ -894,7 +908,7 @@ function Newsletter({ city }: { city: City }) {
         }
       }}
     >
-      <h3>{NEWSLETTER}</h3>
+      <h2>{NEWSLETTER}</h2>
       <p>Five plates next door worth a try around {city.name}, in your inbox every Thursday.</p>
       {done ? (
         <p className="nl-done">You&apos;re on the list. See you Thursday.</p>

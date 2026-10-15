@@ -22,12 +22,27 @@ const ll = (c: [number, number]): LngLatLike => [c[1], c[0]];
 // if the vector map hasn't drawn any tiles by then, switch to plain OpenStreetMap tiles
 const TILE_WATCHDOG_MS = 6000;
 
-function marker(map: GLMap, at: [number, number], className: string, html: string, z: number) {
+/**
+ * a11y: a pin is a button named for its place; a neighborhood label is a group around its own
+ * button; landmarks are decoration. (MapLibre would otherwise call every one a "Map marker" button.)
+ */
+type MarkerRole = { role: "button"; label: string } | { role: "group"; label: string } | { role: "decor" };
+
+function marker(map: GLMap, at: [number, number], className: string, html: string, z: number, a11y: MarkerRole) {
   const el = document.createElement("div");
   el.className = className;
   el.innerHTML = html;
   el.style.width = el.style.height = "0"; // zero-size anchor; the CSS centers what's inside
   el.style.zIndex = String(z);
+  if (a11y.role === "decor") {
+    el.setAttribute("role", "presentation");
+    el.setAttribute("aria-hidden", "true");
+    el.setAttribute("aria-label", "");
+  } else {
+    el.setAttribute("role", a11y.role);
+    el.setAttribute("aria-label", a11y.label);
+    if (a11y.role === "button") el.tabIndex = 0;
+  }
   return new maplibregl.Marker({ element: el, anchor: "top-left" }).setLngLat(ll(at)).addTo(map);
 }
 
@@ -155,8 +170,8 @@ export default function MapViewGL(props: MapProps) {
       .catch(() => toRaster("style unavailable"));
 
     if (cb.current.city.id === "birmingham-al") {
-      marker(m, [33.4745, -86.835], "ridge-label", "<span>Red Mountain</span>", 0);
-      for (const lm of LANDMARKS) marker(m, lm.coords, "landmark", `<div>${LANDMARK_SVG[lm.icon]}<span>${esc(lm.label)}</span></div>`, 0);
+      marker(m, [33.4745, -86.835], "ridge-label", "<span>Red Mountain</span>", 0, { role: "decor" });
+      for (const lm of LANDMARKS) marker(m, lm.coords, "landmark", `<div>${LANDMARK_SVG[lm.icon]}<span>${esc(lm.label)}</span></div>`, 0, { role: "decor" });
     }
 
     // small screens zoomed out: drop secondary labels so pins stay legible
@@ -207,9 +222,15 @@ export default function MapViewGL(props: MapProps) {
         have.setLngLat(ll(s.coords)); // exact coordinates can arrive after first paint
         continue;
       }
-      const mk = marker(m, s.coords, "pin-wrap", pinHtml(s.name), 10);
+      const mk = marker(m, s.coords, "pin-wrap", pinHtml(s.name), 10, { role: "button", label: s.name });
       const node = mk.getElement();
       onTap(node, () => cb.current.onSelect(s.id)); // a drag that starts on a pin moves the map, it doesn't open the place
+      node.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          cb.current.onSelect(s.id);
+        }
+      });
       node.addEventListener("mouseenter", () => cb.current.onHover(s.id));
       node.addEventListener("mouseleave", () => cb.current.onHover(null));
       pins.current.set(s.id, mk);
@@ -222,7 +243,7 @@ export default function MapViewGL(props: MapProps) {
     hoods.current.forEach((mk) => mk.remove());
     hoods.current.clear();
     for (const a of props.areas) {
-      const mk = marker(m, a.labelAt, "hood", `<button type="button">${esc(a.label)}</button>`, 1);
+      const mk = marker(m, a.labelAt, "hood", `<button type="button">${esc(a.label)}</button>`, 1, { role: "group", label: `${a.label} neighborhood` });
       onTap(mk.getElement(), () => cb.current.onArea(a.id));
       hoods.current.set(a.id, mk);
     }

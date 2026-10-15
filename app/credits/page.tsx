@@ -20,7 +20,7 @@ export default function Credits() {
   const stock: Row[] = Object.entries(LIBRARY).map(([k, p]) => ({ key: k, file: p.file, title: p.dish.charAt(0).toUpperCase() + p.dish.slice(1), author: p.author, license: p.license }));
 
   return (
-    <div className="credits">
+    <main className="credits">
       <header className="partners-top">
         <Link href="/" className="textbtn">
           ← Back to the map
@@ -48,7 +48,7 @@ export default function Credits() {
       <p>
         Shot one of these better at a place on the map? <Link href="/">Find it</Link> and add your photo. Yours goes up front.
       </p>
-    </div>
+    </main>
   );
 }
 
