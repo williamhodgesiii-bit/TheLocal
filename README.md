@@ -9,7 +9,7 @@
 - **The browse bar** (same on computers and phones), top to bottom: one search box; **what sounds good**, every kind of food on its own little plate (Southern, BBQ, Italian, Seafood, Latin, Asian, Greek, Special occasion, Brunch, Coffee, Sweets, and **Drinks** with cocktails, breweries, wine and bars); then three buttons that always show their current value: **Where** (a town, then a neighborhood; nobody is asked on the first visit), **Price**, and **Want to try**. Under it: how many places match, *Clear all*, and the sort.
 - **The map**: drag it with the mouse or one finger, zoom with the wheel, a pinch, double-click, the +/− buttons or keys. The camera frames your picks; once you move it yourself, **Recenter** brings it back.
 - **Front page** (until you narrow things down): **This week's plate** (one place for everyone, new every Thursday, the day the email goes out; `lib/collections.ts`), your **Plate Passport** card, three **occasion rows** picked for the time of day (Date night, Patio weather, Cheap & good, Brunch, Coffee to work from, Bring the kids, Big groups, Award winners, Breweries; built only from place tags, never padded), and a **trail**. "See all" turns a row into a filter that also reframes the map.
-- **Plate Passport** (`lib/passport.ts`, the Passport tab): tap **I've been** on any place to stamp it, then say how it went (Loved it / It was good / Not for me). Shows N of 78, stamps by neighborhood, milestones (1, 5, 10, 25, 50, all), a forgiving weekly streak (a quiet week doesn't break it), trails (`lib/trails.ts`: a seasonal coffee trail, Over the mountain, Meat-and-threes) and a share card drawn in the browser (progress, not places). **Where have you eaten already?** lets people stamp the places they've been in one go, so nobody starts at zero. It works without an account and stays on the device.
+- **Plate Passport** (`lib/passport.ts`, the Passport tab): tap **I've been** on any place to stamp it, then say how it went (Loved it / It was good / Not for me). Shows how many of the listed places you've stamped, stamps by neighborhood, milestones (1, 5, 10, 25, 50, all), a forgiving weekly streak (a quiet week doesn't break it), trails (`lib/trails.ts`: a seasonal coffee trail, Over the mountain, Meat-and-threes) and a share card drawn in the browser (progress, not places). **Where have you eaten already?** lets people stamp the places they've been in one go, so nobody starts at zero. It works without an account and stays on the device.
 - **Restaurant page**: name, the basics and what to order first, then awards (dated, each links to where it was announced; `lib/honors.ts`), Want to try / I've been, Directions & hours, photos, the write-up, reviews, nearby places, and who checked it and when, with **Report a change**.
 - **Sort**: Most loved, **Nearest to me** (asks for your location only when you pick it), Top rated, A to Z. Nobody can pay to move up.
 - **Surprise me**: a random pick, a little more likely for well-loved places, never for paid ones. If you've narrowed things down it starts inside your picks.
@@ -19,7 +19,7 @@
 ## Coverage today
 
 The **Birmingham area**, by town: Birmingham (Downtown, Southside, Lakeview, Avondale), **Homewood** (downtown/SoHo, Edgewood, West Homewood), **Mountain Brook** (Mountain Brook Village and Lane Parke, English Village, Crestline) and **Vestavia Hills** (Cahaba Heights, Highway 31, Rocky Ridge).
-- 78 locally owned places. They were checked against local news (Homewood Star, Village Living, Vestavia Voice, Bham Now) in October 2026. Known closures were left off: Satterfield's, Sol y Luna, Post Office Pies (both locations), DeVinci's and Iron City Pizza.
+- 83 locally owned places, including all 11 Birmingham places in Michelin's first American South guide (2025). They were checked against local news (Homewood Star, Village Living, Vestavia Voice, Bham Now) in October 2026. Known closures were left off: Satterfield's, Sol y Luna, Post Office Pies (both locations), DeVinci's and Iron City Pizza.
 - **Exact pins, free**: a GitHub Action (`.github/workflows/pins.yml`) looks every place up on OpenStreetMap, which needs no key and no card. It saves the results to `lib/geo-overrides.json` and commits them, and Vercel redeploys. It runs by itself whenever `lib/data.ts` changes and on the 1st of every month, and keeps its own schedule switched on, so there is nothing to do by hand. A pin only moves if the match is within 3 km of where it was.
 - **Optional Google key** (`GOOGLE_PLACES_API_KEY`, paid after Google's free allowance): adds Google photos and ratings, refines pins further, and drops places Google marks *permanently* closed (never closed-for-the-night or temporarily closed). See `/api/pins`.
 - Other Alabama cities are already defined in `lib/regions.ts` with status `"later"`. To open one, change it to `"founding"` (members add places, staff verify) or `"live"`.
@@ -64,6 +64,20 @@ Photos copied off restaurants' websites or Instagram aren't used. They're copyri
 
 On first visit, people pick a home state and city, and the choice is remembered. Each city has its own page (`/al/huntsville`) and every spot has its own page (`/spot/{id}`). Both are in the sitemap. To open a new city or state, add a line to `CITIES`.
 
+## To do
+
+Not built yet, in rough order:
+
+- [ ] **Open now.** Needs hours for every place. The free route is to pull OpenStreetMap's `opening_hours` in the pins Action (Google's hours when `GOOGLE_PLACES_API_KEY` is set), then show "Open now" or "Closes at 9" on cards and the place page, plus an "Open now" filter. Show the date the hours were checked, since they change.
+- [ ] **The Thursday Plate, the weekly email.** Signups already collect in the `subscribers` table. Still needed: a sending service (Buttondown, Resend or Mailchimp), a weekly email built from `plateOfTheWeek` (it already turns over every Thursday) plus new places and trails, and a note when a place on someone's want-to-try list is the pick. Every email needs an unsubscribe link and a mailing address (CAN-SPAM).
+- [ ] **Founder name and email.** Fill in `FOUNDER` in `lib/brand.ts`. The "Who we are" part of `/about` shows up once a name is set. A named person you can write to is one of the strongest trust signals in the research.
+- [ ] **Michelin American South 2026** comes out Oct 21, 2026. Update `lib/honors.ts` (new badges, changed or dropped ones) and the Award winners row follows. Add any newly recognized local places to `lib/data.ts`.
+- [ ] **Re-check the list** every few months: closures, new owners, prices. Bump `CHECKED` in `lib/brand.ts` when done.
+- [ ] **Owner setup:** Supabase (see Deploy), the domain and `NEXT_PUBLIC_SITE_URL`, privacy and terms pages (before collecting emails), payments for Partner and Sponsored (Stripe payment links are the simplest start), and turning on Vercel Analytics.
+- [ ] **Have a lawyer read** the review rules and the Sponsored labeling on `/about` and `/partners`.
+- [ ] **Real photos of every place** (owner uploads or a local photographer) to replace the labeled stock dish photos.
+- [ ] **Passport across devices** for signed-in members. Today it stays on the device.
+
 ## Deploy (Vercel)
 
 1. Import the repo into Vercel (framework: Next.js). It deploys with **no environment variables**. Accounts, reviews and photos then run in on-device **demo mode**.
@@ -106,4 +120,4 @@ Trust rules (on `/partners` and `/about`): nobody pays to rank; anything paid sa
 
 ## Stack
 
-Next.js 14 (App Router) · React 18 · Leaflet (CARTO basemap; swap tiles via `NEXT_PUBLIC_MAP_TILES` for commercial scale) · Framer Motion · Supabase (optional) · self-hosted Fraunces, Big Shoulders Display, Instrument Sans and JetBrains Mono.
+Next.js 14 (App Router) · React 18 · MapLibre GL with OpenFreeMap vector tiles (Leaflet when WebGL is off) · Framer Motion · Supabase (optional) · self-hosted Yellowtail, Young Serif, Libre Franklin and Nanum Pen Script.

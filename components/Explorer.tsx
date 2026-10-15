@@ -984,7 +984,7 @@ function TabGlyph({ k }: { k: "menu" | "map" | "me" | "spark" | "stamp" }) {
   );
 }
 
-// a row only redraws when its own props change (hovering one row shouldn't redraw all 78)
+// a row only redraws when its own props change (hovering one row shouldn't redraw every row)
 const SpotRow = memo(function SpotRow({
   spot,
   n,

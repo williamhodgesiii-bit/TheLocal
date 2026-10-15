@@ -174,6 +174,11 @@ const SPOT_DISHES: Record<string, DishKey[]> = {
   "the-well-co": ["latte", "cappuccino"],
   "iz-cafe": ["lane-cake", "reuben"],
   napoli: ["pizza-margherita", "pasta-ragu"],
+  bayonet: ["oysters", "grilled-fish", "wine"],
+  "la-fete": ["steak-frites", "croissant", "wine"],
+  "pizza-grace": ["pizza-napoletana", "pizza-margherita", "wine"],
+  "current-charcoal": ["grilled-fish", "dumplings", "cocktail-bar"],
+  reve: ["grilled-fish", "steak", "wine"],
 };
 
 /** Fallback for member-added places, by kind of food. */

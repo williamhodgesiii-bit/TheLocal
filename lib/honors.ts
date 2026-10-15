@@ -15,6 +15,7 @@ export interface Honor {
 
 const MICHELIN_2025 = "https://bhamnow.com/2025/11/04/11-birmingham-restaurants-recognized-by-michelin-guide/";
 const BEARD_2026_FINALIST = "https://bhamnow.com/2026/03/31/bottega-named-james-beard-award-finalist-for-outstanding-hospitality/";
+const BEARD_2026_SEMI = "https://bhamnow.com/2026/01/21/5-birmingham-chefs-restaurants-make-2026-james-beard-semifinalist-list/";
 const STITT = "https://en.wikipedia.org/wiki/Frank_Stitt";
 const HASTINGS = "https://www.bhamwiki.com/w/Chris_Hastings";
 
@@ -32,6 +33,14 @@ export const HONORS: Record<string, Honor[]> = {
   "chez-fonfon": [michelin("Michelin Recommended"), { label: "James Beard Best Chef: Southeast", who: "Frank Stitt", year: 2001, kind: "beard", source: STITT }],
   "automatic-seafood": [michelin("Michelin Recommended")],
   helen: [michelin("Michelin Recommended")],
+  bayonet: [michelin("Michelin Bib Gourmand"), { label: "James Beard semifinalist, Outstanding Chef", who: "Rob McDaniel", year: 2026, kind: "beard", source: BEARD_2026_SEMI }],
+  "la-fete": [michelin("Michelin Bib Gourmand"), { label: "James Beard semifinalist, Best Chef: South", who: "Kristen Hall", year: 2026, kind: "beard", source: BEARD_2026_SEMI }],
+  "pizza-grace": [
+    michelin("Michelin Bib Gourmand"),
+    { label: "James Beard semifinalist, Best Chef: South", who: "Geri-Martha & Ryan O'Hara", year: 2026, kind: "beard", source: BEARD_2026_SEMI },
+  ],
+  "current-charcoal": [michelin("Michelin Recommended")],
+  reve: [michelin("Michelin Recommended")],
 };
 
 export const honorsOf = (id: string) => HONORS[id] ?? [];

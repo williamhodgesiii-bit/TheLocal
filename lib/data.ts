@@ -253,6 +253,41 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     blurb: "Gadsden brewery with a big taproom near Sloss Furnaces. Pizza from the kitchen.",
     tags: ["brewery", "pizza", "Sloss Quarter"], pop: 64,
   },
+  {
+    id: "bayonet", name: "Bayonet", genres: ["seafood", "chefs"], area: "downtown",
+    address: "2015 2nd Ave N", coords: onAveN(2015, 2), price: 3,
+    knownFor: "Raw-bar oysters & the tuna burger",
+    blurb: "Rob and Emily McDaniel's seafood place, next door to Helen. About 20 kinds of oysters at the raw bar. The New York Times named it one of America's 50 best restaurants in 2025, so book ahead or try the bar early in the week.",
+    tags: ["oysters", "raw bar", "date night"], pop: 91,
+  },
+  {
+    id: "la-fete", name: "La Fête", genres: ["chefs"], area: "downtown",
+    address: "2018 Morris Ave", coords: grid(20.2, -0.42), price: 3,
+    knownFor: "Roast chicken & potato gratin",
+    blurb: "Kristen Hall's French bistro on Morris Avenue. Marble bar, tiled floors and a patio, with bread and pastry from its sister bakery, Bandit. Michelin gave it a Bib Gourmand in 2025.",
+    tags: ["French", "bistro", "patio", "date night", "Morris Ave"], pop: 88,
+  },
+  {
+    id: "pizza-grace", name: "Pizza Grace", genres: ["italian"], area: "downtown",
+    address: "2212 Morris Ave", coords: grid(22.12, -0.4), price: 2,
+    knownFor: "Sourdough pies & the meatballs",
+    blurb: "Sourdough pizza with a lot going on (pesto, mortadella and pistachio, say) in the Mercantile on Morris building. Get the meatballs for the table. The Big Spoon Creamery owners bought it in 2025.",
+    tags: ["pizza", "natural wine", "Morris Ave"], pop: 86,
+  },
+  {
+    id: "current-charcoal", name: "Current Charcoal Grill", genres: ["asian", "seafood"], area: "downtown",
+    address: "1625 2nd Ave S", coords: onAveS(1625, 2), price: 3,
+    knownFor: "Crab fried rice & fish off the charcoal",
+    blurb: "Adam Evans (of Automatic Seafood) and Luke Joseph cook Gulf seafood with Asian flavors over Japanese binchotan charcoal, next to Railroad Park. The Peking duck has to be ordered two weeks ahead.",
+    tags: ["Gulf seafood", "charcoal grill", "date night"], pop: 84,
+  },
+  {
+    id: "reve", name: "Rêve", genres: ["chefs"], area: "downtown",
+    address: "1821 2nd Ave N", coords: onAveN(1821, 2), price: 4,
+    knownFor: "The French tasting menu",
+    blurb: "Jacob Stull's French tasting-menu restaurant inside the Pizitz, across from McWane Science Center. Dinner only, a few nights a week. Book on Resy.",
+    tags: ["tasting menu", "French", "date night"], pop: 80,
+  },
 
   /* ------------------------ SOUTHSIDE & FIVE POINTS ------------------------ */
   {
