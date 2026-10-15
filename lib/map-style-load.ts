@@ -1,5 +1,6 @@
 import type { StyleSpecification } from "maplibre-gl";
 import { MAP_STYLES } from "./map-styles";
+import { MAP_INK, printStyle } from "./map-style-print";
 
 /**
  * Loading the map's look. Free, no key, no account: OpenFreeMap vector tiles
@@ -16,8 +17,8 @@ const HIDDEN_ON_PRINT = /^(place|poi|airport|aerodrome|water_name|housenumber|mo
 
 export type Style = StyleSpecification;
 
-/** The paper color the map sits on while (or if) tiles load. */
-export const PAPER = "#ece6d6";
+/** The paper color the map sits on while (or if) tiles load: the map's own land color. */
+export const PAPER = MAP_INK.land;
 
 export const BLANK_STYLE: Style = { version: 8, sources: {}, layers: [{ id: "paper", type: "background", paint: { "background-color": PAPER } }] };
 
@@ -44,6 +45,7 @@ export function webgl() {
 const cache = new Map<string, Promise<Style>>();
 export function loadStyle(kind: keyof typeof MAP_STYLES): Promise<Style> {
   const url = MAP_STYLES[kind];
+  if (!url) return Promise.resolve(printStyle(OFM_CREDIT)); // our own look: nothing to fetch but the tiles
   if (!cache.has(url)) {
     const p = fetch(url)
       .then((r) => {

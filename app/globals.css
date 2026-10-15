@@ -1418,18 +1418,21 @@ select {
 .leaflet-host {
   position: absolute;
   inset: 7px;
-  background: #e9e2cf;
+  background: #ebe3cd;
 }
 .map-loading {
-  background: #e9e2cf;
+  background: #ebe3cd;
 }
 .leaflet-container {
-  background: #e9e2cf;
+  background: #ebe3cd;
   font-family: var(--f-sans);
 }
-.leaflet-host .leaflet-tile-pane,
-.gl-host .maplibregl-canvas {
-  filter: grayscale(1) sepia(0.32) contrast(1.06) brightness(0.99);
+/* The vector map is drawn in the site's own colors (lib/map-style-print.ts), so it gets no
+   filter. Plain OpenStreetMap tiles (no WebGL, or the vector tiles are down) are toned toward
+   the paper a little, without washing out the streets. */
+.leaflet-host:not(.gl-host) .leaflet-tile-pane,
+.gl-host.raster .maplibregl-canvas {
+  filter: saturate(0.72) sepia(0.14) contrast(1.03);
 }
 /* the vector map: same paper, same printed controls.
    MapLibre's own stylesheet sets .maplibregl-map { position: relative }, which would
@@ -1438,7 +1441,7 @@ select {
   position: absolute;
 }
 .gl-host {
-  background: #ece6d6;
+  background: #ebe3cd;
   font-family: var(--f-sans);
 }
 /* drag to move: an open hand, a closed one while dragging (MapLibre's own cursors) */

@@ -125,4 +125,4 @@ Trust rules (on `/partners` and `/about`): nobody pays to rank; anything paid sa
 
 ## Stack
 
-Next.js 14 (App Router) · React 18 · MapLibre GL with OpenFreeMap vector tiles (Leaflet when WebGL is off) · Framer Motion · Supabase (optional) · self-hosted Yellowtail, Young Serif, Libre Franklin and Nanum Pen Script.
+Next.js 14 (App Router) · React 18 · MapLibre GL with OpenFreeMap vector tiles, drawn in the site's own style (`lib/map-style-print.ts`; Leaflet and plain OpenStreetMap tiles when WebGL is off or the tiles are down) · Framer Motion · Supabase (optional) · self-hosted Yellowtail, Young Serif, Libre Franklin and Nanum Pen Script.

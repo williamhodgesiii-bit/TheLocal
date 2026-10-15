@@ -5,6 +5,7 @@ import maplibregl, { type LngLatLike, type Map as GLMap, type Marker } from "map
 import "maplibre-gl/dist/maplibre-gl.css";
 import { LANDMARKS, RED_MOUNTAIN } from "@/lib/data";
 import { BLANK_STYLE, OFM_CREDIT, OSM_CREDIT, RASTER_STYLE, loadStyle, type Style } from "@/lib/map-style-load";
+import { MAP_STYLES } from "@/lib/map-styles";
 import { LANDMARK_SVG, Recenter, declutter, esc, onTap, pinHtml, zoomKey, type MapProps } from "./map-shared";
 
 /**
@@ -116,7 +117,7 @@ export default function MapViewGL(props: MapProps) {
 
     let alive = true;
     let attribution: maplibregl.AttributionControl | null = null;
-    const credit = (html: string) => {
+    const credit = (html?: string) => {
       if (attribution) m.removeControl(attribution);
       attribution = new maplibregl.AttributionControl({ compact: false, customAttribution: html });
       m.addControl(attribution, "bottom-right");
@@ -140,6 +141,7 @@ export default function MapViewGL(props: MapProps) {
       if (!alive || usingRaster) return;
       usingRaster = true;
       console.warn(`Map: using OpenStreetMap tiles (${why}).`);
+      el.current?.classList.add("raster"); // photo-like tiles get the softer paper treatment
       m.setStyle(RASTER_STYLE, { diff: false });
       credit(OSM_CREDIT);
     };
@@ -147,8 +149,12 @@ export default function MapViewGL(props: MapProps) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (vector && e.dataType === "source" && (e as any).tile && (e as any).sourceId !== "ridge") drew = true;
     });
-    m.on("error", () => {
-      if (vector && !drew && ++failures >= 4) toRaster("tiles failing");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    m.on("error", (e: any) => {
+      if (!vector || drew) return;
+      // the tile index itself didn't load, so no tiles ever will
+      if (e.sourceId === "openmaptiles" && !e.tile) return toRaster("tile index unavailable");
+      if (++failures >= 4) toRaster("tiles failing");
     });
     // the clock only runs while the map is on screen: a hidden map (phone list tab) loads no tiles
     let watchdog: ReturnType<typeof setTimeout> | undefined;
@@ -164,7 +170,7 @@ export default function MapViewGL(props: MapProps) {
         if (!alive) return;
         vector = true;
         m.setStyle(style, { diff: false });
-        credit(OFM_CREDIT);
+        credit(MAP_STYLES.print ? OFM_CREDIT : undefined); // our own style carries the credit on its tiles
         arm();
       })
       .catch(() => toRaster("style unavailable"));
