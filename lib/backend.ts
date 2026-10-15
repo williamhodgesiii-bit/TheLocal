@@ -4,7 +4,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { resizeImage } from "./image";
 import { slugify, type DrinkKind, type GenreId, type Spot } from "./data";
 
-export type User = { id: string; name: string; email: string };
+export type User = { id: string; name: string; email: string; /** home city id (or "other:Town, ST"), see lib/regions */ home?: string };
 export type Review = {
   id: string;
   spotId: string;
@@ -62,7 +62,7 @@ export interface Backend {
   mode: "supabase" | "local";
   getUser(): Promise<User | null>;
   onAuth(cb: (u: User | null) => void): () => void;
-  signUp(name: string, email: string, password: string): Promise<User>;
+  signUp(name: string, email: string, password: string, home?: string): Promise<User>;
   signIn(email: string, password: string): Promise<User>;
   signOut(): Promise<void>;
   listReviews(spotId: string): Promise<Review[]>;
@@ -79,6 +79,7 @@ export interface Backend {
   myReviews(): Promise<Review[]>;
   myPhotos(): Promise<Photo[]>;
   updateName(name: string): Promise<User>;
+  updateHome(home: string): Promise<User>;
 
   /* community spots */
   listSpots(cityId: string): Promise<Spot[]>;
@@ -122,7 +123,14 @@ function spotFrom(sub: Submission, edits: SpotInput & { pop: number }, id: strin
 
 function supabaseBackend(sb: SupabaseClient): Backend {
   const toUser = (u: { id: string; email?: string; user_metadata?: Record<string, unknown> } | null | undefined): User | null =>
-    u ? { id: u.id, email: u.email ?? "", name: (u.user_metadata?.display_name as string) || (u.email ?? "Local").split("@")[0] } : null;
+    u
+      ? {
+          id: u.id,
+          email: u.email ?? "",
+          name: (u.user_metadata?.display_name as string) || (u.email ?? "Local").split("@")[0],
+          home: (u.user_metadata?.home_city as string) || undefined,
+        }
+      : null;
 
   const mapReview = (r: Record<string, any>): Review => ({
     id: r.id, spotId: r.spot_id, userId: r.user_id, userName: r.display_name, rating: r.rating, body: r.body, createdAt: r.created_at,
@@ -173,6 +181,11 @@ function supabaseBackend(sb: SupabaseClient): Backend {
     },
     async updateName(name) {
       const { data, error } = await sb.auth.updateUser({ data: { display_name: name.trim().slice(0, 40) } });
+      if (error) throw error;
+      return toUser(data.user)!;
+    },
+    async updateHome(home) {
+      const { data, error } = await sb.auth.updateUser({ data: { home_city: home.slice(0, 80) } });
       if (error) throw error;
       return toUser(data.user)!;
     },
@@ -257,8 +270,8 @@ function supabaseBackend(sb: SupabaseClient): Backend {
       const { data } = sb.auth.onAuthStateChange((_e, session) => cb(toUser(session?.user)));
       return () => data.subscription.unsubscribe();
     },
-    async signUp(name, email, password) {
-      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name } } });
+    async signUp(name, email, password, home) {
+      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name, ...(home ? { home_city: home } : {}) } } });
       if (error) throw error;
       if (!data.session) throw new Error("Check your inbox to confirm your email, then sign in.");
       return toUser(data.user)!;
@@ -381,14 +394,14 @@ function localBackend(): Backend {
       listeners.add(cb);
       return () => listeners.delete(cb);
     },
-    async signUp(name, email, password) {
+    async signUp(name, email, password, home) {
       const users = read<StoredUser[]>(K.users, []);
       const e = email.trim().toLowerCase();
       if (users.some((u) => u.email === e)) throw new Error("That email already has an account. Sign in instead.");
       if (password.length < 6) throw new Error("Use at least 6 characters for your password.");
-      const u: StoredUser = { id: uid(), name: name.trim() || e.split("@")[0], email: e, hash: await sha(e + password) };
+      const u: StoredUser = { id: uid(), name: name.trim() || e.split("@")[0], email: e, home, hash: await sha(e + password) };
       write(K.users, [...users, u]);
-      const pub = { id: u.id, name: u.name, email: u.email };
+      const pub = { id: u.id, name: u.name, email: u.email, home: u.home };
       write(K.session, pub);
       emit();
       return pub;
@@ -397,7 +410,7 @@ function localBackend(): Backend {
       const e = email.trim().toLowerCase();
       const u = read<StoredUser[]>(K.users, []).find((x) => x.email === e);
       if (!u || u.hash !== (await sha(e + password))) throw new Error("Email or password doesn't match.");
-      const pub = { id: u.id, name: u.name, email: u.email };
+      const pub = { id: u.id, name: u.name, email: u.email, home: u.home };
       write(K.session, pub);
       emit();
       return pub;
@@ -462,6 +475,15 @@ function localBackend(): Backend {
       write(K.users, read<(User & { hash: string })[]>(K.users, []).map((x) => (x.id === u.id ? { ...x, name: clean } : x)));
       write(K.reviews, read<Review[]>(K.reviews, []).map((r) => (r.userId === u.id ? { ...r, userName: clean } : r)));
       const next = { ...u, name: clean };
+      write(K.session, next);
+      emit();
+      return next;
+    },
+    async updateHome(home) {
+      const u = current();
+      if (!u) throw new Error("Sign in first.");
+      write(K.users, read<StoredUser[]>(K.users, []).map((x) => (x.id === u.id ? { ...x, home } : x)));
+      const next = { ...u, home };
       write(K.session, next);
       emit();
       return next;

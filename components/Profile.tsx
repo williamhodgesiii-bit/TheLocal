@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import type { Spot } from "@/lib/data";
 import type { Photo, Review, Submission } from "@/lib/backend";
+import { DEFAULT_CITY, homeLabel, homeParts, isOpenCity } from "@/lib/regions";
 import { useApp } from "./Providers";
+import HomeSelect from "./HomeSelect";
 import PhotoImg from "./Photo";
 import { Stars } from "./Stars";
 
@@ -25,13 +27,15 @@ export default function Profile({
   onAdd: () => void;
   admin: boolean;
 }) {
-  const { backend, user, openAuth, toast } = useApp();
+  const { backend, user, openAuth, toast, home, setHome } = useApp();
   const [tab, setTab] = useState<Tab>("reviews");
   const [reviews, setReviews] = useState<Review[] | null>(null);
   const [photos, setPhotos] = useState<Photo[] | null>(null);
   const [subs, setSubs] = useState<Submission[] | null>(null);
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
+  /** the home being picked, while the picker is open */
+  const [homeEdit, setHomeEdit] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -46,8 +50,10 @@ export default function Profile({
       <div className="profile">
         <div className="profile-empty">
           <h2 className="modal-title">Join your neighbors</h2>
-          <p className="muted">Your passport works without an account. Sign up (it&apos;s free) to write reviews, post photos and add the places you love.</p>
-          <button className="btn btn-green" onClick={() => openAuth("Sign in to write reviews, post photos and add places.")}>
+          <p className="muted">
+            Your passport works without an account. Sign up (it&apos;s free) to pick your home city, write reviews, post photos and add the places you love.
+          </p>
+          <button className="btn btn-green" onClick={() => openAuth()}>
             Sign in or make an account
           </button>
         </div>
@@ -60,6 +66,18 @@ export default function Profile({
     added: subs?.length ?? 0,
   };
   const verified = subs?.filter((x) => x.status === "approved").length ?? 0;
+
+  function saveHome(e: React.FormEvent) {
+    e.preventDefault();
+    if (!homeEdit || !user) return;
+    setHome(homeEdit);
+    if (!isOpenCity(homeEdit)) {
+      const p = homeParts(homeEdit);
+      backend.waitlist(user.email, p.state, p.city).catch(() => {});
+    }
+    toast(`Home set: ${homeLabel(homeEdit)}`, "ok");
+    setHomeEdit(null);
+  }
 
   async function saveName(e: React.FormEvent) {
     e.preventDefault();
@@ -96,6 +114,27 @@ export default function Profile({
           {user.email}
           {verified > 0 && ` · ${verified} place${verified === 1 ? "" : "s"} you added ${verified === 1 ? "is" : "are"} on the map`}
         </p>
+        {homeEdit === null ? (
+          <p className="profile-home">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden>
+              <path d="M4 11.5 12 5l8 6.5V20h-5.5v-5h-5v5H4Z" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" />
+            </svg>
+            Home: <strong>{homeLabel(home) || "not picked yet"}</strong>{" "}
+            <button className="textbtn" onClick={() => setHomeEdit(home ?? DEFAULT_CITY)}>
+              {home ? "change" : "pick one"}
+            </button>
+          </p>
+        ) : (
+          <form className="form profile-home-edit" onSubmit={saveHome}>
+            <HomeSelect value={homeEdit} onChange={setHomeEdit} />
+            <p className="pp-actions">
+              <button className="btn btn-green btn-sm">Save home</button>
+              <button type="button" className="textbtn" onClick={() => setHomeEdit(null)}>
+                Cancel
+              </button>
+            </p>
+          </form>
+        )}
         <button className="btn btn-line profile-add" onClick={onAdd}>
           + Add a place you love
         </button>

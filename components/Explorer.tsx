@@ -25,9 +25,10 @@ import type { RatingSummary } from "@/lib/backend";
 import { BRAND, MANTRA, NEWSLETTER, SIGNOFF } from "@/lib/brand";
 import { COLLECTION_BY_ID, collectionsFor, greeting, plateOfTheWeek, weekStart } from "@/lib/collections";
 import { TRAILS, trailProgress } from "@/lib/trails";
-import { CITY_BY_ID, DEFAULT_CITY, HOME_KEY, HOME_TOWN_KEY, apState, cityPath, stateName, type City } from "@/lib/regions";
+import { CITY_BY_ID, DEFAULT_CITY, HERE_KEY, HOME_KEY, HOME_TOWN_KEY, apState, cityPath, stateName, type City } from "@/lib/regions";
 import BrowseBar from "./BrowseBar";
 import WherePicker from "./WherePicker";
+import CityPicker, { WhereBar } from "./CityPicker";
 import SubmitSpot from "./SubmitSpot";
 import MySubmissions from "./MySubmissions";
 import { useApp } from "./Providers";
@@ -61,6 +62,15 @@ type Sort = "popular" | "rating" | "az" | "near";
 /** an occasion collection or a trail, picked from the front page; filters the list and frames the map */
 type Theme = { kind: "collection" | "trail"; id: string } | null;
 const SEEN_KEY = "tl.seenApproved";
+/** set once the first page of this visit has drawn; after that, "/" means Birmingham, not "take me home" */
+let booted = false;
+const writeHere = (id: string) => {
+  try {
+    sessionStorage.setItem(HERE_KEY, id);
+  } catch {
+    /* ignore */
+  }
+};
 
 export default function Explorer({
   cityId,
@@ -73,11 +83,13 @@ export default function Explorer({
   initialSpotData?: Spot;
   initialView?: View;
 }) {
-  const { backend, user, openAuth, requireAuth, saved, toggleSaved, toast, been } = useApp();
+  const { backend, user, openAuth, requireAuth, saved, toggleSaved, toast, been, home } = useApp();
   const router = useRouter();
   const [city, setCity] = useState<City>(CITY_BY_ID[cityId ?? initialSpotData?.city ?? DEFAULT_CITY] ?? CITY_BY_ID[DEFAULT_CITY]);
   const [community, setCommunity] = useState<Spot[]>(initialSpotData ? [initialSpotData] : []);
   const [picker, setPicker] = useState<{ open: boolean; first: boolean }>({ open: false, first: false });
+  /** "Where are you?": which city's map you're looking at */
+  const [cityPicker, setCityPicker] = useState(false);
   const [adding, setAdding] = useState(false);
   const [mine, setMine] = useState(false);
   const [admin, setAdmin] = useState(false);
@@ -117,26 +129,43 @@ export default function Explorer({
   const scrollRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const hydrated = useRef(false);
+  /** on the way to another city's page: don't write this page's address over the move */
+  const leaving = useRef(false);
 
   /* ---------- city ---------- */
-  // "/" has no city in the URL: use the member's home city
+  // Home is where the map opens each visit; "Where are you?" (this tab only) can point somewhere else.
+  // "/" has no city in the URL, so on arrival it goes to where you said you are, else home.
   useEffect(() => {
-    let home: string | null = null;
+    const arriving = !booted;
+    booted = true;
+    let saved: string | null = null;
     let town: string | null = null;
+    let here: string | null = null;
     try {
-      home = localStorage.getItem(HOME_KEY);
+      saved = localStorage.getItem(HOME_KEY);
       town = localStorage.getItem(HOME_TOWN_KEY);
+      here = sessionStorage.getItem(HERE_KEY);
     } catch {
       /* ignore */
     }
-    // start where they eat most, unless the link says otherwise
+    // in your home city, start in the town you eat in most, unless the link says otherwise
     // (a shared link to one place shows it in context, not filtered out by your home town)
-    if (town && TOWN_BY_ID[town as TownId] && !initialSpot && !new URLSearchParams(location.search).get("a")) setArea(`t:${town}`);
+    if ((saved ?? DEFAULT_CITY) === city.id && town && TOWN_BY_ID[town as TownId] && !initialSpot && !new URLSearchParams(location.search).get("a")) setArea(`t:${town}`);
     if (cityId || initialSpot || initialView !== "list") return;
+    if (!arriving) return writeHere(DEFAULT_CITY); // came back to "/" from inside the site
     // first visit: no question up front; show the guide, and let "Where" be asked when wanted
-    if (home && home !== DEFAULT_CITY && CITY_BY_ID[home]) router.replace(cityPath(CITY_BY_ID[home]));
+    const start = here ?? saved;
+    if (start && start !== DEFAULT_CITY && CITY_BY_ID[start]) {
+      leaving.current = true;
+      router.replace(cityPath(CITY_BY_ID[start]));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityId, initialSpot, router]);
+
+  // a city's own page means you're looking there
+  useEffect(() => {
+    if (cityId && CITY_BY_ID[cityId]) writeHere(cityId);
+  }, [cityId]);
 
   // back/forward between city routes
   useEffect(() => {
@@ -228,7 +257,7 @@ export default function Explorer({
   }, []);
 
   useEffect(() => {
-    if (!hydrated.current) return;
+    if (!hydrated.current || leaving.current) return;
     const p = new URLSearchParams();
     if (genre !== "all") p.set("g", genre);
     if (genre === "drinks" && drink !== "all") p.set("d", drink);
@@ -344,19 +373,32 @@ export default function Explorer({
     setDrink("all");
     select(null);
   };
-  /** remember where they eat, so the next visit starts there */
+  /** remember the town they eat in at home, so the next visit starts there (not while visiting elsewhere) */
   const remember = useCallback(
     (a: string) => {
+      if ((home ?? DEFAULT_CITY) !== city.id) return;
       const town = a === "all" ? null : a.startsWith("t:") ? a.slice(2) : (areaById[a]?.town ?? null);
       try {
-        localStorage.setItem(HOME_KEY, city.id);
         if (town) localStorage.setItem(HOME_TOWN_KEY, town);
         else localStorage.removeItem(HOME_TOWN_KEY);
       } catch {
         /* ignore */
       }
     },
-    [areaById, city.id]
+    [areaById, city.id, home]
+  );
+  /** "Where are you?": look at another city's food for this visit; home stays put */
+  const goCity = useCallback(
+    (c: City) => {
+      writeHere(c.id);
+      setCityPicker(false);
+      if (c.id === city.id) {
+        if (selectedId || view !== "list") router.push(cityPath(c));
+        return;
+      }
+      router.push(cityPath(c));
+    },
+    [city.id, selectedId, view, router]
   );
   const pickArea = (a: string) => {
     remember(a);
@@ -611,6 +653,7 @@ export default function Explorer({
                 </motion.div>
               ) : (
                 <motion.div key="browse" className="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+                  <WhereBar city={city} onOpen={() => setCityPicker(true)} onGoHome={goCity} />
                   <section className="hello">
                     <p className="hello-hi">{now ? greeting(now) : "\u00a0"}</p>
                     {/* each sentence stays whole when the line has to break */}
@@ -925,7 +968,12 @@ export default function Explorer({
         total={list.length}
         onArea={pickArea}
         onDone={closePicker}
+        onChangeCity={() => {
+          closePicker();
+          setCityPicker(true);
+        }}
       />
+      <CityPicker open={cityPicker} city={city} onPick={goCity} onClose={() => setCityPicker(false)} />
 
       <StampPicker open={stampPicker} onClose={() => setStampPicker(false)} spots={allSpots} areas={areas} />
 

@@ -3,12 +3,17 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { getBackend } from "@/lib/backend";
+import { DEFAULT_CITY, HERE_KEY, homeParts, isOpenCity } from "@/lib/regions";
+import { useApp } from "./Providers";
+import HomeSelect from "./HomeSelect";
 
 export default function AuthModal({ open, reason, onClose }: { open: boolean; reason?: string; onClose: () => void }) {
   const [tab, setTab] = useState<"in" | "up">("up");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [home, setHomeChoice] = useState(DEFAULT_CITY);
+  const { home: savedHome, setHome } = useApp();
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const backend = getBackend();
@@ -16,6 +21,18 @@ export default function AuthModal({ open, reason, onClose }: { open: boolean; re
   useEffect(() => {
     if (!open) return;
     setErr(null);
+    // start "Where's home?" on the home they already picked, else where they're looking now
+    let here: string | null = null;
+    try {
+      here = sessionStorage.getItem(HERE_KEY);
+    } catch {
+      /* ignore */
+    }
+    setHomeChoice(savedHome ?? (here && isOpenCity(here) ? here : DEFAULT_CITY));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+  useEffect(() => {
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -26,8 +43,15 @@ export default function AuthModal({ open, reason, onClose }: { open: boolean; re
     setBusy(true);
     setErr(null);
     try {
-      if (tab === "up") await backend.signUp(name, email, password);
-      else await backend.signIn(email, password);
+      if (tab === "up") {
+        await backend.signUp(name, email, password, home);
+        setHome(home);
+        // a home we don't cover yet: they asked to hear when it opens (the form says so)
+        if (!isOpenCity(home)) {
+          const p = homeParts(home);
+          backend.waitlist(email.trim(), p.state, p.city).catch(() => {});
+        }
+      } else await backend.signIn(email, password);
       onClose();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Something went wrong.");
@@ -55,7 +79,7 @@ export default function AuthModal({ open, reason, onClose }: { open: boolean; re
               ×
             </button>
             <h2 className="modal-title">{tab === "up" ? "Make an account" : "Sign in"}</h2>
-            <p className="muted">{reason ?? "Join your neighbors: write reviews, post photos and add the places you love. It's free."}</p>
+            <p className="muted">{reason ?? "Join your neighbors: pick your home, write reviews, post photos and add the places you love. It's free."}</p>
 
             <div className="seg">
               <button className={tab === "up" ? "on" : ""} onClick={() => setTab("up")} type="button">
@@ -89,6 +113,7 @@ export default function AuthModal({ open, reason, onClose }: { open: boolean; re
                   autoComplete={tab === "up" ? "new-password" : "current-password"}
                 />
               </label>
+              {tab === "up" && <HomeSelect value={home} onChange={setHomeChoice} />}
               {err && <p className="form-err">{err}</p>}
               <button className="btn btn-green btn-block" disabled={busy}>
                 {busy ? "One sec…" : tab === "up" ? "Create account" : "Sign in"}

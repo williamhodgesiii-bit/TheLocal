@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { getBackend, type Backend, type User } from "@/lib/backend";
+import { HOME_KEY } from "@/lib/regions";
 import AuthModal from "./AuthModal";
 
 type Toast = { id: number; text: string; tone?: "ok" | "err" };
@@ -23,6 +24,9 @@ type Ctx = {
   been: BeenMap;
   /** stamp a place (optionally with how it went); null takes the stamp back */
   markBeen: (id: string, verdict?: Verdict | null) => void;
+  /** where the map opens every visit (lib/regions); null until someone picks one */
+  home: string | null;
+  setHome: (home: string) => void;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
@@ -42,6 +46,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
   const [been, setBeen] = useState<BeenMap>({});
+  const [home, setHomeState] = useState<string | null>(null);
   const tid = useRef(0);
 
   useEffect(() => {
@@ -53,10 +58,29 @@ export default function Providers({ children }: { children: ReactNode }) {
     try {
       setSaved(JSON.parse(localStorage.getItem(SAVED_KEY) || "[]"));
       setBeen(JSON.parse(localStorage.getItem(BEEN_KEY) || "{}"));
+      setHomeState(localStorage.getItem(HOME_KEY));
     } catch {
       /* private mode */
     }
   }, []);
+
+  // a member's home follows them to any device they sign in on
+  // (and an account from before homes existed takes the one picked on this device)
+  useEffect(() => {
+    if (!user) return;
+    try {
+      if (user.home) {
+        setHomeState(user.home);
+        localStorage.setItem(HOME_KEY, user.home);
+      } else {
+        const local = localStorage.getItem(HOME_KEY);
+        if (local) backend.updateHome(local).catch(() => {});
+      }
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.home, backend]);
 
   const toast = useCallback((text: string, tone?: Toast["tone"]) => {
     const id = ++tid.current;
@@ -103,9 +127,22 @@ export default function Providers({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const setHome = useCallback(
+    (h: string) => {
+      setHomeState(h);
+      try {
+        localStorage.setItem(HOME_KEY, h);
+      } catch {
+        /* ignore */
+      }
+      if (user && user.home !== h) backend.updateHome(h).catch(() => toast("Couldn't save your home to your account. Try again?", "err"));
+    },
+    [user, backend, toast]
+  );
+
   const value = useMemo(
-    () => ({ backend, user, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen }),
-    [backend, user, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen]
+    () => ({ backend, user, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome }),
+    [backend, user, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome]
   );
 
   return (

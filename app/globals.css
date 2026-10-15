@@ -5070,3 +5070,168 @@ label.check input {
 .front .crow {
   contain-intrinsic-size: auto 300px;
 }
+
+/* ---------------------------------------------------------------- where are you? / home
+   Home is where the map opens every visit (picked when you join). "Where are you?" is just
+   this visit: a night in another city doesn't change home. */
+.wherebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 14px 22px 0;
+}
+.wherebar + .hello {
+  padding-top: 14px;
+}
+.wb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 42px;
+  padding: 6px 13px 6px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 2px 2px 0 rgba(34, 32, 28, 0.12);
+  text-align: left;
+}
+.wb-btn:hover {
+  border-color: var(--red);
+}
+.wb-btn > svg:first-child {
+  flex: none;
+  color: var(--red);
+}
+.wb-q {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.wb-city {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--f-serif);
+  font-size: 16px;
+  color: var(--red);
+}
+.wb-chev {
+  flex: none;
+  color: var(--ink-2);
+}
+.wb-home,
+.wb-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.wb-home {
+  color: var(--green);
+}
+.wb-back {
+  min-height: 36px;
+}
+.cp-locate {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.cp-located {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.where-row.soon .where-name {
+  color: var(--ink-2);
+}
+.where-row.soon .where-dot {
+  border-style: dashed;
+}
+.where-row.soon.on .where-dot {
+  border-style: solid;
+}
+.city-picker li > .where-wait {
+  margin: 0;
+  padding: 0 0 16px 32px;
+  border-top: 0;
+}
+.cp-notify {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+.cp-notify label {
+  flex: 1;
+}
+.cp-notify .btn {
+  flex: none;
+}
+.cp-else {
+  margin-top: 18px;
+  min-height: 32px;
+}
+.cp-elsewhere {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line-2);
+}
+.cp-elsewhere .where-wait {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.cp-home-now {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green);
+}
+.home-select {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.home-note {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.profile-home {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.profile-home svg {
+  color: var(--green);
+}
+.profile-home-edit {
+  margin-top: 12px;
+}
+@media (max-width: 900px) {
+  .wherebar {
+    padding: 14px 20px 0;
+  }
+}
+@media (max-width: 380px) {
+  /* SE-width phones: the city name matters more than the question */
+  .wb-q {
+    display: none;
+  }
+}

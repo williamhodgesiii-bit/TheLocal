@@ -55,14 +55,18 @@ Photos copied off restaurants' websites or Instagram aren't used. They're copyri
 - **Staff in production**: run this after the member signs up:
   `insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';`
 
-## Cities & states
+## Cities, home and "Where are you?"
 
-`lib/regions.ts` defines states and cities.
-- **Birmingham** is the *live* launch city with the curated guide.
-- Other Alabama cities (Huntsville, Montgomery, Mobile, Tuscaloosa, Auburn–Opelika, the Shoals, Decatur, Gadsden, Dothan, the Eastern Shore and the Gulf Coast) are **founding cities**. Members add spots there, and neighborhoods appear automatically from the spots that get approved.
-- Every other state shows a **waitlist** (the `waitlist` table) so you can see where demand is before you expand.
+`lib/regions.ts` defines states and cities. Each city has a status:
+- **live**: Birmingham, the launch city with the curated guide.
+- **founding**: open for members to add places, each checked before it shows. Neighborhoods appear from the places that get approved. None yet.
+- **later**: coming soon. Huntsville, Montgomery, Mobile, Tuscaloosa, Auburn–Opelika, the Shoals, Decatur, Gadsden, Dothan, the Eastern Shore, the Gulf Coast and Atlanta. They're listed under "Coming soon" with a way to get one email when they open (the `waitlist` table), so you can see where demand is before you expand.
 
-On first visit, people pick a home state and city, and the choice is remembered. Each city has its own page (`/al/huntsville`) and every spot has its own page (`/spot/{id}`). Both are in the sitemap. To open a new city or state, add a line to `CITIES`.
+**Home.** Joining asks for a name, an email (plus a password to sign back in) and **Where's home?** Home can be a city on the map, one that's coming, or a town we don't have yet. The map opens on home every visit, on any device the member signs in on. It's saved on the account (`home_city`) and on the device. Members change it on their page; visitors without an account can tap "Make … home" in the city picker. A home we don't cover yet goes on the waitlist, and the site shows Birmingham until it opens.
+
+**Where are you?** The bar at the top of the list. Pick a city to see its food and reviews, or tap **Use my location**. It doesn't change home: it lasts until the tab closes, and the bar offers "Back to {home}". Coming-soon cities offer the email-me form instead.
+
+Each open city has its own page (`/al/huntsville`) and every place has its own page (`/spot/{id}`). Both are in the sitemap. To open a city, change its status in `CITIES` to `"founding"` or `"live"`; to add one, add a line.
 
 ## To do
 
@@ -77,6 +81,7 @@ Not built yet, in rough order:
 - [ ] **Have a lawyer read** the review rules and the Sponsored labeling on `/about` and `/partners`.
 - [ ] **Real photos of every place** (owner uploads or a local photographer) to replace the labeled stock dish photos.
 - [ ] **Passport across devices** for signed-in members. Today it stays on the device.
+- [ ] **Sign in by email link** instead of a password, once an email service is set up (Supabase's built-in email is for testing only). Joining would then be just name, email and home.
 
 ## Deploy (Vercel)
 

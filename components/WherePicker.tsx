@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { TOWNS, TOWN_BY_ID, type Area } from "@/lib/data";
-import { DEFAULT_CITY, STATES, citiesIn, plannedIn, stateName, type City } from "@/lib/regions";
-import { useApp } from "./Providers";
+import { DEFAULT_CITY, type City } from "@/lib/regions";
 
 /**
  * Where are you eating? One list: anywhere, a town, then (once a town is picked) its
@@ -21,6 +20,7 @@ export default function WherePicker({
   total,
   onArea,
   onDone,
+  onChangeCity,
 }: {
   open: boolean;
   firstRun: boolean;
@@ -33,12 +33,11 @@ export default function WherePicker({
   total: number;
   onArea: (a: string) => void;
   onDone: () => void;
+  /** "Not in Birmingham?": the city picker */
+  onChangeCity: () => void;
 }) {
-  const [elsewhere, setElsewhere] = useState(false);
-
   useEffect(() => {
     if (!open) return;
-    setElsewhere(false);
     // keyboard: start on the current choice
     const t = setTimeout(() => document.querySelector<HTMLElement>(".where .where-row.on, .where .where-row")?.focus({ preventScroll: true }), 60);
     return () => clearTimeout(t);
@@ -120,11 +119,10 @@ export default function WherePicker({
                   </li>
                 ))}
               </ul>
-              {elsewhere ? <Waitlist city={city} /> : null}
             </div>
             <div className="sheet-foot">
-              <button type="button" className="textbtn" onClick={() => setElsewhere((v) => !v)} aria-expanded={elsewhere}>
-                {elsewhere ? "Never mind" : `Not near ${city.name}?`}
+              <button type="button" className="textbtn" onClick={onChangeCity}>
+                Not in {city.name}?
               </button>
               <button type="button" className="btn btn-green" onClick={onDone}>
                 {total === 0 ? "No matches yet" : `Show ${total} ${total === 1 ? "place" : "places"}`}
@@ -146,57 +144,5 @@ function WhereRow({ label, n, on, expanded, onClick }: { label: string; n: numbe
         {n} {n === 1 ? "place" : "places"}
       </span>
     </button>
-  );
-}
-
-/** Other towns open once enough people there ask. */
-function Waitlist({ city }: { city: City }) {
-  const { backend, toast } = useApp();
-  const [state, setState] = useState(city.state);
-  const [email, setEmail] = useState("");
-  const [town, setTown] = useState("");
-  const [joined, setJoined] = useState(false);
-  const planned = plannedIn(state);
-  if (joined) return <p className="where-done">You&apos;re on the list. We&apos;ll email you when your town opens.</p>;
-  return (
-    <form
-      className="form where-wait"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        try {
-          await backend.waitlist(email.trim(), state, town.trim());
-          setJoined(true);
-        } catch {
-          toast("That didn't go through. Try again?", "err");
-        }
-      }}
-    >
-      <p>
-        <strong>We open a town once enough neighbors ask.</strong>
-        {planned.length ? ` Next up: ${planned.slice(0, 3).map((c) => c.name).join(", ")}.` : ""}
-        {citiesIn(state).length === 0 ? ` Nothing in ${stateName(state)} yet.` : ""}
-      </p>
-      <div className="form-grid">
-        <label>
-          <span>State</span>
-          <select value={state} onChange={(e) => setState(e.target.value)}>
-            {STATES.map((s) => (
-              <option key={s.code} value={s.code}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>Your town</span>
-          <input value={town} onChange={(e) => setTown(e.target.value)} placeholder="Town" maxLength={60} />
-        </label>
-      </div>
-      <label>
-        <span>Email</span>
-        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-      </label>
-      <button className="btn btn-green">Tell me when it opens</button>
-    </form>
   );
 }

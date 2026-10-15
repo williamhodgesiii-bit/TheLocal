@@ -54,6 +54,7 @@ export const CITIES: City[] = [
   c("dothan", "Dothan", "AL", [31.2232, -85.3905], "later", "The Peanut Capital"),
   c("eastern-shore", "Fairhope & Eastern Shore", "AL", [30.5227, -87.9033], "later", "The Eastern Shore"),
   c("gulf-coast", "Gulf Shores & Orange Beach", "AL", [30.27, -87.65], "later", "The Alabama Gulf Coast", 12),
+  c("atlanta", "Atlanta", "GA", [33.749, -84.388], "later", "The City in a Forest", 12),
 ];
 
 export const DEFAULT_CITY = "birmingham-al";
@@ -66,7 +67,55 @@ export const stateName = (code: string) => STATES.find((s) => s.code === code)?.
 export const cityPath = (city: City) => (city.id === DEFAULT_CITY ? "/" : `/${city.state.toLowerCase()}/${city.slug}`);
 export const findCity = (state: string, slug: string) => OPEN_CITIES.find((x) => x.state.toLowerCase() === state.toLowerCase() && x.slug === slug);
 
+/** every city we know of, open or not (homes can be anywhere; only open ones have a map) */
+export const ANY_CITY: Record<string, City> = Object.fromEntries(CITIES.map((x) => [x.id, x]));
+export const isOpenCity = (id: string | null | undefined) => !!id && !!CITY_BY_ID[id];
+export const cityLabel = (c: City) => `${c.name}, ${apState(c.state)}`;
+
+/**
+ * Home is where the map opens, every visit, on any device you sign in on. It's picked when you
+ * join (or on your page) and only changes when you change it. It's a city id, or for a town we
+ * don't have yet, "other:Town, ST".
+ */
 export const HOME_KEY = "tl.home";
+/** where you are this visit (a trip, a night out of town). Doesn't touch home; gone when the tab closes */
+export const HERE_KEY = "tl.here";
+export const otherHome = (town: string, state: string) => `other:${town.trim()}, ${state}`;
+export function homeLabel(home: string | null | undefined) {
+  if (!home) return "";
+  if (home.startsWith("other:")) {
+    const { city, state } = homeParts(home);
+    return state ? `${city}, ${apState(state)}` : city;
+  }
+  return ANY_CITY[home] ? cityLabel(ANY_CITY[home]) : "";
+}
+/** the state and town of a home, for the waitlist */
+export function homeParts(home: string): { state: string; city: string } {
+  if (home.startsWith("other:")) {
+    const m = home.slice(6).match(/^(.*),\s*([A-Z]{2})$/);
+    return m ? { city: m[1], state: m[2] } : { city: home.slice(6), state: "" };
+  }
+  const c = ANY_CITY[home];
+  return { city: c?.name ?? "", state: c?.state ?? "" };
+}
+
+/** the closest city we know to a point, and how far it is (km) */
+export function nearestCity(p: [number, number], list: City[] = CITIES): { city: City; km: number } | null {
+  let best: { city: City; km: number } | null = null;
+  for (const c of list) {
+    const km = haversineKm(p, c.center);
+    if (!best || km < best.km) best = { city: c, km };
+  }
+  return best;
+}
+function haversineKm(a: [number, number], b: [number, number]) {
+  const r = Math.PI / 180;
+  const dLat = (b[0] - a[0]) * r;
+  const dLng = (b[1] - a[1]) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLng / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(h));
+}
+
 /** the town (Homewood, Mountain Brook…) a member eats in most; preselects the map */
 export const HOME_TOWN_KEY = "tl.hometown";
 
