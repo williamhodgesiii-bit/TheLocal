@@ -84,7 +84,7 @@ export default function Providers({ children }: { children: ReactNode }) {
       } catch {
         /* ignore */
       }
-      toast(had ? "Removed from saved" : "Saved");
+      toast(had ? "Off your want-to-try list" : "On your want-to-try list");
     },
     [saved, toast]
   );

@@ -1730,7 +1730,7 @@ select {
   white-space: nowrap;
   border: 0;
   background: none;
-  padding: 2px 4px;
+  padding: 7px 6px;
   font: 700 11px/1 var(--f-sans);
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -4129,4 +4129,944 @@ label.check input {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* ---------------------------------------------------------------- front page
+   This week's plate, your passport, occasion rows and a trail: what's new, what's yours,
+   and ways in for people who know the occasion before the cuisine. */
+.hello-hi {
+  margin: 0 0 2px !important;
+  font-family: var(--f-pen);
+  font-size: 24px !important;
+  line-height: 1 !important;
+  color: var(--pen) !important;
+}
+.trust-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 10px 0 0 !important;
+  font-size: 12.5px !important;
+  font-weight: 600;
+  color: var(--green) !important;
+}
+.trust-line span::before {
+  content: "✓ ";
+}
+.trust-line a {
+  color: var(--ink-2);
+}
+.front {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding: 20px 0 6px;
+}
+.front-all {
+  margin: 4px 22px -14px;
+  font-family: var(--f-serif);
+  font-weight: 400;
+  font-size: 20px;
+}
+
+/* a photo card */
+.pcard {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: inherit;
+}
+.pcard-img {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #e9e2cf;
+}
+.pcard-img img,
+.pcard-img .img-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.pcard:hover .pcard-img img {
+  transform: scale(1.04);
+}
+.pcard-name {
+  font-family: var(--f-serif);
+  font-size: 16.5px;
+  line-height: 1.2;
+}
+.pcard-known {
+  font-style: italic;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pcard-meta {
+  font-size: 12.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pcard-heart {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(251, 248, 239, 0.94) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z' fill='%23b23a24'/%3E%3C/svg%3E") center / 15px no-repeat;
+}
+
+/* the passport stamp: a rubber stamp, a little crooked */
+.stamp {
+  position: absolute;
+  z-index: 2;
+  padding: 3px 9px 2px;
+  border: 2.5px solid var(--red);
+  border-radius: 6px;
+  color: var(--red);
+  background: rgba(251, 248, 239, 0.8);
+  font: 800 13px/1.1 var(--f-sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transform: rotate(-9deg);
+  box-shadow: 0 0 0 1px rgba(251, 248, 239, 0.8);
+}
+.stamp-sm {
+  top: 10px;
+  left: 8px;
+  font-size: 11px;
+}
+
+/* occasion rows */
+.crow-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 22px;
+}
+.crow-head h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  font-family: var(--f-serif);
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.2;
+}
+.crow-now {
+  font-family: var(--f-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+.crow-head .textbtn {
+  flex: none;
+}
+.crow-line {
+  margin: 2px 22px 10px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.crow-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 14px;
+  margin: 0 22px;
+}
+.crow-cards .pcard:nth-child(n + 5) {
+  display: none; /* computers: the best four; "See all" for the rest */
+}
+
+/* this week's plate */
+.week {
+  margin: 0 22px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(34, 32, 28, 0.08), 0 12px 28px -14px rgba(34, 32, 28, 0.35);
+}
+.week-img {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  padding: 0;
+  border: 0;
+  background: #e9e2cf;
+  overflow: hidden;
+}
+.week-img img,
+.week-img .img-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.week-kicker {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  padding: 5px 11px 4px;
+  border-radius: 14px;
+  background: var(--red);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.week-body {
+  padding: 14px 18px 18px;
+}
+.week-date {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.week-name {
+  margin: 2px 0 0;
+  font-family: var(--f-serif);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.1;
+}
+.week-name button {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+.week-name button:hover {
+  color: var(--red);
+}
+.week-meta {
+  margin: 3px 0 0;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.week-order {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 9px 12px 8px;
+  border-radius: 10px;
+  background: var(--check);
+}
+.week-order .pen {
+  font-size: 22px;
+  line-height: 1.05;
+}
+.week-why {
+  margin: 10px 0 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+/* Want to try / I've been, then how it went */
+.been {
+  margin-top: 14px;
+}
+.been-row {
+  display: flex;
+  gap: 8px;
+}
+.been-btn {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid var(--line-2);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 14.5px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
+}
+.been-btn:hover {
+  border-color: var(--ink);
+}
+.been-btn:active {
+  transform: scale(0.97);
+}
+.been-btn.on {
+  border-color: var(--red);
+  color: var(--red);
+  background: #fff6f3;
+}
+.been-stamp.on {
+  background: var(--red);
+  color: #fff;
+  animation: stamped 0.35s ease;
+}
+@keyframes stamped {
+  0% {
+    transform: scale(1.12) rotate(-3deg);
+  }
+  60% {
+    transform: scale(0.96) rotate(1deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+.verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  overflow: hidden;
+  padding-top: 10px;
+}
+.verdict-q {
+  font-family: var(--f-pen);
+  font-size: 21px;
+  line-height: 1;
+  color: var(--pen);
+}
+.verdict-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.verdict-undo {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* awards: small, dated, and they link to where they were announced */
+.honors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.honor a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 3px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  line-height: 1.3;
+}
+.honor a::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.honor-michelin a {
+  background: #fbeeea;
+  color: #8c2a17;
+}
+.honor-michelin a::before {
+  background: var(--red);
+}
+.honor-beard a {
+  background: #eef1e8;
+  color: var(--green-2);
+}
+.honor-beard a::before {
+  background: var(--green);
+}
+.honor a:hover {
+  text-decoration: underline;
+}
+
+/* your passport, on the front page */
+.pp-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 22px;
+  padding: 16px 18px;
+  border: 1.5px dashed var(--line-2);
+  border-radius: 16px;
+  background: var(--card);
+}
+.pp-ring {
+  --p: 0;
+  flex: none;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--red) calc(var(--p) * 360deg), rgba(34, 32, 28, 0.12) 0);
+}
+.pp-ring::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.pp-ring span {
+  position: relative;
+  font-family: var(--f-serif);
+  font-size: 26px;
+  line-height: 1;
+}
+.pp-ring-lg {
+  width: 96px;
+  height: 96px;
+}
+.pp-ring-lg::before {
+  inset: 9px;
+}
+.pp-ring-lg span {
+  font-size: 34px;
+}
+.pp-text h2 {
+  margin: 0;
+  font-family: var(--f-serif);
+  font-weight: 400;
+  font-size: 19px;
+}
+.pp-text p {
+  margin: 3px 0 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.pp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin: 10px 0 0 !important;
+}
+
+/* a trail */
+.trail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 22px;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--green);
+  color: var(--card);
+  text-align: left;
+}
+.trail:hover {
+  background: var(--green-2);
+}
+.trail-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.trail-title {
+  font-family: var(--f-serif);
+  font-size: 22px;
+  line-height: 1.15;
+}
+.trail-line {
+  font-size: 13.5px;
+  opacity: 0.9;
+}
+.trail-dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.trail-dot {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 0 2px rgba(251, 248, 239, 0.4);
+  filter: grayscale(1) opacity(0.6);
+}
+.trail-dot.on {
+  filter: none;
+  box-shadow: 0 0 0 2.5px var(--mustard);
+}
+.trail-dot img,
+.trail-dot .img-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.b-theme span {
+  margin-left: 2px;
+  font-size: 17px;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+/* the place page */
+.detail-been {
+  margin: 14px 22px 0;
+}
+.detail-been .honors {
+  margin-top: 0;
+}
+
+/* ---------------------------------------------------------------- the passport (You tab) */
+.passport {
+  padding: 22px 22px 6px;
+  border-bottom: 1px solid var(--line);
+}
+.pp-top {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.pp-title {
+  margin: 2px 0 0;
+  font-family: var(--f-serif);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.1;
+}
+.pp-sub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.pp-bar {
+  display: block;
+  height: 8px;
+  margin-top: 10px;
+  border-radius: 4px;
+  background: rgba(34, 32, 28, 0.1);
+  overflow: hidden;
+}
+.pp-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--red);
+  transition: width 0.4s ease;
+}
+.pp-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pp-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pp-badge b {
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 4px;
+  border-radius: 13px;
+  background: var(--red);
+  color: #fff;
+  font-size: 12px;
+}
+.pp-h {
+  margin: 22px 0 10px;
+  font-family: var(--f-serif);
+  font-weight: 400;
+  font-size: 18px;
+}
+.pp-hoods {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 12px 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pp-hood {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+.pp-hood-stamp {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px dashed var(--line-2);
+  color: var(--muted);
+  font-family: var(--f-serif);
+  font-size: 18px;
+}
+.pp-hood.some .pp-hood-stamp {
+  border: 2.5px solid var(--red);
+  color: var(--red);
+  transform: rotate(-8deg);
+}
+.pp-hood.full .pp-hood-stamp {
+  border: 2.5px solid var(--red);
+  background: var(--red);
+  color: #fff;
+  transform: rotate(-8deg);
+}
+.pp-hood-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.pp-hood-n {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.pp-trails {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pp-trails li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 12px;
+}
+.pp-trails .pp-bar {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.pp-trails li.done .pp-bar i {
+  background: var(--green);
+}
+.pp-trail-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.pp-trail-n {
+  font-size: 13px;
+  color: var(--muted);
+}
+.pp-tabs {
+  margin-top: 22px;
+}
+.pp-lines {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pp-lines button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  text-align: left;
+}
+.pp-lines .thumb {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 10px;
+  transform: none !important;
+}
+.pp-line-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.pp-line-name {
+  font-family: var(--f-serif);
+  font-size: 16px;
+}
+.pp-line-meta {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* "Where have you eaten already?" */
+.sp-search {
+  margin: 14px 0 6px;
+}
+.sp-group h3 {
+  margin: 18px 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+.sp-group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sp-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 5px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  text-align: left;
+}
+.sp-item .thumb {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 10px;
+  transform: none !important;
+}
+.sp-name {
+  flex: 1;
+  font-family: var(--f-serif);
+  font-size: 16px;
+}
+.sp-check {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--line-2);
+  color: #fff;
+  font-weight: 800;
+}
+.sp-item.on .sp-check {
+  border-color: var(--red);
+  background: var(--red);
+  animation: stamped 0.3s ease;
+}
+.sp-total {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+/* ---------------------------------------------------------------- how we pick */
+.about {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 22px 70px;
+}
+.about h1 {
+  margin: 4px 0 10px;
+  font-family: var(--f-serif);
+  font-weight: 400;
+  font-size: 38px;
+  line-height: 1.1;
+}
+.about-lede {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.about-promises {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 22px 0 10px;
+}
+.about-promises div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.about-promises b {
+  font-family: var(--f-serif);
+  font-weight: 400;
+  font-size: 18px;
+  color: var(--ink);
+}
+.about-list {
+  padding-left: 20px;
+  line-height: 1.6;
+}
+.about-list li {
+  margin-bottom: 8px;
+}
+.about-foot {
+  margin-top: 30px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 900px) {
+  .front {
+    gap: 24px;
+    padding-top: 16px;
+  }
+  .front-all {
+    margin: 4px 20px -14px;
+  }
+  .week,
+  .pp-card,
+  .trail {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+  .crow-head,
+  .crow-line {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+  /* phones: swipe a row of photo cards, with the next one peeking in */
+  .crow-cards {
+    display: flex;
+    gap: 12px;
+    margin: 0;
+    padding: 0 20px 4px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scroll-padding: 0 20px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .crow-cards::-webkit-scrollbar {
+    display: none;
+  }
+  .crow-cards .pcard {
+    width: 62vw;
+    max-width: 240px;
+    scroll-snap-align: start;
+  }
+  .crow-cards .pcard:nth-child(n + 5) {
+    display: flex;
+  }
+  .detail > .detail-been {
+    order: 2;
+    margin: 14px 20px 0;
+  }
+  .detail > .detail-actions {
+    order: 3;
+  }
+  .detail > .snaps {
+    order: 4;
+  }
+  .detail > .detail-body {
+    order: 5;
+  }
+  .detail > .reviews {
+    order: 6;
+  }
+  .detail > .nearby {
+    order: 7;
+  }
+  .detail > .claim {
+    order: 8;
+  }
+  .passport {
+    padding: 20px 16px 6px;
+  }
+  .pp-hoods {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px 6px;
+  }
+  .pp-hood-stamp {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+  .pp-hood-name {
+    font-size: 11.5px;
+  }
+  .about-promises {
+    grid-template-columns: 1fr;
+  }
+  .about h1 {
+    font-size: 30px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pcard:hover .pcard-img img {
+    transform: none;
+  }
+}
+
+/* the one sponsored card: labeled, bordered, apart from the list */
+.sponsored-slot {
+  margin: 12px 22px 4px;
+  padding: 12px;
+  border: 1.5px solid var(--mustard);
+  border-radius: 14px;
+  background: #fffaf0;
+}
+.sponsored-slot .paid {
+  margin: 0 0 8px;
+}
+@media (max-width: 900px) {
+  .sponsored-slot {
+    margin: 12px 20px 4px;
+  }
+}
+
+/* the rest of the list: drawn as you scroll, and skipped by the browser until it's near the screen */
+.more-rows {
+  display: block;
+  margin: 14px auto 0;
+}
+.bill .item,
+.front .crow {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 112px;
+}
+.front .crow {
+  contain-intrinsic-size: auto 300px;
 }

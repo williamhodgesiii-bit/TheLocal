@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { areaLabelOf, priceLabel, type Spot } from "@/lib/data";
+import type { Spot } from "@/lib/data";
 import type { Photo, Review, Submission } from "@/lib/backend";
 import { useApp } from "./Providers";
 import PhotoImg from "./Photo";
 import { Stars } from "./Stars";
 
-type Tab = "reviews" | "photos" | "added" | "saved";
+type Tab = "reviews" | "photos" | "added";
 
-/** "You": a member's reviews, photos, places they've written in, and saved places. */
+/** "You", under the passport: a member's reviews, photos and the places they've written in. */
 export default function Profile({
   spotById,
   onOpen,
@@ -25,7 +25,7 @@ export default function Profile({
   onAdd: () => void;
   admin: boolean;
 }) {
-  const { backend, user, openAuth, saved, toast } = useApp();
+  const { backend, user, openAuth, toast } = useApp();
   const [tab, setTab] = useState<Tab>("reviews");
   const [reviews, setReviews] = useState<Review[] | null>(null);
   const [photos, setPhotos] = useState<Photo[] | null>(null);
@@ -45,19 +45,11 @@ export default function Profile({
     return (
       <div className="profile">
         <div className="profile-empty">
-          <h2 className="modal-title">Your page</h2>
-          <p className="muted">Sign in to keep your reviews, photos, saved places and the places you&apos;ve added in one spot.</p>
-          <button className="btn btn-green" onClick={() => openAuth("Sign in to see your page.")}>
+          <h2 className="modal-title">Join your neighbors</h2>
+          <p className="muted">Your passport works without an account. Sign up (it&apos;s free) to write reviews, post photos and add the places you love.</p>
+          <button className="btn btn-green" onClick={() => openAuth("Sign in to write reviews, post photos and add places.")}>
             Sign in or make an account
           </button>
-          {saved.length > 0 && (
-            <>
-              <h3 className="small-head" style={{ marginTop: 26 }}>
-                Saved on this phone
-              </h3>
-              <SpotLines ids={saved} spotById={spotById} onOpen={onOpen} />
-            </>
-          )}
         </div>
       </div>
     );
@@ -66,7 +58,6 @@ export default function Profile({
     reviews: reviews?.length ?? 0,
     photos: photos?.length ?? 0,
     added: subs?.length ?? 0,
-    saved: saved.length,
   };
   const verified = subs?.filter((x) => x.status === "approved").length ?? 0;
 
@@ -116,7 +107,6 @@ export default function Profile({
             ["reviews", "Reviews"],
             ["photos", "Photos"],
             ["added", "Added"],
-            ["saved", "Saved"],
           ] as [Tab, string][]
         ).map(([k, l]) => (
           <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)} aria-pressed={tab === k}>
@@ -204,12 +194,6 @@ export default function Profile({
             </>
           ))}
 
-        {tab === "saved" &&
-          (saved.length === 0 ? (
-            <Empty text="Tap Save on any place and it shows up here." />
-          ) : (
-            <SpotLines ids={saved} spotById={spotById} onOpen={onOpen} />
-          ))}
       </motion.section>
 
       <footer className="profile-foot">
@@ -229,26 +213,6 @@ export default function Profile({
         </button>
       </footer>
     </div>
-  );
-}
-
-function SpotLines({ ids, spotById, onOpen }: { ids: string[]; spotById: Record<string, Spot>; onOpen: (id: string) => void }) {
-  const list = ids.map((id) => spotById[id]).filter(Boolean);
-  if (!list.length) return <Empty text="Your saved places are in another city." />;
-  return (
-    <ul className="p-saved">
-      {list.map((s) => (
-        <li key={s.id}>
-          <button onClick={() => onOpen(s.id)}>
-            <span className="nb-name">{s.name}</span>
-            <span className="leader" aria-hidden />
-            <span className="nb-d">
-              {areaLabelOf(s)} · {priceLabel(s.price)}
-            </span>
-          </button>
-        </li>
-      ))}
-    </ul>
   );
 }
 

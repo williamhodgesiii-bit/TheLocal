@@ -85,32 +85,38 @@ export function declutter(root: HTMLElement) {
   const pad = (r: DOMRect, n: number) => ({ l: r.left - n, r: r.right + n, t: r.top - n, b: r.bottom + n });
   type Box = ReturnType<typeof pad>;
   const hit = (a: Box, b: Box) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
-  const taken: Box[] = [];
-  root.querySelectorAll<HTMLElement>(".pin:not(.dim) .pin-dot, .pin.selected .pin-label, .pin.hot .pin-label").forEach((n) => {
-    const r = n.getBoundingClientRect();
-    if (r.width) taken.push(pad(r, 3));
-  });
   const labels = [
     ...root.querySelectorAll<HTMLElement>(".hood.active button"),
     ...root.querySelectorAll<HTMLElement>(".hood:not(.active) button"),
     ...root.querySelectorAll<HTMLElement>(".ridge-label span, .landmark span"),
   ];
-  const nudges: [number, number][] = [[0, 0], [0, 16], [0, -16], [0, 30], [0, -30], [-44, 0], [44, 0], [-44, 22], [44, -22], [0, 46], [0, -46]];
-  for (const n of labels) {
-    n.style.translate = "";
+  // writes first, then one round of reads, then the writes that place things
+  for (const n of labels) n.style.translate = "";
+  const taken: Box[] = [];
+  root.querySelectorAll<HTMLElement>(".pin:not(.dim) .pin-dot, .pin.selected .pin-label, .pin.hot .pin-label").forEach((n) => {
     const r = n.getBoundingClientRect();
-    if (!r.width) continue;
+    if (r.width) taken.push(pad(r, 3));
+  });
+  const rects = labels.map((n) => n.getBoundingClientRect());
+  const nudges: [number, number][] = [[0, 0], [0, 16], [0, -16], [0, 30], [0, -30], [-44, 0], [44, 0], [-44, 22], [44, -22], [0, 46], [0, -46]];
+  const out: { n: HTMLElement; at: [number, number] | null }[] = [];
+  labels.forEach((n, i) => {
+    const r = rects[i];
+    if (!r.width) return;
     const base = pad(r, 2);
-    let placed: Box | null = null;
+    let at: [number, number] | null = null;
     for (const [dx, dy] of nudges) {
       const box = { l: base.l + dx, r: base.r + dx, t: base.t + dy, b: base.b + dy };
       if (!taken.some((t) => hit(box, t))) {
-        placed = box;
-        if (dx || dy) n.style.translate = `${dx}px ${dy}px`;
+        at = [dx, dy];
+        taken.push(box);
         break;
       }
     }
-    n.classList.toggle("crowded", !placed);
-    if (placed) taken.push(placed);
+    out.push({ n, at });
+  });
+  for (const { n, at } of out) {
+    n.classList.toggle("crowded", !at);
+    if (at && (at[0] || at[1])) n.style.translate = `${at[0]}px ${at[1]}px`;
   }
 }

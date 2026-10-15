@@ -6,7 +6,7 @@ import { BRAND, NEWSLETTER } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "For restaurants",
-  description: `Claim your listing on ${BRAND} for free, or pay to be featured in your neighborhood.`,
+  description: `Every locally owned place gets a free listing on ${BRAND}. Optional extras for owners; nobody can pay to rank.`,
 };
 
 const TIERS = [
@@ -14,25 +14,25 @@ const TIERS = [
     id: "neighbor",
     name: "Listing",
     price: "Free",
-    per: "",
+    per: "always",
     pitch: "Every locally owned place gets one.",
-    perks: ["Claim and verify your page", "Update your hours, links and menu", "Answer reviews", "An owner mark on your page"],
+    perks: ["Your page: photos, what to order, directions", "Claim it and correct your details", "Answer reviews", "An owner mark on your page"],
   },
   {
     id: "regular",
-    name: "Featured",
+    name: "Partner",
     price: "$39",
-    per: "a month",
-    pitch: "Show up first in your kind of food.",
-    perks: ["Everything in Listing", "Top of your category, marked as paid", "Pick your cover photo and order your gallery", "A monthly count of views, saves and directions", "Post specials and events"],
+    per: "a month, or $390 a year",
+    pitch: "Look your best, and see what it's doing for you.",
+    perks: ["Everything in Listing", "Pick your cover photo and order your gallery", 'Post specials and events, marked "From the owner"', "A monthly report: views, saves, stamps and directions", "Your place in the list stays exactly where it was"],
   },
   {
     id: "institution",
-    name: "Front page",
+    name: "Sponsored spot",
     price: "$99",
     per: "a month",
-    pitch: "Own your part of town.",
-    perks: ["Everything in Featured", "Top of your neighborhood on the map", "Comes up more often in Surprise Me (marked)", `A write-up in ${NEWSLETTER}, our Thursday email`, "A call with us every quarter"],
+    pitch: "Be the first card people see in your kind of food or your neighborhood.",
+    perks: ["Everything in Partner", 'One card, labeled "Sponsored" everywhere it shows', "At most one per kind of food and one per neighborhood", "Never in awards, rankings or Surprise me"],
   },
 ];
 
@@ -52,8 +52,8 @@ export default function Partners({ searchParams }: { searchParams: { spot?: stri
         <p className="cap-kicker">For restaurants, bars and coffee shops</p>
         <h1>Be the plate next door.</h1>
         <p>
-          Your neighbors are deciding where to eat tonight. {BRAND} only lists places that are locally owned: no chains, no fast food. A basic listing is
-          free. If you want to be seen first in your neighborhood or your kind of food, there are two paid options.
+          Your neighbors are deciding where to eat tonight. {BRAND} only lists places that are locally owned: no chains, no fast food. Your listing is free,
+          and where you show up is never for sale. That&apos;s why people trust the list, and why being on it is worth something.
         </p>
       </section>
 
@@ -84,15 +84,18 @@ export default function Partners({ searchParams }: { searchParams: { spot?: stri
 
       <section className="principles">
         <div>
-          <h3 className="small-head">What we promise diners</h3>
+          <h3 className="small-head">What we promise diners (and you)</h3>
           <p>
-            Anything paid is marked <span className="paid">Paid listing</span>. Owners can&apos;t buy, edit or remove reviews. Ratings only come from people with
-            accounts.
+            Nobody pays to rank. Anything paid is marked <span className="paid">Sponsored</span> right next to it. Owners can&apos;t buy, edit or remove reviews, and
+            reviews come only from members with accounts. <Link href="/about">How we pick</Link>.
           </p>
         </div>
         <div>
           <h3 className="small-head">Other ways to work with us</h3>
-          <p>Sponsor {NEWSLETTER}, take over a neighborhood for a week, list an event, or add reservation and delivery links to your page.</p>
+          <p>
+            Put a &quot;presented by&quot; line on {NEWSLETTER} or a seasonal trail (local banks, credit unions and services welcome), host a stop on a ticketed Plate
+            Crawl, or list an event.
+          </p>
         </div>
       </section>
 

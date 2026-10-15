@@ -6,10 +6,14 @@
 
 **The look**: the site is built to look like things you'd find around town, not a template. A restaurant's page is a green guest check with taped-up snapshots and reviews in handwriting. The map is a printed city map whose numbered pins match the list. Surprise Me prints a kitchen ticket. The header reads like a newspaper masthead with an AP-style dateline. Fonts: Yellowtail (sign script), Young Serif, Libre Franklin and Nanum Pen Script, all self-hosted.
 
-- **The browse bar** (same on computers and phones), top to bottom: one search box; **what sounds good**, every kind of food on its own little plate (Southern, BBQ, Italian, Seafood, Latin, Asian, Greek, Special occasion, Brunch, Coffee, Sweets, and **Drinks** with cocktails, breweries, wine and bars); then three buttons that always show their current value: **Where** (a town, then a neighborhood), **Price**, and **Saved**. Under it: how many places match, *Clear all*, and the sort.
+- **The browse bar** (same on computers and phones), top to bottom: one search box; **what sounds good**, every kind of food on its own little plate (Southern, BBQ, Italian, Seafood, Latin, Asian, Greek, Special occasion, Brunch, Coffee, Sweets, and **Drinks** with cocktails, breweries, wine and bars); then three buttons that always show their current value: **Where** (a town, then a neighborhood; nobody is asked on the first visit), **Price**, and **Want to try**. Under it: how many places match, *Clear all*, and the sort.
 - **The map**: drag it with the mouse or one finger, zoom with the wheel, a pinch, double-click, the +/− buttons or keys. The camera frames your picks; once you move it yourself, **Recenter** brings it back.
-- **Restaurant page**: building photo first, then food photos, then member reviews. Members can upload photos. Also directions, save, share and nearby places.
-- **Surprise me**: picks a place, weighted toward the well-loved ones. It can stay inside your current picks.
+- **Front page** (until you narrow things down): **This week's plate** (one place for everyone, new every Thursday, the day the email goes out; `lib/collections.ts`), your **Plate Passport** card, three **occasion rows** picked for the time of day (Date night, Patio weather, Cheap & good, Brunch, Coffee to work from, Bring the kids, Big groups, Award winners, Breweries; built only from place tags, never padded), and a **trail**. "See all" turns a row into a filter that also reframes the map.
+- **Plate Passport** (`lib/passport.ts`, the Passport tab): tap **I've been** on any place to stamp it, then say how it went (Loved it / It was good / Not for me). Shows N of 78, stamps by neighborhood, milestones (1, 5, 10, 25, 50, all), a forgiving weekly streak (a quiet week doesn't break it), trails (`lib/trails.ts`: a seasonal coffee trail, Over the mountain, Meat-and-threes) and a share card drawn in the browser (progress, not places). **Where have you eaten already?** lets people stamp the places they've been in one go, so nobody starts at zero. It works without an account and stays on the device.
+- **Restaurant page**: name, the basics and what to order first, then awards (dated, each links to where it was announced; `lib/honors.ts`), Want to try / I've been, Directions & hours, photos, the write-up, reviews, nearby places, and who checked it and when, with **Report a change**.
+- **Sort**: Most loved, **Nearest to me** (asks for your location only when you pick it), Top rated, A to Z. Nobody can pay to move up.
+- **Surprise me**: a random pick, a little more likely for well-loved places, never for paid ones. If you've narrowed things down it starts inside your picks.
+- **Trust**: a one-line promise under the headline (every place checked by a person, nobody pays to rank), and `/about` (**How we pick**): what counts as locally owned, how places get on, keeping it current, how we make money, and the review rules. Put your name and email in `FOUNDER` in `lib/brand.ts`; named people are one of the strongest trust signals a new site has.
 - **Keyboard**: `/` search · `↑/↓` browse · `Esc` back · `S` surprise.
 
 ## Coverage today
@@ -22,13 +26,13 @@ The **Birmingham area**, by town: Birmingham (Downtown, Southside, Lakeview, Avo
 
 ## Phones first
 
-On a phone the site works like an app. A bottom tab bar has **Explore · Map · Surprise · You**.
-- **Explore**: the same browse bar; the plates swipe sideways, and the bar tucks away while you scroll down the list and comes back when you scroll up. Where and Price open as sheets from the bottom.
+On a phone the site works like an app. A bottom tab bar has **Explore · Map · Surprise · Passport**.
+- **Explore**: the front page (this week's plate, your passport, occasion rows you swipe, a trail), then the full list. The same browse bar; the plates swipe sideways, and the bar tucks away while you scroll down the list and comes back when you scroll up. Where and Price open as sheets from the bottom.
 - **Map**: full screen, with swipeable place cards that steer the map.
 - **Opening a place**: the place page sits under a strip of map with the pin on it.
 - **Forms**: open as sheets from the bottom.
 - **Home screen**: it can be added as an app (manifest and app icon included).
-- **You** (`/me`): your reviews, photos, the places you've added and their status, and saved places. You can also edit your name and sign out.
+- **Passport** (`/me`): your Plate Passport (stamps, neighborhoods, trails, Been and Want to try lists, share card) for everyone; members also see their reviews, photos and the places they've added, and can edit their name and sign out.
 
 ## Real photos
 
@@ -89,15 +93,16 @@ Photos without a member or Google image fall back to two things. The storefront 
 
 | Lever | Where |
 | --- | --- |
-| Partner tiers (Neighbor free / Regular $39 / Institution $99) | `/partners`. Leads go to `partner_leads` |
-| Sponsored placement | set `sponsored: true` on a spot. It pins to the top of its lists with a visible **Sponsored** label and gets a modest Surprise Me boost |
-| In-list "Your spot here" slot | the 5th position of any list with 7+ results |
+| Listing (free) / Partner $39 a month / Sponsored spot $99 a month | `/partners`. Leads go to `partner_leads`. Partner is presentation and a monthly report; it never changes order |
+| Sponsored spot | set `sponsored: true` on a spot. It shows as one card labeled **Sponsored**, apart from the list, once someone has picked a kind of food or part of town. At most one per kind of food and one per neighborhood (keep it that way when you sell it). Never in rankings, awards or Surprise me |
+| "Presented by" | a sponsor line on The Thursday Plate email or a seasonal trail (banks, credit unions, local services) |
+| In-list "Own a place like these?" card | the 5th position of any list with 7+ results |
 | Claim-your-listing CTA | bottom of every spot page (pre-fills the partner form) |
-| The Weekly Plate newsletter | the signup at the end of the list goes to `subscribers`. Sponsorship inventory |
+| The Thursday Plate email | the signup at the end of the list goes to `subscribers`. Sponsorship inventory |
 | Partner analytics | Vercel Analytics events: `spot_view`, `directions`, `website`, `share`, `review`, `photo_upload`, `surprise_spin`. These are the numbers in partner reports |
 | SEO | a static page per spot (`/spot/[id]`) with Restaurant JSON-LD, sitemap and OG image |
 
-Trust rules (shown on `/partners`): paid placement is always labeled. Partners can't edit or remove reviews. Ratings come only from members.
+Trust rules (on `/partners` and `/about`): nobody pays to rank; anything paid says **Sponsored** right next to it; owners can't buy, edit or remove reviews; reviews come only from members and show their date. The research behind this (FTC review rules, what sank Yelp's trust, what local media charge) is in the redesign research report.
 
 ## Stack
 

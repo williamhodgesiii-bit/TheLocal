@@ -29,6 +29,8 @@ export default function BrowseBar(p: {
   setSavedOnly: (v: boolean) => void;
   savedCount: number;
   tucked?: boolean;
+  /** a collection or trail picked from the front page */
+  theme?: { label: string; onClear: () => void } | null;
 }) {
   return (
     <div className={`browse ${p.tucked ? "tucked" : ""}`}>
@@ -65,6 +67,12 @@ export default function BrowseBar(p: {
       )}
 
       <div className="b-row" role="group" aria-label="Narrow it down">
+        {p.theme && (
+          <button type="button" className="b-chip on b-theme" onClick={p.theme.onClear} aria-label={`${p.theme.label}. Tap to show everything`}>
+            {p.theme.label}
+            <span aria-hidden>×</span>
+          </button>
+        )}
         <button type="button" className={`b-chip b-pick ${p.whereOn ? "on" : ""}`} onClick={p.openWhere} aria-haspopup="dialog">
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
             <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
@@ -79,7 +87,7 @@ export default function BrowseBar(p: {
             <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden>
               <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" fill={p.savedOnly ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
             </svg>
-            Saved <span className="b-n">{p.savedCount}</span>
+            Want to try <span className="b-n">{p.savedCount}</span>
           </button>
         )}
       </div>

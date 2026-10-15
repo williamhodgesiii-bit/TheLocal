@@ -7,7 +7,7 @@ import { track } from "@vercel/analytics";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { GENRE_BY_ID, areaLabelOf, distanceKm, mapsUrl, priceLabel, type Spot } from "@/lib/data";
-import { BRAND } from "@/lib/brand";
+import { BRAND, CHECKED } from "@/lib/brand";
 import { hash } from "@/lib/images";
 import { PLACE_PHOTOS, commonsPage, commonsSrc, commonsSrcSet, dishesFor, shortDish } from "@/lib/photos";
 import type { Photo as MemberPhoto, PhotoKind } from "@/lib/backend";
@@ -15,6 +15,7 @@ import { useApp } from "./Providers";
 import Storefront from "./Storefront";
 import Reviews from "./Reviews";
 import Photo from "./Photo";
+import { BeenButtons, Honors } from "./FrontPage";
 
 type GPhoto = { url: string; author: string; authorUri: string | null };
 type Places = { enabled: boolean; photos: GPhoto[]; rating?: number | null; ratingCount?: number | null; website?: string | null };
@@ -46,7 +47,7 @@ export default function SpotDetail({
   onBack: () => void;
   onSelect: (id: string) => void;
 }) {
-  const { backend, requireAuth, toast, saved, toggleSaved } = useApp();
+  const { backend, requireAuth, toast } = useApp();
   const [photos, setPhotos] = useState<MemberPhoto[]>([]);
   const [places, setPlaces] = useState<Places | null>(null);
   const [lightbox, setLightbox] = useState<number | null>(null);
@@ -158,7 +159,6 @@ export default function SpotDetail({
     }
   }
 
-  const isSaved = saved.includes(spot.id);
 
   const checkNo = String(1000 + (hash(spot.id) % 9000));
   const website = places?.website || safeUrl(spot.website);
@@ -177,9 +177,6 @@ export default function SpotDetail({
           ← Back
         </button>
         <div className="row gap12">
-          <button className={`textbtn ${isSaved ? "on" : ""}`} onClick={() => toggleSaved(spot.id)} aria-pressed={isSaved}>
-            {isSaved ? "Saved" : "Save"}
-          </button>
           <button className="textbtn" onClick={share}>
             Share
           </button>
@@ -192,12 +189,13 @@ export default function SpotDetail({
         <p className="m-meta">
           {spot.genres.map((x) => GENRE_BY_ID[x].short).join(", ")} · {areaLabelOf(spot)} · {priceLabel(spot.price)}
           {places?.rating ? <span className="g-rate"> · Google {places.rating.toFixed(1)}</span> : null}
-          {spot.sponsored && <span className="paid">Paid listing</span>}
+          {spot.sponsored && <span className="paid">Sponsored</span>}
         </p>
         <p className="m-order">
           <span className="cl">Order</span> <span className="pen">{spot.knownFor}</span>
         </p>
       </header>
+
 
       <div className="guest-check">
         <div className="check-top">
@@ -242,10 +240,19 @@ export default function SpotDetail({
               {spot.verifiedAt ? ` ${new Date(spot.verifiedAt).toLocaleDateString(undefined, { month: "long", year: "numeric" })}` : ""}.
             </>
           ) : (
-            <>Picked and checked by {BRAND}.</>
-          )}
-          {spot.sponsored && <span className="paid">Paid listing</span>}
+            <>
+              Picked and checked by {BRAND}, {CHECKED}.
+            </>
+          )}{" "}
+          <Link href="/about">How we pick</Link> · <Link href={`/partners?spot=${spot.id}#contact`}>Report a change</Link>
+          {spot.sponsored && <span className="paid">Sponsored</span>}
         </p>
+      </div>
+
+      {/* the passport stamp and the awards, right under the basics (phones move it up under the name) */}
+      <div className="detail-been">
+        <Honors id={spot.id} />
+        <BeenButtons spot={spot} />
       </div>
 
       {/* building, then food */}
@@ -298,7 +305,7 @@ export default function SpotDetail({
 
       <div className="actions detail-actions">
         <a className="btn btn-green" href={mapsUrl(spot)} target="_blank" rel="noreferrer" onClick={() => track("directions", { id: spot.id })}>
-          Directions
+          Directions &amp; hours
         </a>
         {spot.phone && (
           <a className="btn btn-line" href={`tel:${spot.phone.replace(/[^0-9+]/g, "")}`}>

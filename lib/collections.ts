@@ -1,4 +1,5 @@
 import type { Spot } from "./data";
+import { HONORS } from "./honors";
 
 /**
  * Collections: ways in for people who know the occasion before the cuisine.
@@ -75,8 +76,8 @@ export const COLLECTIONS: Collection[] = [
   {
     id: "honors",
     title: "Award winners",
-    line: "James Beard and Michelin nods, right here.",
-    match: (s) => has(s, "James Beard", "Michelin") || /Bib Gourmand|James Beard|Michelin/.test(s.blurb),
+    line: "Michelin and James Beard nods, a short drive away.",
+    match: (s) => !!HONORS[s.id]?.length,
   },
   {
     id: "pints",
@@ -90,10 +91,11 @@ export const COLLECTIONS: Collection[] = [
 export const COLLECTION_BY_ID = Object.fromEntries(COLLECTIONS.map((c) => [c.id, c])) as Record<string, Collection>;
 
 /** Collections in the order that fits right now: what suits this hour first, then the rest. */
-export function collectionsFor(now: Date, pool: Spot[], min = 3) {
+export function collectionsFor(now: Date, pool: Spot[], min = 3, timely = true) {
   const h = now.getHours();
   const weekend = now.getDay() === 0 || now.getDay() === 6;
-  const fits = (c: Collection) => c.leads?.some((l) => h >= l.from && h < l.to && (!l.weekend || weekend)) ?? false;
+  // without the visitor's own clock (the prebuilt page), keep the plain order
+  const fits = (c: Collection) => timely && (c.leads?.some((l) => h >= l.from && h < l.to && (!l.weekend || weekend)) ?? false);
   return COLLECTIONS.map((c, i) => ({ c, i, spots: pool.filter(c.match), now: fits(c) }))
     .filter((x) => x.spots.length >= min)
     .sort((a, b) => Number(b.now) - Number(a.now) || a.i - b.i)
@@ -112,20 +114,20 @@ export function greeting(now: Date) {
 }
 
 /**
- * Today's plate: one place a day, the same for everyone in town, new at midnight.
- * Well-loved places come up more often; it never repeats within two weeks.
+ * This week's plate: one place a week, the same for everyone in town, new every Thursday
+ * (the day The Thursday Plate email goes out). Well-loved places come up more often,
+ * and none repeats within eight weeks.
  */
-export function plateOfTheDay(day: Date, pool: Spot[]): Spot | null {
+export function plateOfTheWeek(day: Date, pool: Spot[]): Spot | null {
   if (!pool.length) return null;
   const list = [...pool].sort((a, b) => a.id.localeCompare(b.id));
-  const dayNo = Math.floor(Date.UTC(day.getFullYear(), day.getMonth(), day.getDate()) / 86400000);
-  const recent = new Set<string>();
+  const week = weekKey(day);
+  const recent: string[] = [];
   let pick: Spot | null = null;
-  // walk the last two weeks forward so today's pick avoids the previous 13 days' picks
-  for (let d = dayNo - 13; d <= dayNo; d++) {
-    const options = list.filter((s) => !recent.has(s.id));
+  for (let w = week - 7; w <= week; w++) {
+    const options = list.filter((s) => !recent.includes(s.id));
     const weights = options.map((s) => Math.pow(s.pop / 100, 2));
-    let r = mulberry(d) * weights.reduce((a, b) => a + b, 0);
+    let r = mulberry(w) * weights.reduce((a, b) => a + b, 0);
     pick = options[options.length - 1];
     for (let i = 0; i < options.length; i++) {
       r -= weights[i];
@@ -134,9 +136,22 @@ export function plateOfTheDay(day: Date, pool: Spot[]): Spot | null {
         break;
       }
     }
-    recent.add(pick.id);
+    recent.push(pick.id);
   }
   return pick;
+}
+
+/** weeks since a Thursday, counted in local time, so the pick turns over Thursday at midnight */
+export function weekKey(day: Date) {
+  const local = Date.UTC(day.getFullYear(), day.getMonth(), day.getDate());
+  return Math.floor(local / 86400000 / 7); // day 0, 1 Jan 1970, was a Thursday
+}
+
+/** the Thursday this week's plate went up */
+export function weekStart(day: Date) {
+  const d = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+  d.setDate(d.getDate() - ((d.getDay() + 3) % 7));
+  return d;
 }
 
 // a small seeded random number in [0, 1) from the day number

@@ -8,8 +8,8 @@ import { BRAND } from "@/lib/brand";
 
 function weightedPick(pool: Spot[], avoid?: string) {
   const list = pool.length > 1 && avoid ? pool.filter((s) => s.id !== avoid) : pool;
-  // well-loved places come up more often; paid listings get a small, labeled bump
-  const weights = list.map((s) => Math.pow(s.pop / 100, 3) * (s.sponsored ? 1.5 : 1));
+  // well-loved places come up a little more often; nobody can pay to come up more
+  const weights = list.map((s) => Math.pow(s.pop / 100, 2));
   let r = Math.random() * weights.reduce((a, b) => a + b, 0);
   for (let i = 0; i < list.length; i++) {
     r -= weights[i];
@@ -25,7 +25,9 @@ export default function Surprise({
   all,
   filtered,
   onGo,
+  defaultScoped = false,
 }: {
+  defaultScoped?: boolean;
   open: boolean;
   onClose: () => void;
   all: Spot[];
@@ -36,18 +38,20 @@ export default function Surprise({
   const [ticket, setTicket] = useState(0);
   const [pick, setPick] = useState<Spot | null>(null);
   const [printed, setPrinted] = useState(false);
-  const pool = scoped && filtered.length ? filtered : all;
-
-  function print() {
+  function print(inPicks = scoped) {
+    const pool = inPicks && filtered.length ? filtered : all;
     setPrinted(false);
     setPick((w) => weightedPick(pool, w?.id));
     setTicket((n) => n + 1);
-    track("surprise_spin", { scoped });
+    track("surprise_spin", { scoped: inPicks });
   }
 
+  // opening with something picked keeps the surprise inside your picks
   useEffect(() => {
-    if (open) print();
-    else setPick(null);
+    if (open) {
+      setScoped(defaultScoped);
+      print(defaultScoped);
+    } else setPick(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -127,7 +131,7 @@ export default function Surprise({
                 Only from what I&apos;ve picked{scoped && filtered.length > 0 ? ` (${filtered.length})` : ""}
               </label>
               <div className="row gap8">
-                <button className="btn btn-line" onClick={print}>
+                <button className="btn btn-line" onClick={() => print()}>
                   Another
                 </button>
                 <button className="btn btn-red" disabled={!printed || !pick} onClick={() => pick && onGo(pick.id)}>

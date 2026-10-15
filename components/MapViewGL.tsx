@@ -181,16 +181,23 @@ export default function MapViewGL(props: MapProps) {
     density();
 
     let lastW = el.current.clientWidth;
+    let lastH = el.current.clientHeight;
     const ro = new ResizeObserver(() => {
       m.resize();
       density();
       tidy();
       const w = el.current?.clientWidth ?? 0;
+      const h = el.current?.clientHeight ?? 0;
       if (w > 10 && lastW <= 10) {
         setTimeout(() => aim.current(), 30); // shown again (phone tabs)
         if (armWhenShown) arm();
+      } else if (w > 10 && lastH > 10 && Math.abs(h - lastH) > lastH * 0.2) {
+        // the layout changed under the map (full map → the short strip over a place): aim again,
+        // instantly, once the new size has settled
+        setTimeout(() => aim.current(true), 30);
       }
       lastW = w;
+      lastH = h;
     });
     ro.observe(el.current);
 
@@ -249,7 +256,8 @@ export default function MapViewGL(props: MapProps) {
     }
   }, [props.areas]);
 
-  // marker states
+  // marker states (hover is handled on its own below: it only touches two pins)
+  const hovered = useRef<string | null>(null);
   useEffect(() => {
     pins.current.forEach((mk, id) => {
       const wrap = mk.getElement();
@@ -257,11 +265,10 @@ export default function MapViewGL(props: MapProps) {
       if (!node) return;
       const vis = props.visible.has(id);
       node.classList.toggle("dim", !vis && props.selectedId !== id);
-      node.classList.toggle("hot", props.hoveredId === id);
       node.classList.toggle("selected", props.selectedId === id);
       const num = node.querySelector(".pin-n");
       if (num) num.textContent = props.numbers[id] ? String(props.numbers[id]) : "";
-      wrap.style.zIndex = String(props.selectedId === id ? 2000 : props.hoveredId === id ? 1000 : vis ? 10 : 2);
+      wrap.style.zIndex = String(props.selectedId === id ? 2000 : hovered.current === id ? 1000 : vis ? 10 : 2);
     });
     hoods.current.forEach((mk, id) => {
       const a = props.areas.find((x) => x.id === id);
@@ -269,7 +276,20 @@ export default function MapViewGL(props: MapProps) {
       mk.getElement().classList.toggle("quiet", props.selectedId !== null);
     });
     tidy();
-  }, [props.visible, props.numbers, props.hoveredId, props.selectedId, props.area, props.spots, props.areas]);
+  }, [props.visible, props.numbers, props.selectedId, props.area, props.spots, props.areas]);
+
+  // hovering a list row or a pin lifts that one pin; no relayout of the map's labels
+  useEffect(() => {
+    const set = (id: string | null, on: boolean) => {
+      const wrap = id ? pins.current.get(id)?.getElement() : null;
+      if (!wrap || !id) return;
+      wrap.querySelector(".pin")?.classList.toggle("hot", on);
+      wrap.style.zIndex = String(cb.current.selectedId === id ? 2000 : on ? 1000 : cb.current.visible.has(id) ? 10 : 2);
+    };
+    set(hovered.current, false);
+    hovered.current = props.hoveredId;
+    set(props.hoveredId, true);
+  }, [props.hoveredId]);
 
   // + and - zoom the map from anywhere on the page (not while typing). Presses made
   // while a zoom is still easing add up toward one target, so none are lost.
@@ -291,8 +311,8 @@ export default function MapViewGL(props: MapProps) {
 
   // camera
   const aimed = useRef(false);
-  const aim = useRef<() => void>(() => {});
-  aim.current = () => {
+  const aim = useRef<(instant?: boolean) => void>(() => {});
+  aim.current = (instant = false) => {
     const m = map.current;
     const box = el.current;
     if (!m || !box) return;
@@ -302,12 +322,15 @@ export default function MapViewGL(props: MapProps) {
     // the box may have just changed size (phone: Map tab → the short strip over a place).
     // A fly works out where the middle is when it starts, so resize first.
     const c = m.getCanvas();
-    if (Math.abs(c.clientWidth - w) > 1 || Math.abs(c.clientHeight - h) > 1) m.resize();
+    const resized = Math.abs(c.clientWidth - w) > 1 || Math.abs(c.clientHeight - h) > 1;
+    if (resized) m.resize();
     setMoved(false);
     // the first view jumps straight into place: one set of tiles to load, not two
     const first = !aimed.current;
     aimed.current = true;
-    const dur = first ? 0 : 1100;
+    // the box just changed size (it already jumped on screen): jump the camera too, so two
+    // flights can't overlap and leave the place off the edge of the strip
+    const dur = first || instant || resized ? 0 : 1100;
     const small = w < 600;
     // MapLibre keeps the last padding it was given, so every move below sets its own:
     // otherwise the Map tab's room for the caption and cards would push a place
@@ -332,7 +355,7 @@ export default function MapViewGL(props: MapProps) {
     if (props.focusId) {
       // the card under the map steers it: keep the pin between the caption and the cards
       const s = props.spots.find((x) => x.id === props.focusId);
-      if (s) m.flyTo({ center: ll(s.coords), zoom: Math.max(m.getZoom(), Z(15)), duration: first ? 0 : 600, padding: framed });
+      if (s) m.flyTo({ center: ll(s.coords), zoom: Math.max(m.getZoom(), Z(15)), duration: dur ? 600 : 0, padding: framed });
       return;
     }
     const pts = props.spots.filter((s) => props.visible.has(s.id)).map((s) => s.coords);

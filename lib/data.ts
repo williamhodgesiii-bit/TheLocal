@@ -384,8 +384,8 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     id: "johnnys", name: "Johnny's Restaurant", genres: ["southern", "mediterranean"], area: "homewood",
     address: "2902 18th St S", coords: [33.4752, -86.8003], price: 2,
     knownFor: "Greek-and-three & keftedes",
-    blurb: "Timothy Hontzas's meat-and-three, with Greek dishes alongside the Southern ones. He's been up for James Beard awards. Lunch line moves fast.",
-    tags: ["meat-and-three", "James Beard", "lunch"], pop: 91,
+    blurb: "Timothy Hontzas's meat-and-three, with Greek dishes alongside the Southern ones. Lunch line moves fast.",
+    tags: ["meat-and-three", "lunch"], pop: 91,
     photos: [
       {
         url: "https://commons.wikimedia.org/wiki/Special:FilePath/Johnny%27s_Greek_And_Three%2C_Homewood%2C_AL.jpg?width=1200",
