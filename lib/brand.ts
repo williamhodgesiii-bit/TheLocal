@@ -12,4 +12,4 @@ export const CHECKED = "October 2026";
  * Who's behind it, shown on /about. Fill these in: named people are one of the strongest trust
  * signals a new site can show. Leave name empty and the About page skips the section.
  */
-export const FOUNDER = { name: "", line: "", email: "" };
+export const FOUNDER = { name: "Lawson Brown & Will Hodges", line: "", email: "emails@theplatenextdoor.com" };
