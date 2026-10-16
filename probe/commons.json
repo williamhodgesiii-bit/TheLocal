@@ -1,1653 +1,828 @@
 {
- "wings": [
-  {
-   "file": "Chicken_wings_at_Bar_Loosister.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "JIP",
-   "desc": "A plate of 10 chicken wings with \"Hot as Fuck\" sauce, served at restaurant Bar Loosister in Sörnäinen, Helsinki, Finland."
-  },
-  {
-   "file": "Chicken_wings_at_West_Side_Story_in_February_2025.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "JIP",
-   "desc": "A plate of chicken wings in hot sauce, French fries, carrot sticks and cucumber sticks, along with a glass of water, served for lunch at res"
-  },
-  {
-   "file": "Chicken_wings_at_West_Side_Story_in_May_2025.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "JIP",
-   "desc": "A plate of chicken wings with French fries, carrot sticks, cucumber sticks, blue cheese dip and extra hot chili sauce, along with a glass of"
-  },
-  {
-   "file": "Chicken_wings_at_West_Side_Story_in_May_2025_turned_around.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "JIP",
-   "desc": "A plate of chicken wings with French fries, carrot sticks, cucumber sticks, blue cheese dip and extra hot chili sauce turned around so the F"
-  },
-  {
-   "file": "Chicken_wings_at_Pretty_Boy_Redi.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "JIP",
-   "desc": "A plate of chicken wings and French fries served for lunch at restaurant Pretty Boy Wingery in the Redi shopping centre in Kalasatama, Helsi"
-  }
- ],
- "wings2": [
-  {
-   "file": "Chicken_Wings_in_Coca_Cola_Sauce.jpg",
-   "w": 2048,
-   "h": 1536,
-   "license": "CC BY-SA 2.0",
-   "artist": "Alpha from Melbourne, Australia",
-   "desc": "Chicken Wings in Coca Cola Sauce with Rice - King's No. 1 Cafe AUD7.50 --- Jeff and I wanted to have lunch at Dessert House, but the queues "
-  },
-  {
-   "file": "Sriracha_chicken_wings_(10832723804).jpg",
-   "w": 3264,
-   "h": 2448,
-   "license": "CC BY-SA 2.0",
-   "artist": "anokarina from United States",
-   "desc": "12/30/365"
-  },
-  {
-   "file": "Chicken_wings_with_honey-garlic_sauce.jpg",
-   "w": 800,
-   "h": 600,
-   "license": "CC BY-SA 2.0",
-   "artist": "Alpha from Melbourne, Australia",
-   "desc": "Who needs Buffalo Wings when you can have Honey Pepper Wings! The sauce is quite intriguing, with cracked pepper, garlic and very tangy! Sta"
-  },
-  {
-   "file": "Uncooked_chicken_wings_with_sauce.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC0",
-   "artist": "Lemon tart",
-   "desc": "Çiğ tavuk kanatları"
-  },
-  {
-   "file": "Hot_wings_and_garlic_sauce.jpg",
-   "w": 1920,
-   "h": 2560,
-   "license": "CC BY-SA 4.0",
-   "artist": "E4024",
-   "desc": "Hot wings and garlic sauce, at an Ankara restaurant."
-  },
-  {
-   "file": "TPK-style_chicken_wings_in_Swiss_sauce_at_TPK_Tsim_Sha_Tsui_(20181012120848).jpg",
-   "w": 3827,
-   "h": 2637,
-   "license": "CC BY-SA 4.0",
-   "artist": "N509FZ",
-   "desc": "\"Swiss wings\" is not Alpine at all - it all comes from a waiter's misinterpretation of \"sweet\", for the chicken wings are cooked in sweet so"
-  },
-  {
-   "file": "Chicken_feet_and_chicken_wings_on_grill_(20190711191544).jpg",
-   "w": 3827,
-   "h": 2551,
-   "license": "CC BY-SA 4.0",
-   "artist": "N509FZ",
-   "desc": "Taken at a bistro in Weigongcun. The sauce was added with a brush."
-  },
-  {
-   "file": "Chicken_wings_and_vegan_nuggets_-_Lost_Boys_Chicken_2023-11-12.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Items: Chicken Wings (regular) tossed in Korean BBQ sauce served with Blue cheese dip Vegan Nuggets with Szechuan sauce"
-  },
-  {
-   "file": "Chicken_wings_and_mumbo_sauce.jpg",
-   "w": 640,
-   "h": 640,
-   "license": "CC BY 2.0",
-   "artist": "tanyaboza",
-   "desc": "Chicken wings and mumbo sauce"
-  },
-  {
-   "file": "Street_Foods_During_Sinulog_Chicken_wings_Inasal.jpg",
-   "w": 1280,
-   "h": 577,
-   "license": "CC BY 4.0",
-   "artist": "Bim24",
-   "desc": "Chicken wings inasal is a popular street food during the Sinulog Festival, especially for those looking for flavorful and satisfying snacks."
-  },
-  {
-   "file": "Chicken_wings_at_West_Side_Story_in_February_2025.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "JIP",
-   "desc": "A plate of chicken wings in hot sauce, French fries, carrot sticks and cucumber sticks, along with a glass of water, served for lunch at res"
-  },
-  {
-   "file": "Fried_chicken_pieces_coated_in_sauce_with_sesame_seeds_2025.jpg",
-   "w": 5712,
-   "h": 4284,
-   "license": "CC0",
-   "artist": "Faisal Ahammad",
-   "desc": "A close-up view of a plate filled with crispy, dark brown fried chicken pieces coated in a shiny, sweet sauce and sprinkled with sesame seed"
-  },
-  {
-   "file": "Golden_Salted_Egg_Chicken_Wings_-_Aberdeen_Seafood_2026-01-05.jpg",
-   "w": 8160,
-   "h": 6144,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Description on menu: \"Wings in a rich, creamy salted egg yolk sauce. Dangerously addictive.\""
-  },
-  {
-   "file": "A_box_of_chicken_wings_and_sauces_(49456308206).jpg",
-   "w": 3864,
-   "h": 2576,
-   "license": "Public domain",
-   "artist": "USDAgov",
-   "desc": "A box of chicken wings and sauces."
-  }
- ],
- "doughnuts": [
-  {
-   "file": "Glazed-Donut.jpg",
-   "w": 2840,
-   "h": 1860,
-   "license": "Public domain",
-   "artist": "Evan-Amos",
-   "desc": "A plain glazed donut. This was bought at a Dunkin' Donuts in Brooklyn."
-  },
-  {
-   "file": "Cat_on_chocolate-glazed_Halloween_doughnut_(15272964399).jpg",
-   "w": 5616,
-   "h": 3744,
-   "license": "CC BY 2.0",
-   "artist": "Ryan A. Monson",
-   "desc": "Wedding-Halloween Doughnuts 2014-351"
-  },
-  {
-   "file": "Dough-Doughnut-Blood-Orange.jpg",
-   "w": 4600,
-   "h": 3100,
-   "license": "Public domain",
-   "artist": "Evan-Amos",
-   "desc": "A blood orange flavored doughnut/donut from Dough, an upscale doughnut bakery based out of Brooklyn, NY."
-  },
-  {
-   "file": "Krispy_Kreme_Pirate_and_Glazed_Doughnuts_(15305529630).jpg",
-   "w": 1600,
-   "h": 1200,
-   "license": "CC BY-SA 2.0",
-   "artist": "Willis Lam",
-   "desc": "September 19th = Talk Like a Pirate Day... Arrr!"
-  },
-  {
-   "file": "Glazed_doughnut_(1387333).jpg",
-   "w": 3300,
-   "h": 2300,
-   "license": "CC0",
-   "artist": "Unknown authorUnknown author",
-   "desc": "Glazed doughnut"
-  },
-  {
-   "file": "Doughnut_2.jpg",
-   "w": 3024,
-   "h": 4032,
-   "license": "CC BY-SA 4.0",
-   "artist": "Gaurav Dhwaj Khadka",
-   "desc": "Doughnut."
-  },
-  {
-   "file": "Chocolate_&_hobnob_donut_-_Glazed_Coffee_2024-01-10.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "chocolate &amp; hobnob donut - Glazed Coffee"
-  },
-  {
-   "file": "Double_berry_donut_-_Glazed_Coffee_2024-01-10.jpg",
-   "w": 3024,
-   "h": 4032,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "double berry donut - Glazed Coffee"
-  },
-  {
-   "file": "Coconut_and_strawberry_donut_-_Glazed_Coffee_2024-02-11.jpg",
-   "w": 3024,
-   "h": 4032,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Window seat behind a large donut decoration."
-  },
-  {
-   "file": "Biscoff_donut_-_Glazed_Coffee_2024-02-11.jpg",
-   "w": 3024,
-   "h": 4032,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Window seat behind a large donut decoration."
-  },
-  {
-   "file": "Galaktoboureko_doughnut_from_Oakleigh_Doughnut_Company,_Richmond.jpg",
-   "w": 4032,
-   "h": 2268,
-   "license": "CC BY-SA 2.0",
-   "artist": "Philip Mallis",
-   "desc": "Galaktoboureko doughnut from the Oakleigh Doughnut Company, Richmond, Melbourne, Australia"
-  },
-  {
-   "file": "Glazed_Ring_Doughnuts.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY 4.0",
-   "artist": "Jiddah5212",
-   "desc": "Strawberry, coconut, chocolate and milk flavored glazed donuts"
-  },
-  {
-   "file": "Glazed_doughnut.jpg",
-   "w": 837,
-   "h": 941,
-   "license": "CC0",
-   "artist": "Jidda3711",
-   "desc": "Doughnut"
-  },
-  {
-   "file": "Krispy_kreme_glazed_doughnut.jpg",
-   "w": 3072,
-   "h": 3178,
-   "license": "CC BY 4.0",
-   "artist": "MichaellaaRubio",
-   "desc": "Krispy kreme glazed donut"
-  }
- ],
- "doughnuts2": [
-  {
-   "file": "Donuts_(cropped).jpg",
-   "w": 2984,
-   "h": 2044,
-   "license": "CC BY-SA 3.0",
-   "artist": "WestportWiki",
-   "desc": "Donuts (Coffee An), Westport, CT 06880 USA - Feb 2013"
-  },
-  {
-   "file": "Commerce_August_2015_18_(Sweeties_Donuts).jpg",
-   "w": 6000,
-   "h": 4000,
-   "license": "CC BY-SA 4.0",
-   "artist": "Michael Barera",
-   "desc": "Sweeties Donuts in Commerce, Texas (United States)."
-  },
-  {
-   "file": "Duck_Donuts_storefront.jpg",
-   "w": 2252,
-   "h": 2376,
-   "license": "CC BY-SA 4.0",
-   "artist": "Will120",
-   "desc": "Exterior of a Duck Donuts store"
-  },
-  {
-   "file": "Joe's_Donuts.jpg",
-   "w": 3024,
-   "h": 2268,
-   "license": "CC BY-SA 4.0",
-   "artist": "Alohimudaliar",
-   "desc": "Located in Sandy, OR. Picture taken after remodeling of exterior of bakery."
-  },
-  {
-   "file": "Jelly_Donut_-_Reno,_Nevada_-_2007.jpg",
-   "w": 1600,
-   "h": 1200,
-   "license": "CC BY-SA 2.0",
-   "artist": "jill, jellidonut... whatever",
-   "desc": "Jelly Donut in Reno, Nevada in 2007."
-  },
-  {
-   "file": "Doughnut_shop.jpg",
-   "w": 1024,
-   "h": 684,
-   "license": "CC BY-SA 2.0",
-   "artist": "inspired by you",
-   "desc": "doughnut shop"
-  },
-  {
-   "file": "Honey_Dew_Donuts_location,_Greenwood,_Wakefield,_Massachusetts_02.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY-SA 4.0",
-   "artist": "RedSoxFan274",
-   "desc": "Exterior of a Honey Dew Donuts location in the Greenwood neighborhood of Wakefield, Massachusetts, as seen on Tuesday, June 28, 2022. (This "
-  },
-  {
-   "file": "Honey_Dew_Donuts_location,_Greenwood,_Wakefield,_Massachusetts_01.jpg",
-   "w": 2984,
-   "h": 3667,
-   "license": "CC BY-SA 4.0",
-   "artist": "RedSoxFan274",
-   "desc": "Exterior of a Honey Dew Donuts location in the Greenwood neighborhood of Wakefield, Massachusetts, as seen on Tuesday, June 28, 2022."
-  },
-  {
-   "file": "Slauson_Donuts.jpg",
-   "w": 4200,
-   "h": 2169,
-   "license": "CC BY-SA 4.0",
-   "artist": "Downtowngal",
-   "desc": "Slauson Donuts, 3451 W Slauson Ave, Los Angeles"
-  },
-  {
-   "file": "Drop_In_Donut_-_October_2022_-_Sarah_Stierch.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY 4.0",
-   "artist": "Missvain",
-   "desc": "Drop In Donut, Fort Bragg, California"
-  },
-  {
-   "file": "Donut_Dip,_West_Springfield,_MA_(exterior)_-_April_2024.jpg",
-   "w": 3920,
-   "h": 2941,
-   "license": "CC BY-SA 4.0",
-   "artist": "Marty Aligata",
-   "desc": "Photograph from April 2024 of Donut Dip store in West Springfield, Massachusetts. This donut shop has been in operation at this location on "
-  },
-  {
-   "file": "Donut_Palace_Lauren_Ms.jpg",
-   "w": 640,
-   "h": 598,
-   "license": "CC0",
-   "artist": "MauraWen",
-   "desc": "Donut Palace, Lauren, Mississippi"
-  },
-  {
-   "file": "JP_沖繩_Okinawa_那霸市_Naha_City_mall_shop_Mister_Donut_baked_food_products_in_February_2026_N13P_02.jpg",
-   "w": 4080,
-   "h": 3060,
-   "license": "CC0",
-   "artist": "NORTLAUKAU 26088 JP",
-   "desc": "JP 沖繩 Okinawa 那霸市 Naha City mall shop Mister Donut food products in February 2026"
-  },
-  {
-   "file": "Mister_Donut_Ōhori_shop_The_table_with_donuts_Ōhorikōen_Chūō-ku_Fukuoka_20260629_164449.jpg",
-   "w": 6144,
-   "h": 8192,
-   "license": "CC BY 4.0",
-   "artist": "Hirho",
-   "desc": "Mister Donut Ōhori shop: The table with donuts (Address: 45, Ōhorikōen, Chūō-ku, Fukuoka-shi 8100051, Japan)"
-  }
- ],
- "pancakes": [
-  {
-   "file": "Eating_Pancakes_(Unsplash).jpg",
-   "w": 5760,
-   "h": 3840,
-   "license": "CC0",
-   "artist": "Gabriel Gurrola gabrielgurrola",
-   "desc": "Gabriel Gurrola 2016"
-  },
-  {
-   "file": "Pancake_Breakfast_(Unsplash).jpg",
-   "w": 5184,
-   "h": 3456,
-   "license": "CC0",
-   "artist": "Toa Heftiba heftiba",
-   "desc": "Leto Caffe, London, United Kingdom"
-  },
-  {
-   "file": "Pancakes_with_Berries_(Unsplash).jpg",
-   "w": 6000,
-   "h": 4000,
-   "license": "CC0",
-   "artist": "Herson Rodriguez hero",
-   "desc": "Herson Rodriguez 2016-05-25"
-  },
-  {
-   "file": "Delicious_Stack_(130196593).jpeg",
-   "w": 2048,
-   "h": 1360,
-   "license": "CC BY-SA 3.0",
-   "artist": "Rakesh B S",
-   "desc": "500px provided description: Delicious Stack [#coffee ,#food ,#breakfast ,#chocolate ,#stack ,#sweet ,#pancakes ,#pancake ,#hungry ,#chocolat"
-  },
-  {
-   "file": "2019-04-21_11_41_12_A_stack_of_blueberry_pancakes_with_syrup_in_the_Franklin_Farm_section_of_Oak_Hill,_Fairfax_County,_Virginia.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY-SA 4.0",
-   "artist": "Famartin",
-   "desc": "A stack of blueberry pancakes with syrup in the Franklin Farm section of Oak Hill, Fairfax County, Virginia"
-  },
-  {
-   "file": "2019-04-21_11_42_42_A_stack_of_blueberry_pancakes_with_syrup_and_butter_in_the_Franklin_Farm_section_of_Oak_Hill,_Fairfax_County,_Virginia.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY-SA 4.0",
-   "artist": "Famartin",
-   "desc": "A stack of blueberry pancakes with syrup and butter in the Franklin Farm section of Oak Hill, Fairfax County, Virginia"
-  },
-  {
-   "file": "Slicing_Pancakes_with_Fork_374819.jpg",
-   "w": 1920,
-   "h": 1080,
-   "license": "CC0",
-   "artist": "Shared Food",
-   "desc": "Fork sticking into a few pieces of whole grain pancakes on a plate with syrup, butter and blueberries."
-  },
-  {
-   "file": "American_panecakes.jpg",
-   "w": 4128,
-   "h": 2322,
-   "license": "CC BY-SA 4.0",
-   "artist": "Hortensja Bukietowa",
-   "desc": "Amercan pancakes with maple syrup"
-  },
-  {
-   "file": "Stewed_apple_&_ginger_crumb_pancake_-_Green_Kitchen_2024-03-11.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Description of \"French Toast/Pancake\" on menu: \"2 White farmhouse dipped toasts or stack of three fluffy pancakes of an almond milk, maple s"
-  },
-  {
-   "file": "McDonald's_Hotcake_Syrup_(29953766015).jpg",
-   "w": 1600,
-   "h": 1200,
-   "license": "CC BY-SA 2.0",
-   "artist": "Willis Lam",
-   "desc": "Comes with the 3 stack of pancakes"
-  },
-  {
-   "file": "Blueberry_Pancake_-_Nowhere_Man_2025-07-10.jpg",
-   "w": 8160,
-   "h": 6144,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Description on menu: \"3 stack of fluffy blueberry filled pancakes, rich blueberry compote, topped with almond flakes and a side of maple but"
-  },
-  {
-   "file": "Beginner_Pancake_Club_-_Nowhere_Man_2025-07-10.jpg",
-   "w": 8160,
-   "h": 6144,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Description on menu: \"3 stack of fluffy pancakes with a side of maple butter.\""
-  },
-  {
-   "file": "Bacon_&_maple_pancakes_-_Trading_Post_Coffee_Roasters_2026-02-24.jpg",
-   "w": 8160,
-   "h": 6144,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Description on menu: \"Triple-stacked American-style buttermilk pancakes, layered with smoked back bacon, topped with maple syrup, crumbled p"
-  },
-  {
-   "file": "The_Smoking_Stack_Pancakes_-_Laughing_Dog_2026-08-25.jpg",
-   "w": 8160,
-   "h": 6144,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Description on menu: \"3 Fluffy Pancakes w/ Sussex Bacon &amp; Maple Syrup\""
-  }
- ],
- "falafel": [
-  {
-   "file": "Food_in_Israel.jpg",
-   "w": 2390,
-   "h": 1620,
-   "license": "CC BY 2.0",
-   "artist": "young shanahan",
-   "desc": "Israeli cuisine"
-  },
-  {
-   "file": "Mixed_Plate_(4009287857).jpg",
-   "w": 1024,
-   "h": 758,
-   "license": "CC BY-SA 2.0",
-   "artist": "Charles Haynes from Hobart, Australia",
-   "desc": "Arabian Kebab, Tahini and Falafil"
-  },
-  {
-   "file": "Mixed_Plate_(3186676853).jpg",
-   "w": 2956,
-   "h": 2019,
-   "license": "CC BY-SA 2.0",
-   "artist": "Charles Haynes from Hobart, Australia",
-   "desc": "Falafil, Dahina, and other Israeli food."
-  },
-  {
-   "file": "Pesto_fettucine_and_a_mezze_bowl_at_Hons_All-Day_Dining,_Le_Press,_Hazratganj,_Lucknow_(2025-08-03).jpg",
-   "w": 4096,
-   "h": 3072,
-   "license": "CC BY-SA 4.0",
-   "artist": "Contrapunctus-1",
-   "desc": "Two plates of fettucine in pesto sauce, each with a slice of toast, and a mezze bowl containing pita bread, flatbread crackers, hummus, fala"
-  }
- ],
- "shawarma": [
-  {
-   "file": "Plate_shawarma.jpg",
-   "w": 1084,
-   "h": 848,
-   "license": "CC BY-SA 3.0",
-   "artist": "Sivahari",
-   "desc": "അറബ് രാജ്യങ്ങളിലെ ഒരു ഭക്ഷണവിഭവമാണ് ഷവർമ്മ അഥവാ ഷ്വാർമ്മ."
-  },
-  {
-   "file": "Chicken_Shwarama_plate.jpeg",
-   "w": 3264,
-   "h": 2448,
-   "license": "CC BY-SA 3.0",
-   "artist": "User:CrunchySkies",
-   "desc": "A \"Chicken Shwarama rice bowl\" restaurant dish."
-  },
-  {
-   "file": "Lamb_Shawarma_Plate_(17179708416).jpg",
-   "w": 640,
-   "h": 640,
-   "license": "CC BY 2.0",
-   "artist": "Arnold Gatilao from Oakland, CA, USA",
-   "desc": "Lamb Shawarma Plate"
-  },
-  {
-   "file": "Plate_Shawarma_-_variant.jpg",
-   "w": 16320,
-   "h": 12240,
-   "license": "CC BY-SA 4.0",
-   "artist": "Vis M",
-   "desc": "Chicken plate Shawarma from Kerala"
-  },
-  {
-   "file": "Nasi_ayam,_Emado's_Shawarma_Embong_Malang,_Surabaya,_2025_(01).jpg",
-   "w": 3123,
-   "h": 2497,
-   "license": "CC BY-SA 4.0",
-   "artist": "Bahnfrend",
-   "desc": "A quarter chicken with rice and a small portion of salad, accompanied by a cup of iced tea, served at Emado's Shawarma Embong Malang, Suraba"
-  },
-  {
-   "file": "Food_in_Rabat_1.jpg",
-   "w": 1972,
-   "h": 1411,
-   "license": "CC BY-SA 4.0",
-   "artist": "Yassine ET-TYSIR",
-   "desc": "This is an image with the theme \"Farm to Plate\" from:"
-  },
-  {
-   "file": "Loaded_Shawarma.jpg",
-   "w": 4096,
-   "h": 3072,
-   "license": "CC BY 4.0",
-   "artist": "Dr. Chinchu C.",
-   "desc": "Loaded Chicken Shawarma Plate"
-  },
-  {
-   "file": "Chicken_Shawarma_(94298).jpg",
-   "w": 4096,
-   "h": 3072,
-   "license": "CC BY 4.0",
-   "artist": "Dr. Chinchu C.",
-   "desc": "Special Chicken Shawarma Plate"
-  },
-  {
-   "file": "MyPlate_gov_Cultural_Food_(20241025-USDA-FNS-UNK-0017).jpg",
-   "w": 3300,
-   "h": 2475,
-   "license": "Public domain",
-   "artist": "USDAgov",
-   "desc": "Chicken Shawarma, A traditional Middle Eastern dish made with marinated chicken and served with garlic sauce and pickles in pita bread. Trad"
-  },
-  {
-   "file": "DFC_1238_Plate_of_seasoned_grilled_meat_topped_with_raw_onion_rings_served_with_a_baked_potato_topped_with_creamy_sauce_a_side_of_rice_or_cabbage_and_dipping_sauce.jpg",
-   "w": 5568,
-   "h": 3712,
-   "license": "CC BY-SA 4.0",
-   "artist": "PattayaPatrol",
-   "desc": "This photo shows a delicious-looking meal served on a white plate. The plate features what appears to be seasoned meat (possibly gyro meat o"
-  }
- ],
- "hibachi": [],
- "chinese": [
-  {
-   "file": "Chinese_meal.jpg",
-   "w": 1600,
-   "h": 1200,
-   "license": "CC BY-SA 2.5",
-   "artist": "",
-   "desc": ""
-  },
-  {
-   "file": "Khao_rat_restaurant.JPG",
-   "w": 1920,
-   "h": 1272,
-   "license": "CC BY-SA 3.0",
-   "artist": "Takeaway",
-   "desc": "A so-called Khao kaeng (Thai script: ข้าวแกง) or Rat khao (Thai script: ราดข้าว) restaurant. These simple eateries can be found all over Tha"
-  },
-  {
-   "file": "The_dragon,_image,_and_demon;_or,_The_three_religions_of_China-_Confucianism,_Buddhism,_and_Taoism,_giving_an_account_of_the_mythology,_idolatry,_and_demonolatry_of_the_Chinese_(1887)_(14597243640).jpg",
-   "w": 1604,
-   "h": 1286,
-   "license": "No restrictions",
-   "artist": "Internet Archive Book Images",
-   "desc": "Identifier: dragonimagedemon1887dubo (find matches) Title: The dragon, image, and demon; or, The three religions of China: Confucianism, Bud"
-  },
-  {
-   "file": "Special_foods_&_cuisines_in_Chongqing_-_Family_Dinner_2nd.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "Jason M. C., Han",
-   "desc": "In the annual family visit, foods would be a main theme to watch, talk and taste, especially in Chongqing. You knew, Chongqing is one origin"
-  },
-  {
-   "file": "Special_foods_&_cuisines_in_Chongqing_-_Family_Dinner_3rd.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "Jason M. C., Han",
-   "desc": "In the annual family visit, foods would be a main theme to watch, talk and taste, especially in Chongqing. You knew, Chongqing is one origin"
-  },
-  {
-   "file": "Special_foods_&_cuisines_in_Chongqing_-_Family_Dinner_5th.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "Jason M. C., Han",
-   "desc": "In the annual family visit, foods would be a main theme to watch, talk and taste, especially in Chongqing. You knew, Chongqing is one origin"
-  },
-  {
-   "file": "Boiled_crabs_in_a_Earlier_Autumn_Dish.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "Jason M. C., Han",
-   "desc": "It's not many times I and my family members can eat so great crabs with 'vinegar&amp; ginger source'. Indeed, cooking way is nature and simp"
-  },
-  {
-   "file": "Chinese_food_dishes.jpg",
-   "w": 2048,
-   "h": 1536,
-   "license": "CC BY-SA 3.0",
-   "artist": "Chensiyuan",
-   "desc": "Typical family meal for at least 5 people (judging by the teacups, the number of savory dishes, and space around the table). You-tiao is a b"
-  },
-  {
-   "file": "China_Town_Prawns,_Camel's_Joint_@Fort,_Mombasa,_2025_(01).jpg",
-   "w": 4080,
-   "h": 3060,
-   "license": "CC BY-SA 4.0",
-   "artist": "Bahnfrend",
-   "desc": "China Town Prawns with mashed potatoes served at Camel's Joint @Fort, Mombasa, Kenya – the prawns were described as 'dressed in sesame then "
-  },
-  {
-   "file": "Dinner,_Kuala_Lumpur_International_Airport,_2025_(02).jpg",
-   "w": 3464,
-   "h": 2313,
-   "license": "CC BY-SA 4.0",
-   "artist": "Bahnfrend",
-   "desc": "Nyonya Prawn Noodle Soup from NÖÖÖDLES, Kuala Lumpur International Airport Terminal 2"
-  },
-  {
-   "file": "Dinner,_Kuala_Lumpur_International_Airport,_2025_(03).jpg",
-   "w": 2520,
-   "h": 3776,
-   "license": "CC BY-SA 4.0",
-   "artist": "Bahnfrend",
-   "desc": "Nyonya Prawn Noodle Soup from NÖÖÖDLES, Kuala Lumpur International Airport Terminal 2"
-  },
-  {
-   "file": "DZ6_0963_Nighttime_entrance_to_a_bustling_open-air_food_market_brightly_lit_with_decorative_archway_and_colorful_mascots_flanking_rows_of_red_plastic_chairs_and_food_stalls.jpg",
-   "w": 6048,
-   "h": 4024,
-   "license": "CC BY-SA 4.0",
-   "artist": "PattayaPatrol",
-   "desc": "This photo shows the entrance to an Asian food market or night market, likely in China or a Chinese-speaking region. The decorative arch at "
-  },
-  {
-   "file": "Alaska_Pollock_&_Teriyaki_Chicken_Bento,_FamilyMart_Taiwan_Taoyuan_International_Airport_Terminal_2-5F,_2026_(01).jpg",
-   "w": 2904,
-   "h": 3624,
-   "license": "CC BY-SA 4.0",
-   "artist": "Bahnfrend",
-   "desc": "Alaska Pollock &amp; Teriyaki Chicken Bento, FamilyMart Taiwan Taoyuan International Airport Terminal 2-5F"
-  },
-  {
-   "file": "Chinese_Food.jpg",
-   "w": 2048,
-   "h": 2048,
-   "license": "CC BY-SA 4.0",
-   "artist": "Loulanshinsui",
-   "desc": "It shows a table filled with different Chinese dishes served in traditional bamboo steamers. Several white buns can be seen in the foregroun"
-  }
- ],
- "fried-rice": [
-  {
-   "file": "Chinese_fried_rice.jpg",
-   "w": 1000,
-   "h": 1500,
-   "license": "Public domain",
-   "artist": "Archon6812",
-   "desc": "Chinese Fried Rice"
-  },
-  {
-   "file": "Korean_Chinese_fried_rice.jpg",
-   "w": 3264,
-   "h": 2448,
-   "license": "CC BY 2.0",
-   "artist": "chomjong",
-   "desc": "Korean Chinese fried rice (Junggukjip bokkeum-bap; Chinese restaurant fried rice)"
-  },
-  {
-   "file": "House_special_fried_rice_(516570766).jpg",
-   "w": 3072,
-   "h": 2304,
-   "license": "CC BY 2.0",
-   "artist": "rovingI",
-   "desc": "I think I've finally found the sweet spot for my fried rice recipe. Tastes just right. I make no claims of the authenticity of this recipe. "
-  },
-  {
-   "file": "Chinese_fried_rice_with_soup.jpg",
-   "w": 2944,
-   "h": 1656,
-   "license": "CC BY-SA 4.0",
-   "artist": "এম আবু সাঈদ",
-   "desc": "chinese fried rice with soup"
-  },
-  {
-   "file": "Fried_rice_by_peach_yeung_2020621.jpg",
-   "w": 4000,
-   "h": 3000,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "A fried rice in Chinese restaurant at Yuen Long"
-  },
-  {
-   "file": "Fried_rice_in_home.jpg",
-   "w": 4000,
-   "h": 3000,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "fried rice in home"
-  },
-  {
-   "file": "Mini_abalones_fried_rice_with_choi_sum.jpg",
-   "w": 3712,
-   "h": 2784,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "mini abalones fried rice with choi sum in Choi Fuk Chinese Restaurant at Tsim Sha Tsui"
-  },
-  {
-   "file": "Chinese_egg_fried_rice.jpg",
-   "w": 3000,
-   "h": 4000,
-   "license": "CC BY-SA 4.0",
-   "artist": "Euniceyeoh07",
-   "desc": "Chinese fried is something that can be found at almost all chinese restaurant. It is well known because it is tasty and easy to prepare."
-  },
-  {
-   "file": "King_prawns_fried_rice,_Stir_Fry_by_CK.jpg",
-   "w": 3024,
-   "h": 4032,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "King prawns fried rice, Stir Fry by CK"
-  },
-  {
-   "file": "Mixed_Meats_Garlic_Fried_Rice_-_Ho_Chiak.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Mixed Meats Garlic Fried Rice"
-  },
-  {
-   "file": "Roasted_Pork_Fried_Rice_at_Wo_Hop.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY-SA 4.0",
-   "artist": "Gatorfan252525",
-   "desc": "Roasted Pork Fried Rice at Wo Hop"
-  },
-  {
-   "file": "Sambal_Spicy_Seafood_Fried_Rice_-_Ho_Chiak.jpg",
-   "w": 3024,
-   "h": 4032,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Sambal Spicy Seafood Fried Rice - Ho Chiak"
-  },
-  {
-   "file": "Chicken_fried_rice_-_Stir_Fry_by_CK_2023-12-02.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Chicken fried rice - Stir Fry by CK"
-  },
-  {
-   "file": "Chinese_fried_rice_with_peppered_chicken.jpg",
-   "w": 1668,
-   "h": 2968,
-   "license": "CC BY-SA 4.0",
-   "artist": "Halima Waziri",
-   "desc": "Chinese fried rice with peppered chicken"
-  }
- ],
- "biryani": [
-  {
-   "file": "Dum_Biryani_Plate.jpg",
-   "w": 1600,
-   "h": 1200,
-   "license": "CC BY-SA 3.0",
-   "artist": "Umesh Tongbra",
-   "desc": "Kachhi Murgh Dum Biryani (plated)"
-  },
-  {
-   "file": "Shrimp_Biriyani.JPG",
-   "w": 4288,
-   "h": 2848,
-   "license": "CC BY-SA 3.0",
-   "artist": "Jyothis",
-   "desc": "Shrimp Biriyani"
-  },
-  {
-   "file": "Chicken_biryani_3.jpg",
-   "w": 3648,
-   "h": 2736,
-   "license": "CC BY-SA 2.0",
-   "artist": "pelican",
-   "desc": "At Madinat Zayed Shopping Center, Abu Dhabi, UAE."
-  },
-  {
-   "file": "Chicken_tikka_biryani.jpg",
-   "w": 4928,
-   "h": 3264,
-   "license": "CC BY-SA 2.0",
-   "artist": "pelican",
-   "desc": "At Abu Dhabi Mall, UAE."
-  },
-  {
-   "file": "Chicken_biryani_02-06-2015_(India).jpg",
-   "w": 1200,
-   "h": 719,
-   "license": "CC BY-SA 4.0",
-   "artist": "Shivani shipra",
-   "desc": "INDIAN chicken biryani :can make anyone hungry"
-  },
-  {
-   "file": "Chicken_Biryani_from_the_streets_of_Hyderabad.JPG",
-   "w": 4928,
-   "h": 3264,
-   "license": "CC BY-SA 4.0",
-   "artist": "FoodPlate",
-   "desc": "Hyderabadi Biryani- All about the delicious marinated chicken and the beautiful long grained rice cooked in the flavours of the whole spices"
-  },
-  {
-   "file": "Chicken_Hyderabadi_Biryani.JPG",
-   "w": 4288,
-   "h": 2848,
-   "license": "CC BY-SA 4.0",
-   "artist": "Dheerajk88",
-   "desc": "{Wiki Loves Food 2015"
-  },
-  {
-   "file": "Fresh_Chicken_Biryani_.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY-SA 4.0",
-   "artist": "Gaurav_Dhwaj_Khadka",
-   "desc": "Chicken Biryani."
-  },
-  {
-   "file": "A_home_made_plate_of_mutton_biryani_served_with_chicken_kassa_cooked_in_the_bengali_style.jpg",
-   "w": 4718,
-   "h": 3517,
-   "license": "CC BY-SA 4.0",
-   "artist": "Subhrajyoti07",
-   "desc": "A home made plate of mutton biryani served with chicken kassa cooked in the bengali style"
-  },
-  {
-   "file": "Chicken_Biryani_Salad.jpg",
-   "w": 2048,
-   "h": 1536,
-   "license": "CC BY-SA 4.0",
-   "artist": "Dr. Chinchu C.",
-   "desc": "Chicken Biryani with Vegetable Salad in Kerala, India"
-  },
-  {
-   "file": "Chicken_Biryani_in_plate.jpg",
-   "w": 4000,
-   "h": 3000,
-   "license": "CC BY-SA 4.0",
-   "artist": "Chinchu.c",
-   "desc": "Chicken Biryani served in plate"
-  },
-  {
-   "file": "Chicken_biriyani-_My_cafe_restaurant_-_Meghalaya_DSC_009.jpg",
-   "w": 4238,
-   "h": 3472,
-   "license": "CC BY-SA 4.0",
-   "artist": "Gitika Gayan",
-   "desc": "Restaurant style chicken biriyani with raita"
-  },
-  {
-   "file": "Chicken_Dum_Biryani_03.jpg",
-   "w": 9248,
-   "h": 6936,
-   "license": "CC BY-SA 4.0",
-   "artist": "Vis M",
-   "desc": "Chicken Dum Biryani from WikiConference India 2023 at Hyatt Hyatt Hyderabad Gachibowli"
-  },
-  {
-   "file": "Chicken_Biryani_4.jpg",
-   "w": 3024,
-   "h": 4032,
-   "license": "CC BY-SA 4.0",
-   "artist": "Gaurav Dhwaj Khadka",
-   "desc": "Chicken Biryani."
-  }
- ],
- "naan": [
-  {
-   "file": "Butter_chicken_med_raita_og_naan_(5158340847).jpg",
-   "w": 3011,
-   "h": 2000,
-   "license": "CC BY-SA 2.0",
-   "artist": "cyclonebill from Copenhagen, Denmark",
-   "desc": "Butter chicken med raita og naan"
-  },
-  {
-   "file": "Butter_Chicken_&_Naan.jpg",
-   "w": 480,
-   "h": 481,
-   "license": "CC BY-SA 4.0",
-   "artist": "Stopoverrheactingdude",
-   "desc": "Butter Chicken is an authentic Punjabi dish made in every Punjabi household. Buttery and spicy chicken cooked in a creamy gravy. It is most "
-  },
-  {
-   "file": "Butter_chicken_curry,_chana_masala,_garlic_naan,_samosa_(24536534723).jpg",
-   "w": 3264,
-   "h": 2448,
-   "license": "CC BY 2.0",
-   "artist": "T.Tseng",
-   "desc": "India Jones Food Truck, Los Angeles CA"
-  },
-  {
-   "file": "Butter_chicken_curry,_chana_masala,_garlic_naan,_samosa_(24532684364).jpg",
-   "w": 3264,
-   "h": 2448,
-   "license": "CC BY 2.0",
-   "artist": "T.Tseng",
-   "desc": "India Jones Food Truck, Los Angeles CA"
-  },
-  {
-   "file": "Naan_with_butter_chicken.jpg",
-   "w": 2931,
-   "h": 2933,
-   "license": "CC BY-SA 4.0",
-   "artist": "Soumyasmita Mallick",
-   "desc": "Who doesn't love flavours?...And that so when you're a nonveg lover..You can't resist the mighty combo of Crispy Butter naan , Butter Chicke"
-  },
-  {
-   "file": "Butter_Chicken_&_Butter_Naan_-_Home_-_Chandigarh_-_India_-_0006.jpg",
-   "w": 3472,
-   "h": 4624,
-   "license": "CC BY-SA 4.0",
-   "artist": "Yuvraj Singh 97",
-   "desc": "Homemade butter chicken topped with cream."
-  },
-  {
-   "file": "Vindaloo_on_buttered_naan,_with_fried_chicken-_mushroom_sausage_and_red_onion_-_Massachusetts.jpg",
-   "w": 2775,
-   "h": 2775,
-   "license": "CC0",
-   "artist": "Daderot",
-   "desc": "Vindaloo on buttered naan, with fried chicken-mushroom sausage and red onion - Massachusetts, USA."
-  },
-  {
-   "file": "Butter_Chicken_with_Garlic_Naan.jpg",
-   "w": 1499,
-   "h": 1121,
-   "license": "CC BY-SA 4.0",
-   "artist": "Miscellaneous contributor",
-   "desc": "Butter Chicken with Garlic Naan"
-  },
-  {
-   "file": "Broiled_chicken_and_corn_on_buttered_naan,_with_black_pepper_and_red_chili_flakes_-_Massachusetts.jpg",
-   "w": 4080,
-   "h": 3072,
-   "license": "CC0",
-   "artist": "Daderot",
-   "desc": "Broiled chicken and corn on buttered naan, with black pepper and red chili flakes - Massachusetts, USA"
-  },
-  {
-   "file": "Butter_naan_and_butter_chicken.jpg",
-   "w": 4000,
-   "h": 2252,
-   "license": "CC BY-SA 4.0",
-   "artist": "Radhika41",
-   "desc": "popular Punjabi dishes"
-  },
-  {
-   "file": "Butter_naan_2.jpg",
-   "w": 2252,
-   "h": 4000,
-   "license": "CC BY-SA 4.0",
-   "artist": "Radhika41",
-   "desc": "Flatbread goes well with butter chicken"
-  },
-  {
-   "file": "Butter_Naan_with_three_different_Indian_curry.jpg",
-   "w": 2592,
-   "h": 4608,
-   "license": "CC BY-SA 4.0",
-   "artist": "Medhi jyoti",
-   "desc": "Butter Naan is a Indian bread and the different curry are Mix Veggies, Kadai Panner and Chicken Curry."
-  },
-  {
-   "file": "Butter_naan_&_grilled_chicken.jpg",
-   "w": 3903,
-   "h": 3000,
-   "license": "CC BY-SA 4.0",
-   "artist": "Sadiikul",
-   "desc": "Location: Rajshahi Bangladesh"
-  },
-  {
-   "file": "Butter_chicken_and_naan_chicken.jpg",
-   "w": 960,
-   "h": 1280,
-   "license": "CC0",
-   "artist": "Rajalakshmi duraikathiresan",
-   "desc": "Chicken"
-  }
- ],
- "sandwich": [
-  {
-   "file": "Coldcuts.JPG",
-   "w": 1600,
-   "h": 1200,
-   "license": "CC BY-SA 3.0",
-   "artist": "No machine-readable author provided. Chensiyuan assumed (based on copyright claims).",
-   "desc": "Wędzonki"
-  },
-  {
-   "file": "Cold_cuts.jpg",
-   "w": 3378,
-   "h": 2692,
-   "license": "CC BY-SA 4.0",
-   "artist": "مانفی",
-   "desc": "Cold cuts"
-  },
-  {
-   "file": "Cold_cuts_and_cheese.jpg",
-   "w": 400,
-   "h": 304,
-   "license": "CC BY-SA 4.0",
-   "artist": "Yashwanth278",
-   "desc": "anti pasti"
-  },
-  {
-   "file": "Mixed_cold_cut_and_smoked_fish_in_clipper_lounge.jpg",
-   "w": 5184,
-   "h": 3888,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "mixed cold cut and smoked fish in clipper lounge"
-  },
-  {
-   "file": "Καβουρμάς_2037.jpg",
-   "w": 4367,
-   "h": 3275,
-   "license": "CC BY-SA 4.0",
-   "artist": "C messier",
-   "desc": "Kavourmas, a cold cut from North Greece."
-  },
-  {
-   "file": "Cold_Cuts_and_Cheese_Area_in_City_Café.jpg",
-   "w": 5184,
-   "h": 3888,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "Smoked salmon, Salami and Parma Ham from Cold Cuts and Cheese Area in City Café"
-  },
-  {
-   "file": "Cold_cut_plates_from_The_Farm_House.jpg",
-   "w": 5184,
-   "h": 3888,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "Cold cut plates from The Farm House at Hyatt Centric Victoria Harbour"
-  },
-  {
-   "file": "Mixed_Cold_cuts_plates_from_Bostonian_Seafood_&_Grill.jpg",
-   "w": 5184,
-   "h": 3888,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "Mixed Cold cuts plates from brunch buffet in Bostonian Seafood &amp; Grill"
-  },
-  {
-   "file": "Mix_cold_cut_and_some_cheeses_on_wooden_board.jpg",
-   "w": 5184,
-   "h": 3888,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "Mix cold cut and some cheeses on wooden board at Italian Restaurant in West Kowloon, Hong Kong"
-  },
-  {
-   "file": "Mix_cold_cuts_and_Caprese_Salad_with_Cheese_Ball.jpg",
-   "w": 5184,
-   "h": 3888,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "Mix cold cuts and Caprese Salad with Cheese Ball with naan in Pizza Express at V City in Tuen Mun, Hong Kong"
-  },
-  {
-   "file": "A_Some_Cold_cuts_with_some_honey_melon_at_Osteria_Ristorante_Italiano.jpg",
-   "w": 5184,
-   "h": 3888,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "A Some Cold cuts with some honey melon at Osteria Ristorante Italiano"
-  },
-  {
-   "file": "The_Four_of_Cold_cuts_from_Cafe_Ribvoli.jpg",
-   "w": 7008,
-   "h": 4672,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "A Four of Cold cuts at Buffet Table in CAFE RIVOLI"
-  },
-  {
-   "file": "Cold_Cut_Counter_at_Lighthouse_Cafe.jpg",
-   "w": 6224,
-   "h": 4672,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "Some Cold cut is Salami, Smoked Salmon and Prama Ham with Spanish Ham at Lighthouse Cafe in The Fullerton Ocean Park Hong Kong Hotel"
-  },
-  {
-   "file": "A_Cold_cut_and_meats_ball_platter_from_ODELICE_Tsuen_Wan_West.jpg",
-   "w": 5184,
-   "h": 3888,
-   "license": "CC BY-SA 4.0",
-   "artist": "Peachyeung316",
-   "desc": "A Cold cut and fried meat balls platter from ODELICE Tsuen Wan West in OP MALL"
-  }
- ],
- "cupcakes": [
-  {
-   "file": "Sprinkles_Cupcakes_entrance.jpg",
-   "w": 4000,
-   "h": 3000,
-   "license": "CC BY 2.0",
-   "artist": "David Berkowitz from New York, NY, USA",
-   "desc": "A visit to Sprinkles Cupcakes in Dallas in January, 2010, during their promotion with Red Cross Red Velvet cupcakes to benefit the Haiti Rel"
-  },
-  {
-   "file": "Sprinkles_Cupcakes_New_York.jpg",
-   "w": 1936,
-   "h": 2592,
-   "license": "CC BY 2.0",
-   "artist": "Rachel Kramer Bussel from New York City, USA",
-   "desc": "Sprinkles Cupcakes in New York"
-  },
-  {
-   "file": "Sprinkles_Cupcakes.jpg",
-   "w": 968,
-   "h": 1296,
-   "license": "CC BY 2.0",
-   "artist": "Rachel Kramer Bussel from New York City, USA",
-   "desc": "Sprinkles Cupcakes in New York"
-  },
-  {
-   "file": "Pupcakes_from_Sprinkles_Cupcakes.jpg",
-   "w": 600,
-   "h": 800,
-   "license": "CC BY 2.0",
-   "artist": "Rachel Kramer Bussel from New York City, USA",
-   "desc": "Pupcakes (dog-food cupcakes) from Sprinkles Cupcakes, Beverly Hills"
-  },
-  {
-   "file": "Sprinkles_Cupcakes_Dallas.jpg",
-   "w": 4000,
-   "h": 3000,
-   "license": "CC BY 2.0",
-   "artist": "David Berkowitz from New York, NY, USA",
-   "desc": "Box of Sprinkles Cupcakes in Dallas, Texas, in January, 2010, during their promotion with Red Cross Red Velvet cupcakes to benefit the Haiti"
-  },
-  {
-   "file": "Sprinkles_Cupcakes_mix.jpg",
-   "w": 968,
-   "h": 1296,
-   "license": "CC BY 2.0",
-   "artist": "Rachel Kramer Bussel from New York City, USA",
-   "desc": "Sprinkles Cupcakes mix"
-  },
-  {
-   "file": "Cupcakes_at_Zaros_Bakery_(3627422846).jpg",
-   "w": 600,
-   "h": 800,
-   "license": "CC BY 2.0",
-   "artist": "Rachel Kramer Bussel from New York City, USA",
-   "desc": "See Cupcakes Take the Cake for more cupcake photos, news, and information. They were closed so I'll have to come back another time to taste "
-  },
-  {
-   "file": "Cupcake_ATM,_Sprinkles,_Disney_Springs.jpg",
-   "w": 5184,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "Michael Rivera",
-   "desc": "Town Center, Disney Springs, Lake Buena Vista, Orange County, Florida"
-  },
-  {
-   "file": "Butter_Cream_Bakery_cupcakes_-_February_2024_-_Sarah_Stierch.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY 4.0",
-   "artist": "Missvain",
-   "desc": "Butter Cream Bakery cupcakes"
-  },
-  {
-   "file": "Sprinkles_Cupcakes,_Glendale,_California.JPG",
-   "w": 5712,
-   "h": 4284,
-   "license": "CC0",
-   "artist": "Alexis Doine",
-   "desc": "Sprinkles Cupcakes, Glendale, California."
-  },
-  {
-   "file": "Sprinkles_Cupcakes,_August_2024.jpg",
-   "w": 5712,
-   "h": 4284,
-   "license": "CC0",
-   "artist": "Alexis Doine",
-   "desc": "Sprinkles Cupcakes, August 2024."
-  },
-  {
-   "file": "Sprinkles_Salty_Caramel_Cupcake_(Sept._2024).jpg",
-   "w": 2968,
-   "h": 3029,
-   "license": "CC0",
-   "artist": "Alexis Doine",
-   "desc": "Sprinkles Salty Caramel Cupcake (Sept. 2024)."
-  },
-  {
-   "file": "Sprinkles_Pumpkin_cupcakes,_September_2024.jpg",
-   "w": 5712,
-   "h": 3213,
-   "license": "CC0",
-   "artist": "Alexis Doine",
-   "desc": "Sprinkles Pumpkin cupcakes, September 2024."
-  },
-  {
-   "file": "Fuzzy_Buddies_Cupcakes_on_Display_At_BonBons_Bakery_of_Southland.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC0",
-   "artist": "Brassluff",
-   "desc": "Fuzzy Buddies Cupcakes with different sprinkle Colours on Display At BonBons Bakery of Southland."
-  }
- ],
- "smoked-chicken": [
-  {
-   "file": "Smoked_Chicken_Sandwich.jpg",
-   "w": 4288,
-   "h": 2848,
-   "license": "CC BY-SA 4.0",
-   "artist": "Sirsendu.mohanta",
-   "desc": "A recipe for hickory-smoked chicken sandwiches served with tangy, mayonnaise-based white sauce originated in 1925, when railway worker Big B"
-  }
- ],
- "pulled-pork": [
-  {
-   "file": "Pulled_pork_BBQ_sandwich.jpg",
-   "w": 800,
-   "h": 600,
-   "license": "CC BY 2.0",
-   "artist": "Foodista",
-   "desc": "Pulled pork is a form of barbecue. It is a method of preparation in which pork is cooked using a low-heat, long-cook method. The meat become"
-  },
-  {
-   "file": "Pulled_pork_sandwich.jpg",
-   "w": 1600,
-   "h": 1230,
-   "license": "CC BY 2.0",
-   "artist": "jeffreyw",
-   "desc": "Pulled pork sandwich (BBQ sauce recipe)"
-  },
-  {
-   "file": "Two_plates_with_pulled_pork_sandwiches,_and_Caesar_salads.jpg",
-   "w": 3584,
-   "h": 1160,
-   "license": "CC BY-SA 3.0",
-   "artist": "Michael J. Bennett",
-   "desc": "two plates with pulled pork sandwiches, and Caesar salads"
-  },
-  {
-   "file": "Pulled_Pork_Sandwich,_and_Caesar_Salad.jpg",
-   "w": 5184,
-   "h": 2560,
-   "license": "CC BY-SA 3.0",
-   "artist": "Michael J. Bennett",
-   "desc": "pulled pork sandwich, and Caesar salad"
-  },
-  {
-   "file": "Pulled_pork_009.jpg",
-   "w": 1600,
-   "h": 1071,
-   "license": "CC BY 3.0",
-   "artist": "Christian Geischeder",
-   "desc": "Pulled pork"
-  },
-  {
-   "file": "B.B.Q._Pulled_Pork_Sandwich.jpg",
-   "w": 5184,
-   "h": 3456,
-   "license": "CC BY 2.0",
-   "artist": "vagueonthehow",
-   "desc": "Slow Roasted Pork Covered with Our B.B.Q. Sauce on a Brioche Bun. Served with Cole Slaw, and French Fries or Green Salad (from the Cheesecak"
-  },
-  {
-   "file": "Pulled-pork-sandwiches.jpg",
-   "w": 6240,
-   "h": 4160,
-   "license": "CC0",
-   "artist": "Dktue",
-   "desc": "Pulled Pork sandwiches"
-  },
-  {
-   "file": "Pulled_pork_sandwich_at_Café_Divine_(14229856339).jpg",
-   "w": 4000,
-   "h": 3000,
-   "license": "CC BY 2.0",
-   "artist": "Ruth Hartnup from Vancouver, Canada",
-   "desc": "Pulled pork sandwich at Café Divine"
-  },
-  {
-   "file": "Cut_in_Half_Dickey's_BBQ_Pulled_Pork_Big_Sandwich_(15911947548).jpg",
-   "w": 1600,
-   "h": 1200,
-   "license": "CC BY-SA 2.0",
-   "artist": "Willis Lam",
-   "desc": "That is plenty of pulled pork!"
-  },
-  {
-   "file": "Pulled_pork_sandwich_and_waffle_fries_at_the_GLC_(30959288058).jpg",
-   "w": 4266,
-   "h": 3215,
-   "license": "CC BY 2.0",
-   "artist": "Ruth Hartnup from Vancouver, Canada",
-   "desc": "Pulled pork sandwich and waffle fries at the Garibaldi Lift Co."
-  },
-  {
-   "file": "Pulled_pork_sandwich_in_Turku.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "JIP",
-   "desc": "A pulled pork sandwich along with a glass of beer, served at a restaurant in Turku, Finland."
-  },
-  {
-   "file": "Pulled_pork_sandwich_-_\"Naked\".jpg",
-   "w": 5184,
-   "h": 3888,
-   "license": "CC BY-SA 4.0",
-   "artist": "Infrogmation of New Orleans",
-   "desc": "Pulled pork on a bun, \"naked\" - bbq sauce, beans &amp;c were available, but not used in this particular sandwich. At a Carnival party in Upt"
-  },
-  {
-   "file": "Pulled_pork_sandwich_(52837188377).jpg",
-   "w": 4032,
-   "h": 2415,
-   "license": "CC BY 2.0",
-   "artist": "Sandip Bhattacharya from Toronto, Canada",
-   "desc": "At The Croissant Tree, Church Street. Pretty decent sandwich. Good coffee."
-  },
-  {
-   "file": "Pulled_pork_sandwich_with_Kansas_City_barbecue_sauce_and_mustard_-_Massachusetts.jpg",
-   "w": 2982,
-   "h": 2984,
-   "license": "CC0",
-   "artist": "Daderot",
-   "desc": "Pulled pork sandwich with Kansas City barbecue sauce and mustard - Massachusetts, USA."
-  }
- ],
- "pho": [
-  {
-   "file": "Another_Pho_Bowl.jpg",
-   "w": 1792,
-   "h": 1344,
-   "license": "CC BY-SA 3.0",
-   "artist": "No machine-readable author provided. J. Nguyen~commonswiki assumed (based on copyright claims).",
-   "desc": "Another photo of a bowl of the Vietnamese soup, Pho. The photo was taken by the uploader on January 31st, 2006. It was taken almost exactly "
-  },
-  {
-   "file": "Pho_in_rock_bowl.jpg",
-   "w": 1920,
-   "h": 2560,
-   "license": "CC BY-SA 4.0",
-   "artist": "Zenyrgarden",
-   "desc": "Pho in rock bowl"
-  },
-  {
-   "file": "Saigon_style_chicken_phở.jpg",
-   "w": 1536,
-   "h": 2048,
-   "license": "CC BY-SA 4.0",
-   "artist": "Do An Ngon Qua",
-   "desc": "A bowl of homemade Southern Vietnam style chicken phở positioned around the middle of the image with a smaller dish of toppings positioned a"
-  },
-  {
-   "file": "First_bite_of_the_pho_in_The_Big_Bowl.jpg",
-   "w": 3024,
-   "h": 4032,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "first bite of the pho in The Big Bowl"
-  },
-  {
-   "file": "Pho_on_the_window_table.jpg",
-   "w": 3024,
-   "h": 4032,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Pho: Hanoi Rump Steak - Flash fried steak with garlic"
-  },
-  {
-   "file": "Nam_pho_bowl.jpg",
-   "w": 3024,
-   "h": 4032,
-   "license": "CC BY-SA 4.0",
-   "artist": "Wesoree",
-   "desc": "A yummy bowl of Vietnamese pho"
-  },
-  {
-   "file": "The_Big_Bowl_-_The_Big_Bowl_2024-12-18.jpg",
-   "w": 8160,
-   "h": 6144,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Description on menu: \"Rare beef, meatballs &amp; beef steak\"."
-  },
-  {
-   "file": "3_mushroom_curry_noodle_soup_with_phở_-_Pho_2025-11-12.jpg",
-   "w": 8160,
-   "h": 6144,
-   "license": "CC0",
-   "artist": "Andy Li",
-   "desc": "Description of \"Curry noodle soup\" on menu: \"the marriage of our classic Vietnamese curry &amp; a steaming bowl of noodle soup. Topped with "
-  },
-  {
-   "file": "Bowl_of_Meatball_pho.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY 4.0",
-   "artist": "SerraKnightz",
-   "desc": "Bowl of Meatball Pho with a side a cold glass of coca-cola"
-  },
-  {
-   "file": "Pho_79_extra_noodles.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY 4.0",
-   "artist": "RightCowLeftCoast",
-   "desc": "A bowl of extra noodles at Pho 79."
-  },
-  {
-   "file": "Pho_Xe_Lua_at_Pho_79.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY 4.0",
-   "artist": "RightCowLeftCoast",
-   "desc": "Menu item number 33, 79 super bowl, at Pho 79."
-  },
-  {
-   "file": "Pho_Xe_Lua_with_rau_thom_at_Pho_79.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY 4.0",
-   "artist": "RightCowLeftCoast",
-   "desc": "79 super bowl with side garnishes at Pho 79."
-  },
-  {
-   "file": "79_super_bowl_at_Pho_79.jpg",
-   "w": 4032,
-   "h": 3024,
-   "license": "CC BY 4.0",
-   "artist": "RightCowLeftCoast",
-   "desc": "Pho xe lua at Pho 79."
-  },
-  {
-   "file": "20260518_-_A_Bowl_of_Pho_-_Hanoi.jpg",
-   "w": 1280,
-   "h": 960,
-   "license": "CC BY-SA 4.0",
-   "artist": "Yamato Shiya",
-   "desc": "Pho with fruit, sparkling water, and condiments at Noi Bai International Airport, Hanoi, Vietnam."
-  }
- ],
- "wine": [
-  {
-   "file": "Wine_glass_at_Luke_Palladino_restaurant.jpg",
-   "w": 1024,
-   "h": 768,
-   "license": "CC BY-SA 3.0",
-   "artist": "Thekohser",
-   "desc": "Wine glass at Luke Palladino restaurant, with \"LP\" monogram etched into the glass (circled in red)."
-  },
-  {
-   "file": "Red_wine_in_glass_in_restaurant.jpg",
-   "w": 1536,
-   "h": 2048,
-   "license": "Public domain",
-   "artist": "Paolo Neo",
-   "desc": "Image title: Red wine in glass in restaurant Image from Public domain images website, http://www.public-domain-image.com/full-image/food-and"
-  },
-  {
-   "file": "Red_Wine_glass.jpg",
-   "w": 1024,
-   "h": 683,
-   "license": "Public domain",
-   "artist": "US Department of Agriculture",
-   "desc": "Red wine reflects the light from a restaurant."
-  },
-  {
-   "file": "Lisboa_L1190851_(25137526721).jpg",
-   "w": 3968,
-   "h": 2232,
-   "license": "CC BY-SA 2.0",
-   "artist": "tak.wing",
-   "desc": "L1190851"
-  },
-  {
-   "file": "Offering_a_glass_of_red_wine.jpg",
-   "w": 2779,
-   "h": 2861,
-   "license": "CC BY-SA 4.0",
-   "artist": "FranHogan",
-   "desc": "Waiter offering a glass of red wine"
-  },
-  {
-   "file": "Baguette_and_red_wine_aboard_Finnish_train.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "JIP",
-   "desc": "A baguette filled with ham, cheese and lettuce, along with a glass of red wine, in a restaurant car aboard a Finnish train from Helsinki to "
-  },
-  {
-   "file": "Beef_steak_at_restaurant_Linnankellari.jpg",
-   "w": 4608,
-   "h": 3456,
-   "license": "CC BY-SA 4.0",
-   "artist": "JIP",
-   "desc": "A beef steak in Béarnaise sauce with a potato and string bean ragù and lingonberries, along with a glass of red wine, served at a Christmas "
-  },
-  {
-   "file": "DFC_5084_A_hand_with_bright_blue_nails_holding_a_glass_of_red_wine_beside_a_pink_orchid_on_a_table.jpg",
-   "w": 5568,
-   "h": 3712,
-   "license": "CC BY-SA 4.0",
-   "artist": "PattayaPatrol",
-   "desc": "This photo shows someone holding a glass of red wine at what appears to be a restaurant or dining establishment. The person is wearing a lig"
-  },
-  {
-   "file": "DFC_5095_A_hand_with_bright_blue_nails_pours_red_wine_from_a_carafe_into_a_glass.jpg",
-   "w": 5568,
-   "h": 3712,
-   "license": "CC BY-SA 4.0",
-   "artist": "PattayaPatrol",
-   "desc": "This photo shows someone pouring what appears to be red wine from a glass decanter or carafe into a wine glass. The person is wearing a whit"
-  },
-  {
-   "file": "DZ6_2648_A_cozy_candlelit_dinner_setup_a_delicate_orchid_soft_lamp_glow_and_an_empty_wine_glass_waiting_for_the_evening_to_begin.jpg",
-   "w": 6048,
-   "h": 4024,
-   "license": "CC BY-SA 4.0",
-   "artist": "PattayaPatrol",
-   "desc": "This is a close-up shot of a restaurant or café table in Pattaya City, Thailand. The photo shows a wooden table with a stylish modern table "
-  },
-  {
-   "file": "DSC_7052_Young_woman_in_a_zebra-print_dress_checks_her_phone_at_a_dimly_lit_restaurant_table_a_glass_of_red_drink_in_the_foreground.jpg",
-   "w": 6048,
-   "h": 4024,
-   "license": "CC BY-SA 4.0",
-   "artist": "PattayaPatrol",
-   "desc": "This photo features a woman sitting at a dining table, focused on her cell phone. She is wearing a zebra print dress and appears to be engag"
-  },
-  {
-   "file": "DSC_7238_Four_friends_share_wine_and_conversation_at_a_cozy_brickwalled_restaurant_seated_around_a_table_set_with_bottles_glasses_and_a_red_tablecloth.jpg",
-   "w": 6048,
-   "h": 4024,
-   "license": "CC BY-SA 4.0",
-   "artist": "PattayaPatrol",
-   "desc": "This photo features a group of men sitting around a dining table, enjoying each other's company. There are four men in the scene, with one m"
-  },
-  {
-   "file": "DSC_7237_Three_men_sit_around_a_table_in_a_relaxed_conversation_at_a_restaurant_bar_with_wine_bottles_and_glasses_on_a_red_tablecloth_and_contemporary_artwork_on_the_wall_behind_them.jpg",
-   "w": 6048,
-   "h": 4024,
-   "license": "CC BY-SA 4.0",
-   "artist": "PattayaPatrol",
-   "desc": "This photo features a group of three men sitting around a dining table, engaged in conversation. They are all seated on chairs, with one man"
-  },
-  {
-   "file": "DSC_7250_A_smiling_server_pours_a_glass_of_wine_for_a_seated_guest_at_a_warmly_lit_restaurant_table_surrounded_by_lush_greenery.jpg",
-   "w": 6048,
-   "h": 4024,
-   "license": "CC BY-SA 4.0",
-   "artist": "PattayaPatrol",
-   "desc": "This warmly lit photo captures an intimate restaurant moment in what appears to be an outdoor or garden-style dining setting. A server in a "
-  }
- ]
+ "search": {
+  "cheesesteak": [
+   {
+    "file": "Cheesesteak_heaven.jpg",
+    "w": 2048,
+    "h": 1536,
+    "license": "CC BY-SA 2.0",
+    "artist": "Phil Denton from sunnyvale, CA, usa",
+    "desc": "i haven't had a cheesesteak in philly but this one was fabulous"
+   },
+   {
+    "file": "Philly_cheesesteak_sandwich.jpg",
+    "w": 1600,
+    "h": 1063,
+    "license": "CC BY 2.0",
+    "artist": "jeffreyw",
+    "desc": "A Philly cheesesteak sandwich (link)"
+   },
+   {
+    "file": "Philly_cheesesteak_sandwich,_Philadelphia,_Pennsylvania,_USA_-_20120502.jpg",
+    "w": 1536,
+    "h": 2048,
+    "license": "CC BY-SA 4.0",
+    "artist": "Smuconlaw.",
+    "desc": "A Philly cheesesteak sandwich in Philadelphia, Pennsylvania, USA."
+   },
+   {
+    "file": "Cheesesteak_(19386149993).jpg",
+    "w": 5312,
+    "h": 2988,
+    "license": "CC BY 2.0",
+    "artist": "jeffreyw",
+    "desc": "Philly Cheesesteak"
+   },
+   {
+    "file": "Dolphin_Mall_–_Food-Court_–_Charleys_Philly_Steaks_–_Cheesesteak.jpg",
+    "w": 3456,
+    "h": 4608,
+    "license": "CC BY-SA 4.0",
+    "artist": "SK Sturm Fan",
+    "desc": "Cheesesteak von Charleys Philly Steaks am Food-Court der Dolphin Mall in Sweetwater, Florida, im November 2017"
+   },
+   {
+    "file": "Dolphin_Mall_–_Food-Court_–_Charleys_Philly_Steaks_–_Cheesesteak_+_Cheese_&_Bacon_Gourmet_Fries.jpg",
+    "w": 4608,
+    "h": 3456,
+    "license": "CC BY-SA 4.0",
+    "artist": "SK Sturm Fan",
+    "desc": "Cheesesteak und Cheese &amp; Bacon Gourmet Fries von Charleys Philly Steaks am Food-Court der Dolphin Mall in Sweetwater"
+   },
+   {
+    "file": "Philly_cheesesteak_from_Sonny's.jpg",
+    "w": 2675,
+    "h": 3034,
+    "license": "CC BY-SA 4.0",
+    "artist": "Beyond My Ken",
+    "desc": "A Philly cheesesteak with onions made with Cheez-Wiz, from Sonny's Famous Steaks on Market Street in Philadelphia."
+   },
+   {
+    "file": "Cheesesteak_05_14_20.jpg",
+    "w": 4032,
+    "h": 2268,
+    "license": "CC BY-SA 4.0",
+    "artist": "17parkc",
+    "desc": "A Cheesesteak with a Fresh Roll, Chopped Steak, and A cheese blend."
+   },
+   {
+    "file": "Cheesesteak_1795.jpg",
+    "w": 600,
+    "h": 450,
+    "license": "CC BY-SA 2.0",
+    "artist": "mamojo",
+    "desc": "Cheesesteak from Philly Slims on 9th Ave. This is the best cheesesteak I've ever had, and I've tried them from Philly."
+   },
+   {
+    "file": "Cheesesteak_01.jpg",
+    "w": 3008,
+    "h": 2000,
+    "license": "CC BY-SA 2.0",
+    "artist": "stu_spivack",
+    "desc": "always reliable"
+   },
+   {
+    "file": "Cheesesteak_&_Fries.jpg",
+    "w": 2304,
+    "h": 1728,
+    "license": "CC BY 2.0",
+    "artist": "Shoshanah",
+    "desc": "from Philly Me Up"
+   },
+   {
+    "file": "Philly_Cheesesteak_-_Whiz,_onions_and_peppers.jpg",
+    "w": 2448,
+    "h": 3264,
+    "license": "CC BY 2.0",
+    "artist": "TopRankMarketing",
+    "desc": "Cheesesteak"
+   }
+  ],
+  "sub": [
+   {
+    "file": "Hoagie_Hero_Sub_Sandwich.jpg",
+    "w": 800,
+    "h": 600,
+    "license": "CC BY-SA 3.0",
+    "artist": "BillyTFried at English Wikipedia",
+    "desc": "Photo I took of an Italian sandwich I bought at a deli in San Francisco."
+   }
+  ],
+  "hibachi": [
+   {
+    "file": "Arabesque_Restaurant_at_Shaza_Al_Madina.jpg",
+    "w": 800,
+    "h": 532,
+    "license": "CC BY-SA 3.0",
+    "artist": "Shazaalmadina",
+    "desc": "Arabesque is a light and airy restaurant with a superb view overlooking the Holy Masjid. It features an open show kitche"
+   },
+   {
+    "file": "View_of_the_Harem_from_Arabesque_Restaurant_at_Shaza_Al_Madina.jpg",
+    "w": 800,
+    "h": 533,
+    "license": "CC BY-SA 3.0",
+    "artist": "Shazaalmadina",
+    "desc": "View of the Harem from Arabesque Restaurant. Arabesque is a light and airy restaurant with a superb view overlooking the"
+   },
+   {
+    "file": "Chef_shows_off_his_Teppanyaki_skills.jpg",
+    "w": 1280,
+    "h": 720,
+    "license": "CC BY-SA 4.0",
+    "artist": "Fahm Bekele",
+    "desc": "This is an image of \"African people at work\" from"
+   }
+  ],
+  "tandoori": [
+   {
+    "file": "Kukhura_Ko_Chhoila.jpg",
+    "w": 4032,
+    "h": 3024,
+    "license": "CC BY-SA 3.0",
+    "artist": "JIP",
+    "desc": "A plate of Kukhura Ko Chhoila - tandoori chicken marinated with yoghurt and herbs and roasted soy beans, served with ric"
+   },
+   {
+    "file": "Tandoori_Mix_at_restaurant_Yeti_Nepal_in_Ruoholahti,_Helsinki,_Finland.jpg",
+    "w": 4032,
+    "h": 3024,
+    "license": "CC BY-SA 3.0",
+    "artist": "JIP",
+    "desc": "A plate of Tandoori Mix consisting of herb and yoghurt marinated and tandoori oven grilled chicken and king prawns in sp"
+   },
+   {
+    "file": "Tandoori_Chicken_Plate1.jpg",
+    "w": 4128,
+    "h": 2322,
+    "license": "CC BY-SA 4.0",
+    "artist": "Balaji Kasirajan",
+    "desc": "A plate of Tandoori Chicken"
+   },
+   {
+    "file": "Chicken_Tandoori_01.jpg",
+    "w": 4032,
+    "h": 3024,
+    "license": "CC BY-SA 4.0",
+    "artist": "Marajozkee",
+    "desc": "Chicken Tandoori is a chicken mixed with different types of masala then roasted, served with a plate of Pudina chatni."
+   },
+   {
+    "file": "Chicken_Masala,_Goat_Masala,_Dal,_Cabbage,_Pulao_Rice_-_Zam_Zam_(2117149162).jpg",
+    "w": 2048,
+    "h": 1536,
+    "license": "CC BY-SA 2.0",
+    "artist": "Alpha from Melbourne, Australia",
+    "desc": "2 meat + 1 Veg Lunch Special - Zam Zam AUD8.80 + AUD1 extra for Pulao Rice. I had Chicken Masala, Goat Masala curries wi"
+   },
+   {
+    "file": "Tandoori_with_ketchup.jpg",
+    "w": 720,
+    "h": 1280,
+    "license": "CC0",
+    "artist": "Abithavelu",
+    "desc": "Chicken tandoori with different types of varieties in plates."
+   },
+   {
+    "file": "Tandoori_mix_sizzler_at_Villa_Nepal_Spice_in_December_2024.jpg",
+    "w": 4608,
+    "h": 3456,
+    "license": "CC BY-SA 4.0",
+    "artist": "JIP",
+    "desc": "\"Tandoori mix sizzler\" with tandoori marinated chicken fillet, prawns, lamb with onion and green capsicum in a curry yog"
+   },
+   {
+    "file": "Tandoori_chicken_Plate.jpg",
+    "w": 720,
+    "h": 1280,
+    "license": "CC BY 4.0",
+    "artist": "Sandhiya Rangasami",
+    "desc": "Tandoori"
+   },
+   {
+    "file": "Saino_Tandoori_Special.jpg",
+    "w": 4608,
+    "h": 3456,
+    "license": "CC BY-SA 4.0",
+    "artist": "JIP",
+    "desc": "Saino Tandoori Special with tandoori-roasted lamb, chicken, king prawns, onions, bell peppers and tomato with rice, rait"
+   }
+  ],
+  "smash": [
+   {
+    "file": "Smash_Burger,_Village_Commons,_Tallahassee.jpg",
+    "w": 5184,
+    "h": 3456,
+    "license": "CC BY-SA 4.0",
+    "artist": "Michael Rivera",
+    "desc": "Smash Burger, Village Commons, Tallahassee, Leon County, Florida"
+   },
+   {
+    "file": "SmashBurger_Metairie_Louisiana_01.jpg",
+    "w": 5184,
+    "h": 3888,
+    "license": "CC BY-SA 4.0",
+    "artist": "Infrogmation of New Orleans",
+    "desc": "SmashBurger Metairie Louisiana. Burger with grilled onions &amp; sweet-potato fries. Trademarked This work includes mate"
+   },
+   {
+    "file": "SmashBurger_Metairie_Louisiana_02.jpg",
+    "w": 5184,
+    "h": 3888,
+    "license": "CC BY-SA 4.0",
+    "artist": "Infrogmation of New Orleans",
+    "desc": "SmashBurger Metairie Louisiana. Interior."
+   },
+   {
+    "file": "Sriracha_Double_Smash_Burger.jpg",
+    "w": 4608,
+    "h": 3456,
+    "license": "CC BY-SA 4.0",
+    "artist": "JIP",
+    "desc": "A \"Sriracha Double Smash Burger\" with two beef patties, Sriracha mayonnaise, tomato, pickles, red onion and rocket, serv"
+   },
+   {
+    "file": "Sriracha_Double_Smash_Burger_full_meal.jpg",
+    "w": 4608,
+    "h": 3456,
+    "license": "CC BY-SA 4.0",
+    "artist": "JIP",
+    "desc": "A \"Sriracha Double Smash Burger\" with two beef patties, Sriracha mayonnaise, tomato, pickles, red onion and rocket, serv"
+   },
+   {
+    "file": "Smashburger_with_fries.jpg",
+    "w": 3000,
+    "h": 1688,
+    "license": "CC BY-SA 4.0",
+    "artist": "Kamil",
+    "desc": "smashburger w restauracji Hamburg, Opole"
+   },
+   {
+    "file": "Smashburger_03.jpg",
+    "w": 3000,
+    "h": 1688,
+    "license": "CC BY-SA 4.0",
+    "artist": "Kamil",
+    "desc": "smashburger w restauracji Hamburg, Opole"
+   },
+   {
+    "file": "Double_Smash_Burger_with_Fries.jpg",
+    "w": 4032,
+    "h": 2650,
+    "license": "CC BY-SA 4.0",
+    "artist": "Wiki.cullin",
+    "desc": "Double Smash Burger with Fries"
+   },
+   {
+    "file": "C_N_Cheese_burger_and_\"smash_browns\"_at_BurgerFuel_(Courtenay_Place).jpg",
+    "w": 8064,
+    "h": 6048,
+    "license": "CC BY-SA 4.0",
+    "artist": "Fourthords",
+    "desc": "C N Cheese burger and \"smash browns\" at the Courtenay Place BurgerFuel location in Wellington"
+   },
+   {
+    "file": "Smashburger_and_poutine_from_Two_Dads_One_Truck.jpg",
+    "w": 3264,
+    "h": 2416,
+    "license": "CC BY-SA 4.0",
+    "artist": "The Bushranger",
+    "desc": "Smash burger and poutine from the Two Dads One Truck food truck in Crawfordville, Florida."
+   },
+   {
+    "file": "HopMonk_Tavern_Sonoma_-_June_2025_-_Sarah_Stierch.jpg",
+    "w": 4032,
+    "h": 3024,
+    "license": "CC0",
+    "artist": "Missvain",
+    "desc": "A smashburger and fries at HopMonk Tavern Sonoma"
+   },
+   {
+    "file": "Smash_burger_-_Cambridge,_MA.jpg",
+    "w": 2267,
+    "h": 2267,
+    "license": "CC0",
+    "artist": "Daderot",
+    "desc": "Smash burger - Cambridge, Massachusetts, USA."
+   }
+  ]
+ },
+ "thumbs": {
+  "Chicken_wings_at_West_Side_Story_in_February_2025.jpg": "Chicken_wings_at_West_Side_Story_in_February_2025.jpg.jpg",
+  "Sriracha_chicken_wings_(10832723804).jpg": "Sriracha_chicken_wings__10832723804_.jpg.jpg",
+  "A_box_of_chicken_wings_and_sauces_(49456308206).jpg": "A_box_of_chicken_wings_and_sauces__49456308206_.jpg.jpg",
+  "Glazed_Ring_Doughnuts.jpg": "Glazed_Ring_Doughnuts.jpg.jpg",
+  "Donuts_(cropped).jpg": "Donuts__cropped_.jpg.jpg",
+  "Glazed_doughnut_(1387333).jpg": "Glazed_doughnut__1387333_.jpg.jpg",
+  "Pancakes_with_Berries_(Unsplash).jpg": "Pancakes_with_Berries__Unsplash_.jpg.jpg",
+  "2019-04-21_11_41_12_A_stack_of_blueberry_pancakes_with_syrup_in_the_Franklin_Farm_section_of_Oak_Hill,_Fairfax_County,_Virginia.jpg": "2019-04-21_11_41_12_A_stack_of_blueberry_pancakes_with_syrup.jpg",
+  "Mixed_Plate_(3186676853).jpg": "Mixed_Plate__3186676853_.jpg.jpg",
+  "Loaded_Shawarma.jpg": "Loaded_Shawarma.jpg.jpg",
+  "MyPlate_gov_Cultural_Food_(20241025-USDA-FNS-UNK-0017).jpg": "MyPlate_gov_Cultural_Food__20241025-USDA-FNS-UNK-0017_.jpg.jpg",
+  "Chinese_food_dishes.jpg": "Chinese_food_dishes.jpg.jpg",
+  "Chinese_Food.jpg": "Chinese_Food.jpg.jpg",
+  "House_special_fried_rice_(516570766).jpg": "House_special_fried_rice__516570766_.jpg.jpg",
+  "Butter_chicken_med_raita_og_naan_(5158340847).jpg": "Butter_chicken_med_raita_og_naan__5158340847_.jpg.jpg",
+  "Butter_Chicken_with_Garlic_Naan.jpg": "Butter_Chicken_with_Garlic_Naan.jpg.jpg",
+  "Chicken_Hyderabadi_Biryani.JPG": "Chicken_Hyderabadi_Biryani.JPG.jpg",
+  "Pulled_pork_sandwich.jpg": "Pulled_pork_sandwich.jpg.jpg",
+  "B.B.Q._Pulled_Pork_Sandwich.jpg": "B.B.Q._Pulled_Pork_Sandwich.jpg.jpg",
+  "Butter_Cream_Bakery_cupcakes_-_February_2024_-_Sarah_Stierch.jpg": "Butter_Cream_Bakery_cupcakes_-_February_2024_-_Sarah_Stierch.jpg"
+ },
+ "geo": {
+  "taj-india": [
+   {
+    "lat": 33.5119838,
+    "lon": -86.7827334,
+    "type": "place",
+    "name": "3120, Clairmont Avenue South, Chestnut Hill Historic District, Highland Residence Park, Birmingham, Jefferson ",
+    "city": "Birmingham",
+    "hood": "Chestnut Hill Historic District"
+   }
+  ],
+  "hello-bakery": [
+   {
+    "lat": 33.514999,
+    "lon": -86.736765,
+    "type": "place",
+    "name": "1109, Dunston Avenue, Crestline Park, Birmingham, Jefferson County, Alabama, 35213, United States",
+    "city": "Birmingham"
+   }
+  ],
+  "red-pearl": [
+   {
+    "lat": 33.466957,
+    "lon": -86.8339633,
+    "type": "shop",
+    "name": "Super Oriental Market, 243, West Valley Avenue, Edgemoor Estates, Homewood, Jefferson County, Alabama, 35209, ",
+    "city": "Homewood"
+   },
+   {
+    "lat": 33.4669136,
+    "lon": -86.8339396,
+    "type": "amenity",
+    "name": "Red Pearl Restaurant, 243, West Valley Avenue, Edgemoor Estates, Homewood, Jefferson County, Alabama, 35209, U",
+    "city": "Homewood"
+   },
+   {
+    "lat": 33.4691087,
+    "lon": -86.8291457,
+    "type": "place",
+    "name": "243, West Valley Avenue, Edgemont, Homewood, Jefferson County, Alabama, 35209, United States",
+    "city": "Homewood"
+   }
+  ],
+  "shiki": [
+   {
+    "lat": 33.4783814,
+    "lon": -86.789419,
+    "type": "amenity",
+    "name": "Shiki, 300, 19th Street South, Rosedale, Homewood, Jefferson County, Alabama, 35209, United States",
+    "city": "Homewood"
+   }
+  ],
+  "full-circle": [
+   {
+    "lat": 33.480866,
+    "lon": -86.792933,
+    "type": "place",
+    "name": "1726, 28th Avenue South, Rosedale, Homewood, Jefferson County, Alabama, 35209, United States",
+    "city": "Homewood"
+   }
+  ],
+  "the-battery": [
+   {
+    "lat": 33.4795075,
+    "lon": -86.7953611,
+    "type": "place",
+    "name": "2821, Central Avenue, Rosedale, Homewood, Jefferson County, Alabama, 35209, United States",
+    "city": "Homewood"
+   }
+  ],
+  "whiskey-foxtrot": [
+   {
+    "lat": 33.4809238,
+    "lon": -86.7882164,
+    "type": "building",
+    "name": "1919, 28th Avenue South, Rosedale, Homewood, Jefferson County, Alabama, 35203, United States",
+    "city": "Homewood"
+   },
+   {
+    "lat": 33.4810402,
+    "lon": -86.7881458,
+    "type": "shop",
+    "name": "Supercuts, 1919, 28th Avenue South, Rosedale, Homewood, Jefferson County, Alabama, 35209, United States",
+    "city": "Homewood"
+   },
+   {
+    "lat": 33.480982,
+    "lon": -86.7881435,
+    "type": "amenity",
+    "name": "Whiskey Foxtrot Burger Shoppe, 1919, 28th Avenue South, Rosedale, Homewood, Jefferson County, Alabama, 35209, ",
+    "city": "Homewood"
+   }
+  ],
+  "taco-mama-homewood": [
+   {
+    "lat": 33.4739893,
+    "lon": -86.8080109,
+    "type": "amenity",
+    "name": "Taco Mama, 1014, Oxmoor Road, Edgewood, Homewood, Jefferson County, Alabama, 35209, United States",
+    "city": "Homewood"
+   }
+  ],
+  "curry-corner": [
+   {
+    "lat": 33.4949083,
+    "lon": -86.7813441,
+    "type": "place",
+    "name": "2037, Cahaba Road, Mountain Brook, Jefferson County, Alabama, 35223, United States",
+    "city": "Mountain Brook"
+   },
+   {
+    "lat": 33.4944142,
+    "lon": -86.7813845,
+    "type": "place",
+    "name": "2037, Cahaba Road, Mountain Brook, Jefferson County, Alabama, 35223, United States",
+    "city": "Mountain Brook"
+   }
+  ],
+  "porch": [
+   {
+    "lat": 33.5032432,
+    "lon": -86.7558607,
+    "type": "building",
+    "name": "2, Dexter Avenue, Crestline Heights, Mountain Brook, Jefferson County, Alabama, 35213, United States",
+    "city": "Mountain Brook"
+   }
+  ],
+  "taco-mama-crestline": [
+   {
+    "lat": 33.502255,
+    "lon": -86.755486,
+    "type": "place",
+    "name": "63, Church Street, Crestline Heights, Mountain Brook, Jefferson County, Alabama, 35213, United States",
+    "city": "Mountain Brook"
+   }
+  ],
+  "cala-cahaba": [
+   {
+    "lat": 33.4604057,
+    "lon": -86.7334457,
+    "type": "place",
+    "name": "3950, Autumn Lane, Asbury Park, Cahaba Heights, Vestavia Hills, Jefferson County, Alabama, 35243, United State",
+    "city": "Vestavia Hills"
+   }
+  ],
+  "on-tap": [
+   {
+    "lat": 33.4738574,
+    "lon": -86.6960279,
+    "type": "amenity",
+    "name": "On Tap Sports Cafe, 11967, Liberty Parkway, Liberty Park, Vestavia Hills, Jefferson County, Alabama, 35242, Un",
+    "city": "Vestavia Hills",
+    "hood": "Liberty Park"
+   }
+  ],
+  "chubbfathers": [],
+  "jj-grocery": [
+   {
+    "lat": 33.3302269,
+    "lon": -86.9814942,
+    "type": "place",
+    "name": "8169, Dickey Springs Road, Bessemer, Jefferson County, Alabama, 35022, United States",
+    "city": "Bessemer"
+   },
+   {
+    "lat": 33.3304282,
+    "lon": -86.979738,
+    "type": "place",
+    "name": "8169, Dickey Springs Road, Bessemer, Jefferson County, Alabama, 35022, United States",
+    "city": "Bessemer"
+   }
+  ],
+  "mr-ps": [
+   {
+    "lat": 33.4207428,
+    "lon": -86.8470145,
+    "type": "place",
+    "name": "813, Shades Crest Road, Shades Acres, Crest Estates, Birmingham, Jefferson County, Alabama, 35226, United Stat",
+    "city": "Birmingham",
+    "hood": "Shades Acres"
+   }
+  ],
+  "archies": [
+   {
+    "lat": 33.403367,
+    "lon": -86.806031,
+    "type": "place",
+    "name": "1571, Montgomery Highway, Patton Chapel, Hoover, Jefferson County, Alabama, 35216, United States",
+    "city": "Hoover"
+   }
+  ],
+  "golden-rule": [
+   {
+    "lat": 33.5389421,
+    "lon": -86.6927314,
+    "type": "place",
+    "name": "2504, Crestwood Boulevard, Stoneridge, Irondale, Jefferson County, Alabama, 35210, United States",
+    "city": "Irondale"
+   }
+  ],
+  "martys-gm": [
+   {
+    "lat": 33.529811,
+    "lon": -86.6942455,
+    "type": "office",
+    "name": "Irondale Water System, 5415, Beacon Drive, East Irondale, Irondale, Jefferson County, Alabama, 35210, United S",
+    "city": "Irondale"
+   },
+   {
+    "lat": 33.5298802,
+    "lon": -86.6941566,
+    "type": "amenity",
+    "name": "Gus' Hot Dogs, 5415, Beacon Drive, East Irondale, Irondale, Jefferson County, Alabama, 35210, United States",
+    "city": "Irondale"
+   },
+   {
+    "lat": 33.5308196,
+    "lon": -86.696135,
+    "type": "place",
+    "name": "5415, Beacon Drive, East Irondale, Irondale, Jefferson County, Alabama, 35210, United States",
+    "city": "Irondale"
+   }
+  ],
+  "creekside": [
+   {
+    "lat": 33.2995705,
+    "lon": -86.7708662,
+    "type": "road",
+    "name": "Oak Mountain Park Road, Pelham, Shelby County, Alabama, 35124, United States",
+    "city": "Pelham"
+   },
+   {
+    "lat": 33.3229626,
+    "lon": -86.7874272,
+    "type": "road",
+    "name": "Oak Mountain Park Road, Little Oak Ridge Estates, Pelham, Shelby County, Alabama, 35124, United States",
+    "city": "Pelham"
+   },
+   {
+    "lat": 33.3328411,
+    "lon": -86.780023,
+    "type": "road",
+    "name": "Oak Mountain Park Road, Pelham, Shelby County, Alabama, 35124, United States",
+    "city": "Pelham"
+   }
+  ],
+  "carliles": [
+   {
+    "lat": 33.5171934,
+    "lon": -86.7800191,
+    "type": "place",
+    "name": "3511, 6th Avenue South, Chestnut Hill Historic District, Highland Residence Park, Birmingham, Jefferson County",
+    "city": "Birmingham",
+    "hood": "Chestnut Hill Historic District"
+   }
+  ],
+  "ampersandwich": [
+   {
+    "lat": 33.5239385,
+    "lon": -86.773498,
+    "type": "place",
+    "name": "4124, 3rd Avenue South, Avondale, Forest Park, Birmingham, Jefferson County, Alabama, 35222, United States",
+    "city": "Birmingham",
+    "hood": "Avondale"
+   }
+  ],
+  "high-dive": [
+   {
+    "lat": 33.5150511,
+    "lon": -86.7845546,
+    "type": "amenity",
+    "name": "High Dive HiFi Lounge, 524, 32nd Street South, Chestnut Hill Historic District, Highland Residence Park, Birmi",
+    "city": "Birmingham",
+    "hood": "Chestnut Hill Historic District"
+   }
+  ],
+  "son-of-a-butcher": [
+   {
+    "lat": 33.5153917,
+    "lon": -86.7914704,
+    "type": "place",
+    "name": "2810, 3rd Avenue South, Birmingham, Jefferson County, Alabama, 35222, United States",
+    "city": "Birmingham"
+   }
+  ],
+  "dreamland": [
+   {
+    "lat": 33.494035,
+    "lon": -86.8026743,
+    "type": "amenity",
+    "name": "Dreamland Bar-B-Que, 1427, 14th Avenue South, Phelan Park Historic District, Cullom Place, Birmingham, Jeffers",
+    "city": "Birmingham",
+    "hood": "Phelan Park Historic District"
+   }
+  ],
+  "jim-n-nicks": [
+   {
+    "lat": 33.5005301,
+    "lon": -86.7962542,
+    "type": "place",
+    "name": "1908, 11th Avenue South, Highland Avenue Historic District, Five Points South, Birmingham, Jefferson County, A",
+    "city": "Birmingham",
+    "hood": "Highland Avenue Historic District"
+   },
+   {
+    "lat": 33.5007081,
+    "lon": -86.796027,
+    "type": "place",
+    "name": "1908, 11th Avenue South, Highland Avenue Historic District, Five Points South, Birmingham, Jefferson County, A",
+    "city": "Birmingham",
+    "hood": "Highland Avenue Historic District"
+   }
+  ],
+  "t-bones": [
+   {
+    "lat": 33.501222,
+    "lon": -86.7966,
+    "type": "place",
+    "name": "1017, 20th Street South, Five Points South, Birmingham, Jefferson County, Alabama, 35205, United States",
+    "city": "Birmingham"
+   }
+  ],
+  "armour-house": [
+   {
+    "lat": 33.5164447,
+    "lon": -86.8012598,
+    "type": "place",
+    "name": "2309, 1st Avenue North, Morris Avenue-First Avenue North Historic District, Central City, Birmingham, Jefferso",
+    "city": "Birmingham",
+    "hood": "Morris Avenue-First Avenue North Historic District"
+   }
+  ],
+  "le-fresca": [
+   {
+    "lat": 33.5171994,
+    "lon": -86.8028251,
+    "type": "amenity",
+    "name": "Lé Fresca, 2218, 2nd Avenue North, Morris Avenue-First Avenue North Historic District, Central City, Birmingha",
+    "city": "Birmingham",
+    "hood": "Morris Avenue-First Avenue North Historic District"
+   }
+  ],
+  "pizitz": [
+   {
+    "lat": 33.513076,
+    "lon": -86.808342,
+    "type": "place",
+    "name": "1801, 1st Avenue North, Morris Avenue-First Avenue North Historic District, Central City, Birmingham, Jefferso",
+    "city": "Birmingham",
+    "hood": "Morris Avenue-First Avenue North Historic District"
+   }
+  ],
+  "makarios": [
+   {
+    "lat": 33.5024587,
+    "lon": -86.7974334,
+    "type": "place",
+    "name": "940, 20th Street South, Five Points South, Birmingham, Jefferson County, Alabama, 35205, United States",
+    "city": "Birmingham"
+   },
+   {
+    "lat": 33.503175,
+    "lon": -86.7981461,
+    "type": "place",
+    "name": "940, 20th Street South, Five Points South, Birmingham, Jefferson County, Alabama, 35205, United States",
+    "city": "Birmingham"
+   }
+  ],
+  "falafel-cafe": [
+   {
+    "lat": 33.5080926,
+    "lon": -86.8029913,
+    "type": "building",
+    "name": "401, 19th Street South, Automotive Historic District, Five Points South, Birmingham, Jefferson County, Alabama",
+    "city": "Birmingham",
+    "hood": "Automotive Historic District"
+   }
+  ],
+  "cafe-dupont": [
+   {
+    "lat": 33.5146871,
+    "lon": -86.8056742,
+    "type": "place",
+    "name": "113, 20th Street North, Morris Avenue-First Avenue North Historic District, Central City, Birmingham, Jefferso",
+    "city": "Birmingham",
+    "hood": "Morris Avenue-First Avenue North Historic District"
+   },
+   {
+    "lat": 33.5145692,
+    "lon": -86.805923,
+    "type": "place",
+    "name": "113, 20th Street North, Morris Avenue-First Avenue North Historic District, Central City, Birmingham, Jefferso",
+    "city": "Birmingham",
+    "hood": "Morris Avenue-First Avenue North Historic District"
+   }
+  ],
+  "blueprint": [
+   {
+    "lat": 33.516638,
+    "lon": -86.788852,
+    "type": "place",
+    "name": "3000, 3rd Avenue South, Birmingham, Jefferson County, Alabama, 35233, United States",
+    "city": "Birmingham"
+   }
+  ],
+  "mexico-lindo": [
+   {
+    "lat": 33.4809618,
+    "lon": -86.7817024,
+    "type": "road",
+    "name": "Hollywood Boulevard, Hollywood, Homewood, Jefferson County, Alabama, 35209, United States",
+    "city": "Homewood"
+   },
+   {
+    "lat": 33.4828776,
+    "lon": -86.7769703,
+    "type": "road",
+    "name": "Hollywood Boulevard, Homewood, Jefferson County, Alabama, 35209, United States",
+    "city": "Homewood"
+   }
+  ],
+  "hamburger-heaven": [
+   {
+    "lat": 33.462831,
+    "lon": -86.8300203,
+    "type": "place",
+    "name": "180, Oxmoor Boulevard, Oak Grove Estates, Homewood, Jefferson County, Alabama, 35209, United States",
+    "city": "Homewood"
+   },
+   {
+    "lat": 33.4629887,
+    "lon": -86.8311511,
+    "type": "place",
+    "name": "180, Oxmoor Boulevard, Oak Grove Estates, Homewood, Jefferson County, Alabama, 35209, United States",
+    "city": "Homewood"
+   }
+  ],
+  "mr-chens": [
+   {
+    "lat": 33.4605871,
+    "lon": -86.8193651,
+    "type": "amenity",
+    "name": "Cici's Pizza, 808, Green Springs Highway, Edgemont, Homewood, Jefferson County, Alabama, 35209, United States",
+    "city": "Homewood"
+   },
+   {
+    "lat": 33.4613578,
+    "lon": -86.818232,
+    "type": "place",
+    "name": "808, Green Springs Highway, Edgemont, Homewood, Jefferson County, Alabama, 35209, United States",
+    "city": "Homewood"
+   },
+   {
+    "lat": 33.460503,
+    "lon": -86.8193451,
+    "type": "amenity",
+    "name": "Wingstop, 808, Green Springs Highway, Edgemont, Birmingham, Jefferson County, Alabama, 35209, United States",
+    "city": "Birmingham"
+   }
+  ],
+  "oak-hill": [
+   {
+    "lat": 33.480042,
+    "lon": -86.79158,
+    "type": "amenity",
+    "name": "Oak Hill Bar & Grill, 2835, 18th Street South, Rosedale, Homewood, Jefferson County, Alabama, 35209, United St",
+    "city": "Homewood"
+   }
+  ],
+  "general": [
+   {
+    "lat": 33.514789,
+    "lon": -86.7731819,
+    "type": "place",
+    "name": "3813, Clairmont Avenue South, Forest Park, Birmingham, Jefferson County, Alabama, 35222, United States",
+    "city": "Birmingham"
+   },
+   {
+    "lat": 33.5149495,
+    "lon": -86.7744056,
+    "type": "place",
+    "name": "3813, Clairmont Avenue South, Forest Park, Birmingham, Jefferson County, Alabama, 35222, United States",
+    "city": "Birmingham"
+   }
+  ],
+  "eastwest": [
+   {
+    "lat": 33.5176142,
+    "lon": -86.8019584,
+    "type": "amenity",
+    "name": "EastWest, 2306, 2nd Avenue North, Morris Avenue-First Avenue North Historic District, Central City, Birmingham",
+    "city": "Birmingham",
+    "hood": "Morris Avenue-First Avenue North Historic District"
+   }
+  ]
+ }
 }
