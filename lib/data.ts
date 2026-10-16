@@ -92,7 +92,7 @@ export interface Spot {
  * famous burger is French + Burgers. "Special occasion" and "Date night" are collections.
  */
 export const GENRES: Genre[] = [
-  { id: "southern", label: "Southern & Soul", short: "Southern", color: "#C8692F", icon: "drumstick", tagline: "Meat-and-threes, fried chicken, Lowcountry plates and somebody's grandmother's recipe." },
+  { id: "southern", label: "Southern & Soul", short: "Southern", color: "#C8692F", icon: "drumstick", tagline: "Meat-and-threes, soul food, fried chicken and the new Southern kitchens." },
   { id: "bbq", label: "Barbecue", short: "BBQ", color: "#9E3B22", icon: "flame", tagline: "Hickory smoke and white sauce. This is Alabama." },
   { id: "burgers", label: "Burgers & Sandwiches", short: "Burgers", color: "#A0612F", icon: "burger", tagline: "Smash burgers, hot dogs, Reubens and the Cuban." },
   { id: "pizza", label: "Pizza", short: "Pizza", color: "#B8873A", icon: "pizza", tagline: "Cracker-thin, Neapolitan and sourdough." },
@@ -139,13 +139,14 @@ export const AREAS: Area[] = [
   { id: "downtown", town: "birmingham", label: "Downtown", center: [33.5155, -86.8085], zoom: 15, blurb: "Loft district, Morris Avenue, the old storefronts on Second Avenue North.", labelAt: [33.5212, -86.8165] },
   { id: "southside", town: "birmingham", label: "Southside & Five Points", center: [33.5008, -86.7935], zoom: 15.25, blurb: "Five Points South, the fountain, and the restaurants along Highland Avenue.", labelAt: [33.4972, -86.8030] },
   { id: "lakeview", town: "birmingham", label: "Lakeview & Pepper Place", center: [33.515, -86.7925], zoom: 15.5, blurb: "Old warehouses turned into breweries and restaurants. The farmers market runs Saturdays.", labelAt: [33.5098, -86.7838] },
-  { id: "avondale", town: "birmingham", label: "Avondale", center: [33.525, -86.776], zoom: 15.75, blurb: "41st Street South and the park.", labelAt: [33.5292, -86.7738] },
+  { id: "avondale", town: "birmingham", label: "Avondale & Forest Park", center: [33.522, -86.774], zoom: 15.5, blurb: "41st Street South and the park, and Clairmont Avenue in Forest Park.", labelAt: [33.5292, -86.7738] },
+  { id: "northside", town: "birmingham", label: "Northside", center: [33.536, -86.832], zoom: 15.25, blurb: "North of downtown, where Eagle's has served soul food since 1951.", labelAt: [33.5405, -86.8320] },
   { id: "homewood", town: "homewood", label: "Downtown Homewood", center: [33.4755, -86.8008], zoom: 16, blurb: "18th Street and SoHo Square.", labelAt: [33.4795, -86.8045] },
   { id: "edgewood", town: "homewood", label: "Edgewood", center: [33.4665, -86.8085], zoom: 16.4, blurb: "A few blocks of Oxmoor Road with two ice cream shops on the same corner.", labelAt: [33.4635, -86.8085] },
   { id: "west-homewood", town: "homewood", label: "West Homewood", center: [33.466, -86.818], zoom: 14.8, blurb: "Oxmoor Road west of downtown, out toward Patriot Park.", labelAt: [33.4595, -86.8205] },
   { id: "mtnbrook", town: "mountain-brook", label: "Mountain Brook Village", center: [33.4842, -86.7532], zoom: 16.6, blurb: "Cahaba Road, Culver Road and Lane Parke.", labelAt: [33.4800, -86.7534] },
   { id: "englishvillage", town: "mountain-brook", label: "English Village", center: [33.4936, -86.774], zoom: 17, blurb: "A few blocks of Cahaba Road with a bakery on the corner.", labelAt: [33.4978, -86.7742] },
-  { id: "crestline", town: "mountain-brook", label: "Crestline Village", center: [33.4936, -86.7322], zoom: 17, blurb: "Church Street, a coffee shop and bookstore, and the original Taco Mama.", labelAt: [33.4978, -86.7322] },
+  { id: "crestline", town: "mountain-brook", label: "Crestline Village", center: [33.4936, -86.7322], zoom: 17, blurb: "Church Street: a coffee shop and bookstore, bagels, pizza and a Tex-Mex patio.", labelAt: [33.4978, -86.7322] },
   { id: "cahaba", town: "vestavia-hills", label: "Cahaba Heights", center: [33.462, -86.7275], zoom: 15.75, blurb: "Barbecue, patios and the Heights Village shops.", labelAt: [33.4542, -86.7275] },
   { id: "vestavia-31", town: "vestavia-hills", label: "Highway 31", center: [33.448, -86.79], zoom: 14.8, blurb: "Montgomery Highway, from the City Center down past the library.", labelAt: [33.4525, -86.7985] },
   { id: "rocky-ridge", town: "vestavia-hills", label: "Rocky Ridge", center: [33.4225, -86.7975], zoom: 16, blurb: "A small strip of local spots on Rocky Ridge Road.", labelAt: [33.4192, -86.7975] },
@@ -221,13 +222,6 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["meat-and-three", "classic", "lunch"], pop: 88,
   },
   {
-    id: "revelator-downtown", name: "Revelator Coffee", genres: ["coffee"], area: "downtown",
-    address: "1826 3rd Ave N", coords: onAveN(1826, 3), price: 1,
-    knownFor: "House-roasted pour-overs",
-    blurb: "Birmingham roaster with a bright, quiet cafe downtown. Good place to sit with a laptop.",
-    tags: ["roaster", "work-friendly"], pop: 66,
-  },
-  {
     id: "collins-bar", name: "The Collins Bar", genres: ["drinks"], drinks: ["cocktails"], area: "downtown",
     address: "2125 2nd Ave N", coords: onAveN(2125, 2), price: 2,
     knownFor: "Bartender's-choice cocktails",
@@ -277,7 +271,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["brewery", "pizza", "Sloss Quarter"], pop: 64,
   },
   {
-    id: "bayonet", name: "Bayonet", genres: ["seafood", "drinks"], drinks: ["cocktails"], area: "downtown",
+    id: "bayonet", name: "Bayonet", genres: ["seafood"], area: "downtown",
     address: "2015 2nd Ave N", coords: onAveN(2015, 2), price: 3,
     knownFor: "Raw-bar oysters & the tuna burger",
     blurb: "Rob and Emily McDaniel's seafood place, next door to Helen. About 20 kinds of oysters at the raw bar. The New York Times named it one of America's 50 best restaurants in 2025, so book ahead or try the bar early in the week.",
@@ -312,6 +306,118 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["tasting menu", "French", "date night"], pop: 80,
   },
 
+  {
+    id: "house-of-found-objects", name: "The House of Found Objects", genres: ["drinks"], drinks: ["cocktails"], area: "downtown",
+    address: "2205 2nd Ave N", coords: onAveN(2205, 2), price: 3,
+    knownFor: "Cocktails among the found objects",
+    blurb: "Feizal Valli's cocktail bar next door to El Barrio, built out of repurposed finds, with costumes and a bubble machine. Esquire put it on its 2026 list of the best bars in America.",
+    tags: ["late night", "date night", "cocktails"], pop: 88,
+  },
+  {
+    id: "adios", name: "Adiós", genres: ["drinks"], drinks: ["cocktails"], area: "downtown",
+    address: "2218 1st Ave N", coords: onAveN(2218, 1), price: 3,
+    knownFor: "Agave cocktails & margaritas",
+    blurb: "Tequila and mezcal bar in The Dagny building on First Avenue North. A James Beard semifinalist for beverage service in 2025, and a margarita worth the trip.",
+    tags: ["late night", "date night", "agave"], pop: 87,
+  },
+  {
+    id: "pilcrow", name: "Pilcrow Cocktail Cellar", genres: ["drinks"], drinks: ["cocktails"], area: "downtown",
+    address: "2015 1st Ave N", coords: onAveN(2015, 1), price: 3,
+    knownFor: "Mezcal and tequila cocktails",
+    blurb: "Joe and Meg Phelps's basement bar under the old Caldwell Printing Works. Find the alley between Founders Station and The Essential and look for the neon sign.",
+    tags: ["date night", "late night", "agave"], pop: 79,
+  },
+  {
+    id: "tucana-tiki", name: "Tucana Tiki Bar", genres: ["drinks"], drinks: ["cocktails"], area: "downtown",
+    address: "1143 1st Ave S, Suite 101", coords: onAveS(1143, 1), price: 3,
+    knownFor: "Rum cocktails, tiki style",
+    blurb: "Nicky Vann Tisdale's tiki bar in the Denham Building near Railroad Park, open since 2023. Every December the holiday drinks go tropical.",
+    tags: ["date night", "cocktails"], pop: 80,
+  },
+  {
+    id: "the-fennec", name: "The Fennec", genres: ["drinks"], drinks: ["cocktails"], area: "downtown",
+    address: "1630 2nd Ave S", coords: onAveS(1630, 2), price: 2,
+    knownFor: "Cocktails, bites and live music",
+    blurb: "Bar and music room in Parkside, a block from Railroad Park, with cocktails and small bites.",
+    tags: ["live music", "cocktails"], pop: 72,
+  },
+  {
+    id: "gus-hot-dogs", name: "Gus's Hot Dogs", genres: ["burgers"], area: "downtown",
+    address: "1915 4th Ave N", coords: onAveN(1915, 4), price: 1,
+    knownFor: "Chargrilled dog with onion sauce",
+    blurb: "Greek-owned hot dog stand open since 1947, the longest-running one in town. A few counter seats; most people take it to go.",
+    tags: ["classic", "lunch", "takeout"], pop: 85,
+  },
+  {
+    id: "green-acres", name: "Green Acres Cafe", genres: ["southern"], area: "downtown",
+    address: "1705 4th Ave N", coords: onAveN(1705, 4), price: 1,
+    knownFor: "Whole fried chicken wings",
+    blurb: "The Gratton family's fried chicken counter, on Fourth Avenue North since 1990 and in Birmingham since 1950. Order the wings.",
+    tags: ["classic", "takeout", "late night"], pop: 84,
+  },
+  {
+    id: "fifes", name: "Fife's Restaurant", genres: ["southern", "brunch"], area: "downtown",
+    address: "2321 4th Ave N", coords: onAveN(2321, 4), price: 1,
+    knownFor: "Southern breakfast & meat-and-three",
+    blurb: "Breakfast and meat-and-three in the Fourth Avenue district since 1956.",
+    tags: ["classic", "breakfast", "lunch"], pop: 78,
+  },
+  {
+    id: "trattoria-zaza", name: "Trattoria ZaZa", genres: ["italian", "brunch"], area: "downtown",
+    address: "207 20th St N", coords: onStN(207, 20), price: 2,
+    knownFor: "Casual Italian & Sunday brunch",
+    blurb: "Casual Italian in the Frank Nelson Building, owned since 2015 by two longtime employees. Breakfast on weekdays, brunch on Sundays.",
+    tags: ["lunch", "brunch", "date night"], pop: 80,
+  },
+  {
+    id: "salud-taqueria", name: "Salud Taqueria", genres: ["latin"], area: "downtown",
+    address: "1931 2nd Ave N, Suite 101", coords: onAveN(1931, 2), price: 2,
+    knownFor: "Tacos, late on weekends",
+    blurb: "Taqueria in the old Webb Building on Second Avenue North, open since 2024. Garden & Gun put it on its 2025 list of new restaurants to try. Open until midnight Friday and Saturday.",
+    tags: ["late night", "lunch"], pop: 81,
+  },
+  {
+    id: "el-barrio", name: "El Barrio", genres: ["latin", "drinks", "brunch"], drinks: ["cocktails"], area: "downtown",
+    address: "2211 2nd Ave N", coords: onAveN(2211, 2), price: 2,
+    knownFor: "Modern Mexican & weekend brunch",
+    blurb: "The downtown original on Second Avenue North; the second one is in West Homewood. Weekend brunch is the big draw.",
+    tags: ["brunch", "date night", "margaritas", "groups"], pop: 84,
+  },
+  {
+    id: "bandit-patisserie", name: "Bandit Pâtisserie", genres: ["sweets"], area: "downtown",
+    address: "2323 1st Ave N", coords: onAveN(2323, 1), price: 2,
+    knownFor: "Almond croissant",
+    blurb: "The bakery behind La Fête's bread and pastry, on First Avenue North. Pies, tarts and quiche to order around the holidays.",
+    tags: ["breakfast", "pastries", "takeout"], pop: 82,
+  },
+  {
+    id: "eugenes-hot-chicken", name: "Eugene's Hot Chicken", genres: ["southern"], area: "downtown",
+    address: "2268 9th Ave N", coords: onAveN(2268, 9), price: 1,
+    knownFor: "Hot chicken, pick your heat",
+    blurb: "Hot chicken north of the city center: pick the style and how hot, then the sides. Bham Now put it on its 25 best restaurants in Birmingham in 2026.",
+    tags: ["lunch", "takeout"], pop: 80,
+  },
+  {
+    id: "johinna", name: "Johin'na", genres: ["asian", "southern"], area: "downtown",
+    address: "2002 2nd Ave N", coords: onAveN(2002, 2), price: 3,
+    knownFor: "Collard green gyoza",
+    blurb: "Japanese-Southern restaurant and lounge on Second Avenue North, open since August 2025: collard green gyoza, sweet-tea soy. Brunch on Sundays.",
+    tags: ["date night", "brunch"], pop: 76,
+  },
+  {
+    id: "tortugas", name: "Tortugas Homestyle Pizza", genres: ["pizza"], area: "downtown",
+    address: "1304 2nd Ave S", coords: onAveS(1304, 2), price: 1,
+    knownFor: "Pizza by the slice",
+    blurb: "Slice shop near Regions Field. Food Network picked it for Alabama in its 50 states of pizza slices.",
+    tags: ["lunch", "cheap eats", "game day"], pop: 76,
+  },
+  {
+    id: "cala-coffee-downtown", name: "Cala Coffee (downtown)", genres: ["coffee"], area: "downtown",
+    address: "1826 3rd Ave N, Suite 101", coords: onAveN(1826, 3), price: 1,
+    knownFor: "Seasonal drinks",
+    blurb: "Downtown shop of the local roaster, with a menu that changes with the season. There's another in Mountain Brook Village.",
+    tags: ["work-friendly", "breakfast"], pop: 74,
+  },
   /* ------------------------ SOUTHSIDE & FIVE POINTS ------------------------ */
   {
     id: "bottega", name: "Bottega", genres: ["italian"], area: "southside",
@@ -349,13 +455,6 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["Greek", "market", "family-owned"], pop: 75,
   },
   {
-    id: "dreamland-southside", name: "Dreamland Bar-B-Que", genres: ["bbq"], area: "southside",
-    address: "1427 14th Ave S", coords: onAveS(1427, 14), price: 2,
-    knownFor: "Ribs, sauce, and white bread",
-    blurb: "The Birmingham outpost of the Tuscaloosa rib joint. Ribs, sauce, white bread.",
-    tags: ["ribs", "Alabama classic"], pop: 82,
-  },
-  {
     id: "rojo", name: "Rojo", genres: ["latin", "brunch"], area: "southside",
     address: "2921 Highland Ave S", coords: [33.5009, -86.7843], price: 2,
     knownFor: "Patio tacos facing Rhodes Park",
@@ -363,6 +462,55 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["patio", "dog-friendly", "brunch"], pop: 77,
   },
 
+  {
+    id: "daves-pub", name: "Dave's Pub", genres: ["drinks"], drinks: ["bar"], area: "southside",
+    address: "1128 20th St S", coords: onStS(1128, 20), price: 1,
+    knownFor: "Five Points neighborhood bar",
+    blurb: "Five Points bar on the ground floor of the Terrace Court apartments since 1995. New local owners fixed it up in 2024 and started serving food.",
+    tags: ["late night", "dive"], pop: 78,
+  },
+  {
+    id: "the-nick", name: "The Nick", genres: ["drinks"], drinks: ["bar"], area: "southside",
+    address: "2514 10th Ave S", coords: onAveS(2514, 10), price: 1,
+    knownFor: "Live music, very late",
+    blurb: "Southside's dive bar and live music room, open late. Every Birmingham dive-bar list has it.",
+    tags: ["live music", "late night", "dive"], pop: 80,
+  },
+  {
+    id: "the-garage", name: "The Garage", genres: ["drinks", "burgers"], drinks: ["bar"], area: "southside",
+    address: "2304 10th Terrace S", coords: onAveS(2304, 10.5), price: 1,
+    knownFor: "Courtyard beer garden",
+    blurb: "Beer garden off Highland Avenue in a row of 1930s garages, with a courtyard full of antiques and statues. Sandwiches, cold beer, cash only.",
+    tags: ["patio", "classic", "cash only"], pop: 82,
+  },
+  {
+    id: "freddys-wine-bar", name: "Freddy's Wine Bar", genres: ["drinks"], drinks: ["wine"], area: "southside",
+    address: "2251 Highland Ave S", coords: [33.5002, -86.7912], price: 3,
+    knownFor: "Tuesday bottle specials",
+    blurb: "Wine bar on the ground floor of the Highland Towers, with a patio for sunsets. Bottles are $20, $30 or $40 on Tuesdays.",
+    tags: ["patio", "date night", "wine"], pop: 76,
+  },
+  {
+    id: "teds", name: "Ted's Restaurant", genres: ["southern", "mediterranean"], area: "southside",
+    address: "328 12th St S", coords: onStS(328, 12), price: 1,
+    knownFor: "Greek-Southern meat-and-three",
+    blurb: "Meat-and-three near UAB since 1973, run by Tasos and Beba Touloupis since 2000. Meatloaf and greens next to souvlakia. Weekday lunch, Saturday breakfast.",
+    tags: ["classic", "lunch", "meat-and-three"], pop: 78,
+  },
+  {
+    id: "otsuka-ramen", name: "Otsuka Ramen", genres: ["asian"], area: "southside",
+    address: "707 Richard Arrington Jr Blvd S, Suite 101", coords: onStS(707, 21), price: 2,
+    knownFor: "Ramen",
+    blurb: "Ramen near UAB, open since 2025, with a sushi bar and booths. Yakisoba and poke too.",
+    tags: ["lunch"], pop: 72,
+  },
+  {
+    id: "university-tacos", name: "University Tacos", genres: ["latin"], area: "southside",
+    address: "2009 University Blvd", coords: onAveS(2009, 8), price: 1,
+    knownFor: "Quick tacos by UAB",
+    blurb: "Taco counter on University Boulevard, a block from UAB.",
+    tags: ["cheap eats", "lunch"], pop: 70,
+  },
   /* ------------------------ LAKEVIEW & PEPPER PLACE ------------------------ */
   {
     id: "automatic-seafood", name: "Automatic Seafood & Oysters", genres: ["seafood"], area: "lakeview",
@@ -399,14 +547,42 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     blurb: "Lakeview brewery known for sours and IPAs. Big patio, dogs welcome.",
     tags: ["brewery", "patio", "dog-friendly"], pop: 79,
   },
-  {
-    id: "ghost-train", name: "Ghost Train Brewing", genres: ["drinks"], drinks: ["brewery"], area: "lakeview",
-    address: "2616 3rd Ave S", coords: onAveS(2616, 3), price: 1,
-    knownFor: "Beers + canned cocktails",
-    blurb: "Lakeview taproom. Beer, plus canned cocktails if someone in your group doesn't drink beer.",
-    tags: ["brewery", "groups"], pop: 66,
-  },
 
+  {
+    id: "mayawell", name: "Mayawell", genres: ["drinks", "latin"], drinks: ["cocktails"], area: "lakeview",
+    address: "2900 4th Ave S", coords: onAveS(2900, 4), price: 2,
+    knownFor: "Tequila, mezcal & a rooftop",
+    blurb: "Neill Crook's agave bar in Lakeview, with Mexican-inspired food and a rooftop that looks back at the skyline. Order downstairs and carry it up.",
+    tags: ["rooftop", "patio", "agave"], pop: 82,
+  },
+  {
+    id: "lous-pub", name: "Lou's Pub & Package Store", genres: ["drinks"], drinks: ["bar"], area: "lakeview",
+    address: "726 29th St S", coords: onStS(726, 29), price: 1,
+    knownFor: "A bar and a liquor store in one",
+    blurb: "Lakeview neighborhood bar since 1987 that's also a package store, which is rare in Alabama. Small room, regulars, cold beer.",
+    tags: ["classic", "dive"], pop: 76,
+  },
+  {
+    id: "bettola", name: "Bettola", genres: ["italian"], area: "lakeview",
+    address: "2930 3rd Ave S", coords: onAveS(2930, 3), price: 2,
+    knownFor: "Scratch-made pasta",
+    blurb: "Italian at Pepper Place, with pasta made from scratch. Bham Now put it on its 25 best restaurants in Birmingham in 2026.",
+    tags: ["date night", "pasta"], pop: 84,
+  },
+  {
+    id: "slice-pizza", name: "Slice Pizza & Brew", genres: ["pizza"], area: "lakeview",
+    address: "725 29th St S", coords: onStS(725, 29), price: 2,
+    knownFor: "Specialty pies & craft beer",
+    blurb: "Lakeview pizza and beer, the original of a small local group with spots in Vestavia Hills, Crestline and Homewood.",
+    tags: ["patio", "family", "late night"], pop: 79,
+  },
+  {
+    id: "burning-tree", name: "Burning Tree Smokehouse", genres: ["bbq"], area: "lakeview",
+    address: "3090 3rd Ave S", coords: onAveS(3090, 3), price: 2,
+    knownFor: "Brisket tacos",
+    blurb: "Barbecue at Pepper Place, opened in 2025 by a local pitmaster with decades of smoking behind him. The burger's good too.",
+    tags: ["lunch"], pop: 76,
+  },
   /* ------------------------------- AVONDALE ------------------------------- */
   {
     id: "saws-soul-kitchen", name: "Saw's Soul Kitchen", genres: ["bbq", "southern"], area: "avondale",
@@ -437,6 +613,41 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["brewery", "food trucks"], pop: 63,
   },
 
+  {
+    id: "saturn", name: "Saturn", genres: ["drinks"], drinks: ["bar"], area: "avondale",
+    address: "200 41st St S", coords: onStS(200, 41), price: 2,
+    knownFor: "Concerts in a 500-person room",
+    blurb: "Music venue and bar in the old Cory & Faulkner Hardware building, across from Avondale Brewing. Ten years old in 2025.",
+    tags: ["live music", "late night"], pop: 82,
+  },
+  {
+    id: "black-market", name: "Black Market Bar & Grill", genres: ["drinks", "burgers"], drinks: ["bar"], area: "avondale",
+    address: "4100 3rd Ave S", coords: onAveS(4100, 3), price: 2,
+    knownFor: "Bar food till 2 a.m.",
+    blurb: "Moved from Five Points to the corner of Third Avenue and 41st Street in 2024, in the old Common House space. Open late most nights.",
+    tags: ["late night", "game day"], pop: 74,
+  },
+  {
+    id: "taco-morro-loco", name: "Taco Morro Loco", genres: ["latin", "seafood"], area: "avondale",
+    address: "417 41st St S", coords: onStS(417, 41), price: 1,
+    knownFor: "Fish tacos & fresh salsa",
+    blurb: "Hispanic-owned taqueria on 41st Street in Avondale. Get the fish tacos.",
+    tags: ["cheap eats", "lunch"], pop: 76,
+  },
+  {
+    id: "juniper", name: "Juniper", genres: ["drinks", "brunch"], drinks: ["cocktails"], area: "avondale",
+    address: "3811 Clairmont Ave S", coords: [33.5134, -86.7718], price: 3,
+    knownFor: "Gin cocktails",
+    blurb: "Restaurant and cocktail bar in Forest Park inspired by Victorian gin palaces, so gin runs the menu. Weekend brunch, and one of the best patios in town.",
+    tags: ["patio", "brunch", "date night", "cocktails"], pop: 84,
+  },
+  {
+    id: "eagles", name: "Eagle's Restaurant", genres: ["southern"], area: "northside",
+    address: "2610 16th St N", coords: onStN(2610, 16), price: 1,
+    knownFor: "Friday catfish & meat-and-three",
+    blurb: "Black-owned soul food kitchen open since 1951. Eater sent visitors here in 2026, and Sunday lines go out the door.",
+    tags: ["classic", "lunch", "meat-and-three", "family"], pop: 86,
+  },
   /* ------------------------------- HOMEWOOD ------------------------------- */
   {
     id: "johnnys", name: "Johnny's Restaurant", genres: ["southern", "mediterranean"], area: "homewood",
@@ -457,7 +668,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     id: "little-donkey", name: "Little Donkey", genres: ["latin"], area: "homewood",
     address: "2701 18th St S", coords: [33.4772, -86.7988], price: 2,
     knownFor: "Smoked meats & fresh-pressed tortillas",
-    blurb: "Mexican food with some Southern in it. Smoked meats, tortillas made in house, long margarita list.",
+    blurb: "Mexican food with some Southern in it. Smoked meats, tortillas made in house, long margarita list. A local group took it over in May 2026.",
     tags: ["tacos", "margaritas", "patio"], pop: 80,
   },
   {
@@ -489,13 +700,6 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["date night", "wine", "family-owned"], pop: 82,
   },
   {
-    id: "nabeels", name: "Nabeel's Cafe & Market", genres: ["mediterranean"], area: "west-homewood",
-    address: "1706 Oxmoor Rd", coords: [33.4610, -86.8172], price: 2,
-    knownFor: "Greek market & cafe since 1972",
-    blurb: "Greek and Italian grocery with a small cafe in back, open since 1972. Pick up feta and olives on the way out.",
-    tags: ["market", "family-owned", "lunch"], pop: 74,
-  },
-  {
     id: "seeds-coffee", name: "Seeds Coffee", genres: ["coffee"], area: "west-homewood",
     address: "174 Oxmoor Rd", coords: [33.4716, -86.8036], price: 1,
     knownFor: "Homewood-roasted espresso",
@@ -510,6 +714,34 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["ice cream", "family"], pop: 66,
   },
 
+  {
+    id: "savages-bakery", name: "Savage's Bakery", genres: ["sweets"], area: "homewood",
+    address: "2916 18th St S", coords: [33.4749, -86.8006], price: 1,
+    knownFor: "Smiley-face cookies & meltaways",
+    blurb: "Homewood's bakery since 1939. It closed in February 2026 when the owner retired, and the owner of O'Carr's across the street reopened it a month later.",
+    tags: ["classic", "kid-friendly", "family"], pop: 84,
+  },
+  {
+    id: "ocarrs", name: "O'Carr's Delicatessen", genres: ["burgers", "sweets"], area: "homewood",
+    address: "2909 18th St S", coords: [33.4751, -86.8000], price: 1,
+    knownFor: "Deli lunch & Memory Lane ice cream",
+    blurb: "Deli lunches on 18th Street since 1975, with a retro ice cream parlor next door.",
+    tags: ["lunch", "kid-friendly", "classic"], pop: 78,
+  },
+  {
+    id: "demetris", name: "Demetri's BBQ", genres: ["bbq"], area: "homewood",
+    address: "1901 28th Ave S", coords: [33.4765, -86.7965], price: 1,
+    knownFor: "Pork plate & Greek-dressed slaw",
+    blurb: "Barbecue opened by Demetri Nakos in 1961, on 28th Avenue since 1973 and run now by his son, Sam. It's in the Alabama Barbecue Hall of Fame. Opens early for breakfast.",
+    tags: ["classic", "breakfast", "lunch"], pop: 82,
+  },
+  {
+    id: "daves-pizza", name: "Dave's Pizza", genres: ["pizza"], area: "homewood",
+    address: "1819 29th Ave S", coords: [33.4746, -86.7983], price: 2,
+    knownFor: "Jumbo pies & lunch slices",
+    blurb: "Family pizzeria in SoHo since 1990, near Samford.",
+    tags: ["family", "kid-friendly", "lunch"], pop: 70,
+  },
   /* ---------------------------- ENGLISH VILLAGE ---------------------------- */
   {
     id: "chez-lulu", name: "Chez Lulu & Continental Bakery", genres: ["sweets", "french"], area: "englishvillage",
@@ -526,6 +758,20 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["wine bar", "patio", "date night"], pop: 73,
   },
 
+  {
+    id: "key-circle-commons", name: "Key Circle Commons", genres: ["drinks"], drinks: ["cocktails"], area: "englishvillage",
+    address: "2010 Cahaba Rd", coords: [33.4940, -86.7745], price: 3,
+    knownFor: "Cocktails & small plates",
+    blurb: "English Village cocktail bar with small plates, four years in as of 2026.",
+    tags: ["date night", "happy hour", "cocktails"], pop: 72,
+  },
+  {
+    id: "fridas", name: "Frida's Cocina & Cantina", genres: ["latin"], area: "englishvillage",
+    address: "2031 Cahaba Rd", coords: [33.4932, -86.7738], price: 3,
+    knownFor: "Upscale Mexican & margaritas",
+    blurb: "Upscale Mexican and Tex-Mex at the English Village end of Cahaba Road, in the old Civitas space since 2024.",
+    tags: ["date night", "happy hour"], pop: 72,
+  },
   /* ------------------------- MOUNTAIN BROOK VILLAGE ------------------------- */
   {
     id: "davenports", name: "Davenport's Pizza Palace", genres: ["pizza"], area: "mtnbrook",
@@ -542,6 +788,13 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["soda fountain", "classic", "lunch"], pop: 78,
   },
 
+  {
+    id: "dg", name: "DG", genres: ["southern"], area: "mtnbrook",
+    address: "2837 Culver Rd", coords: [33.4835, -86.7540], price: 4,
+    knownFor: "A menu that changes daily",
+    blurb: "Daniel Briggs's restaurant in Mountain Brook Village, open since 2000 as Daniel George and renamed DG for its 25th year. Lunch on weekdays, dinner Monday through Saturday.",
+    tags: ["date night", "special occasion", "lunch"], pop: 84,
+  },
   /* --------------------------- CRESTLINE VILLAGE --------------------------- */
   {
     id: "church-street-coffee", name: "Church Street Coffee & Books", genres: ["coffee"], area: "crestline",
@@ -565,6 +818,20 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["tavern", "game day"], pop: 62,
   },
 
+  {
+    id: "la-paz", name: "La Paz", genres: ["latin"], area: "crestline",
+    address: "99 Euclid Ave", coords: [33.4938, -86.7330], price: 2,
+    knownFor: "Tacos & margaritas",
+    blurb: "Crestline Village's Tex-Mex and margarita spot.",
+    tags: ["lunch", "family", "happy hour"], pop: 74,
+  },
+  {
+    id: "slims-pizzeria", name: "Slim's Pizzeria", genres: ["pizza"], area: "crestline",
+    address: "65 Church St", coords: [33.4941, -86.7316], price: 2,
+    knownFor: "Hot honey pizza",
+    blurb: "Pizza, salads and ice cream on Church Street in Crestline Village since 2022.",
+    tags: ["kid-friendly", "family", "lunch"], pop: 74,
+  },
   /* ---------------------------- CAHABA HEIGHTS ---------------------------- */
   {
     id: "miss-myras", name: "Miss Myra's Pit Bar-B-Q", genres: ["bbq"], area: "cahaba",
@@ -579,6 +846,13 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     knownFor: "Latin plates & a heated patio",
     blurb: "Latin American food, a busy bar, and a patio they heat in the winter.",
     tags: ["patio", "cocktails"], pop: 69,
+  },
+  {
+    id: "miss-astrids", name: "Miss Astrid's Tavern", genres: ["southern", "brunch"], area: "cahaba",
+    address: "3160 Pipeline Rd", coords: [33.4626, -86.7262], price: 3,
+    knownFor: "Southern plates & weekend brunch",
+    blurb: "Cahaba Heights tavern, open since December 2024 in the old Fig Tree Cafe space and named for a co-owner's late mother. It won best food at Viva Vestavia in 2025.",
+    tags: ["date night", "brunch", "lunch"], pop: 78,
   },
   /* ------------------------- HOMEWOOD (added) ------------------------- */
   {
@@ -596,13 +870,6 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["family-owned", "lunch"], pop: 70,
   },
   {
-    id: "red-mountain-espresso", name: "Red Mountain Espresso", genres: ["coffee"], area: "homewood",
-    address: "2601 18th St S", coords: [33.4786, -86.7984], price: 1,
-    knownFor: "Espresso on the way to work",
-    blurb: "Coffee bar at the top of 18th Street. Opens early on weekdays.",
-    tags: ["early", "to go"], pop: 60,
-  },
-  {
     id: "caveat-coffee", name: "Caveat Coffee", genres: ["coffee"], area: "homewood",
     address: "2832 Linden Ave", coords: [33.4757, -86.8027], price: 1,
     knownFor: "Pour-overs off the main drag",
@@ -617,7 +884,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["ice cream", "family"], pop: 76,
   },
   {
-    id: "el-barrio-homewood", name: "El Barrio", genres: ["latin", "drinks"], drinks: ["cocktails"], area: "west-homewood",
+    id: "el-barrio-homewood", name: "El Barrio (West Homewood)", genres: ["latin", "drinks"], drinks: ["cocktails"], area: "west-homewood",
     address: "195 Oxmoor Rd", coords: [33.4708, -86.8048], price: 2,
     knownFor: "Mexican-Southern plates and margaritas",
     blurb: "The downtown Birmingham favorite, now in Homewood's West Row development. Mexican and Southern cooking mixed together.",
@@ -638,6 +905,13 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["pizza", "kid-friendly"], pop: 72,
   },
 
+  {
+    id: "paramount-west-homewood", name: "Paramount (West Homewood)", genres: ["drinks", "burgers"], drinks: ["bar"], area: "west-homewood",
+    address: "195 Oxmoor Rd", coords: [33.4709, -86.8046], price: 2,
+    knownFor: "Burgers, wings & Skee-Ball",
+    blurb: "The second Paramount, at West Row, with Skee-Ball, claw machines and a long draft list. A hallway connects it to El Barrio.",
+    tags: ["game day", "groups", "late night"], pop: 76,
+  },
   /* ---------------------- MOUNTAIN BROOK (added) ---------------------- */
   {
     id: "little-betty", name: "Little Betty Steak Bar", genres: ["steaks"], area: "mtnbrook",
@@ -716,13 +990,6 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     blurb: "Bagel shop on Church Street. Get one to go and walk over to the bookstore.",
     tags: ["breakfast", "to go"], pop: 70,
   },
-  {
-    id: "taco-mama-crestline", name: "Taco Mama (Crestline)", genres: ["latin"], area: "crestline",
-    address: "63 Church St", coords: [33.4940, -86.7315], price: 1,
-    knownFor: "The original Taco Mama",
-    blurb: "Before there were Taco Mamas all over the state, there was this one on Church Street.",
-    tags: ["tacos", "original", "kid-friendly"], pop: 72,
-  },
 
   /* ---------------------- VESTAVIA HILLS (added) ---------------------- */
   {
@@ -787,6 +1054,20 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     knownFor: "Pizza and baked pastas",
     blurb: "Neighborhood Italian next door to Iz Cafe. Good for takeout on a weeknight.",
     tags: ["pizza", "family"], pop: 60,
+  },
+  {
+    id: "the-ridge", name: "The Ridge Eat & Drink", genres: ["burgers", "drinks"], drinks: ["bar"], area: "rocky-ridge",
+    address: "3325 Rocky Ridge Plaza", coords: [33.4220, -86.7985], price: 2,
+    knownFor: "Burgers & bomb tots",
+    blurb: "Mudtown's sister restaurant on Rocky Ridge, open since 2011. Hot dogs and burgers to pasta, and a bar.",
+    tags: ["family", "game day", "lunch"], pop: 74,
+  },
+  {
+    id: "the-local-bourbon", name: "The Local Bourbon House & Eatery", sign: "The Local", genres: ["drinks", "burgers"], drinks: ["cocktails"], area: "vestavia-31",
+    address: "633 Montgomery Hwy", coords: [33.4495, -86.7884], price: 2,
+    knownFor: "Bourbon list & Wagyu smash burgers",
+    blurb: "Bourbon bar on Highway 31 in the old Hillside Music & Que space, under new owner Kiran Sunkavalli. Smash burgers, tacos and Southern comfort food.",
+    tags: ["patio", "game day"], pop: 72,
   },
 ];
 

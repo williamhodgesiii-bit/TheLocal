@@ -145,9 +145,8 @@ export const WeekPlate = memo(function WeekPlate({ spot, since, onOpen }: { spot
 });
 
 /** Your Plate Passport on the front page: how far you've gotten, and the nudge to keep going. */
-export function PassportCard({ total, onStampMany, onOpen }: { total: number; onStampMany: () => void; onOpen: () => void }) {
+export function PassportCard({ total, count, onStampMany, onOpen }: { total: number; count: number; onStampMany: () => void; onOpen: () => void }) {
   const { been } = useApp();
-  const count = Object.keys(been).length;
   const { next, left } = nextMilestone(count, total);
   const streak = weeklyStreak(been);
   const pct = total ? Math.min(1, count / total) : 0;

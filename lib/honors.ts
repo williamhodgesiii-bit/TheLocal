@@ -9,7 +9,8 @@ export interface Honor {
   year: number;
   /** who for, when it's a person rather than the restaurant */
   who?: string;
-  kind: "michelin" | "beard";
+  /** press: a national best-of list (Esquire, The New York Times, Garden & Gun, Food Network) */
+  kind: "michelin" | "beard" | "press";
   source: string;
 }
 
@@ -33,7 +34,11 @@ export const HONORS: Record<string, Honor[]> = {
   "chez-fonfon": [michelin("Michelin Recommended"), { label: "James Beard Best Chef: Southeast", who: "Frank Stitt", year: 2001, kind: "beard", source: STITT }],
   "automatic-seafood": [michelin("Michelin Recommended")],
   helen: [michelin("Michelin Recommended")],
-  bayonet: [michelin("Michelin Bib Gourmand"), { label: "James Beard semifinalist, Outstanding Chef", who: "Rob McDaniel", year: 2026, kind: "beard", source: BEARD_2026_SEMI }],
+  bayonet: [
+    michelin("Michelin Bib Gourmand"),
+    { label: "James Beard semifinalist, Outstanding Chef", who: "Rob McDaniel", year: 2026, kind: "beard", source: BEARD_2026_SEMI },
+    { label: "New York Times 50 best restaurants in America", year: 2025, kind: "press", source: "https://bhamnow.com/2025/09/09/local-seafood-restaurant-named-among-50-best-restaurants-in-america-by-new-york-times/" },
+  ],
   "la-fete": [michelin("Michelin Bib Gourmand"), { label: "James Beard semifinalist, Best Chef: South", who: "Kristen Hall", year: 2026, kind: "beard", source: BEARD_2026_SEMI }],
   "pizza-grace": [
     michelin("Michelin Bib Gourmand"),
@@ -41,6 +46,10 @@ export const HONORS: Record<string, Honor[]> = {
   ],
   "current-charcoal": [michelin("Michelin Recommended")],
   reve: [michelin("Michelin Recommended")],
+  "house-of-found-objects": [{ label: "Esquire Best Bars in America", year: 2026, kind: "press", source: "https://bhamnow.com/2026/06/09/esquire-names-house-of-found-objects-among-14-best-bars-in-america/" }],
+  adios: [{ label: "James Beard semifinalist, Outstanding Professional in Beverage Service", year: 2025, kind: "beard", source: "https://bhamnow.com/2025/01/22/birmingham-bar-adios-named-james-beard-foundation-semifinalist/" }],
+  "salud-taqueria": [{ label: "Garden & Gun 30 new restaurants to try", year: 2025, kind: "press", source: "https://bhamnow.com/2025/08/01/3-birmingham-establishments-make-garden-guns-30-new-restaurants-to-try-now/" }],
+  tortugas: [{ label: "Food Network: Alabama's best pizza slice", year: 2025, kind: "press", source: "https://bhamnow.com/2025/08/19/tortugas-named-best-pizza-in-alabama-by-food-network/" }],
 };
 
 export const honorsOf = (id: string) => HONORS[id] ?? [];

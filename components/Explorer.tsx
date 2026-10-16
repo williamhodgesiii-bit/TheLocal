@@ -227,6 +227,8 @@ export default function Explorer({
   }, [city.id, community, google, initialSpot]);
   const spotById = useMemo(() => Object.fromEntries(allSpots.map((x) => [x.id, x])) as Record<string, Spot>, [allSpots]);
   const areas = useMemo(() => deriveAreas(city.id, allSpots), [city.id, allSpots]);
+  // stamps for places still on the list (a place that closed drops out of the count)
+  const stampedCount = useMemo(() => allSpots.filter((s) => been[s.id]).length, [allSpots, been]);
   const areaById = useMemo(() => Object.fromEntries(areas.map((a) => [a.id, a])), [areas]);
   const townOf = useCallback((s: Spot) => areaById[s.area]?.town ?? null, [areaById]);
   /** area filter: "all", a town ("t:homewood") or one neighborhood */
@@ -710,7 +712,7 @@ export default function Explorer({
                   {showFront && (
                     <div className="front">
                       {week && <WeekPlate spot={week} since={weekSince} onOpen={select} />}
-                      <PassportCard total={allSpots.length} onStampMany={openStamps} onOpen={openPassport} />
+                      <PassportCard total={allSpots.length} count={stampedCount} onStampMany={openStamps} onOpen={openPassport} />
                       {rows.map((r, i) => (
                         <CollectionRow
                           key={r.id}

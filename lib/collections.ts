@@ -90,7 +90,7 @@ export const COLLECTIONS: Collection[] = [
   {
     id: "honors",
     title: "Award winners",
-    line: "Michelin and James Beard nods, a short drive away.",
+    line: "Michelin, James Beard and best-in-America lists, a short drive away.",
     match: (s) => !!HONORS[s.id]?.length,
   },
   {

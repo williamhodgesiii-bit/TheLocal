@@ -48,11 +48,11 @@ export default function About() {
       </h2>
       <ul className="about-list">
         <li>
-          <b>Locally owned and run.</b> The people who own it live here. A few local favorites have more than one location (Saw&apos;s, Big Spoon, Taco Mama); they count
-          as long as they started here and are still run from here.
+          <b>Locally owned and run.</b> The people who own it live here. A few local favorites have more than one location (Saw&apos;s, Big Spoon, Brick &amp; Tin);
+          they count as long as they started here and are still run from here. Once a name is sold as a franchise, it&apos;s a chain.
         </li>
         <li>
-          <b>No chains, no fast food.</b> If it has a national franchise, a corporate office out of state, or a drive-thru, it isn&apos;t on here. Submissions that match a
+          <b>No chains, no fast food.</b> If it&apos;s franchised, run from a corporate office out of state, or drive-thru only, it isn&apos;t on here. Submissions that match a
           known chain get flagged automatically.
         </li>
         <li>

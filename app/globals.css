@@ -4506,6 +4506,13 @@ label.check input {
 .honor-beard a::before {
   background: var(--green);
 }
+.honor-press a {
+  background: #f4eedd;
+  color: var(--ink-2);
+}
+.honor-press a::before {
+  background: var(--mustard);
+}
 .honor a:hover {
   text-decoration: underline;
 }
