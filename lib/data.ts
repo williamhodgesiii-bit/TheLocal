@@ -1,17 +1,21 @@
 import overrides from "./geo-overrides.json";
 
+/** What's on the plate. Occasions (date night, a splurge, cheap eats) are collections, not kinds of food. */
 export type GenreId =
   | "southern"
   | "bbq"
+  | "burgers"
+  | "pizza"
   | "italian"
   | "seafood"
+  | "steaks"
   | "latin"
   | "asian"
   | "mediterranean"
-  | "chefs"
+  | "french"
   | "brunch"
-  | "coffee"
   | "sweets"
+  | "coffee"
   | "drinks";
 
 export type DrinkKind = "cocktails" | "brewery" | "wine" | "bar";
@@ -24,7 +28,7 @@ export interface Genre {
   label: string;
   short: string;
   color: string;
-  icon: string; // lucide icon name, resolved in components/icons.tsx
+  icon: string; // which drawing in components/PlateIcons.tsx
   tagline: string;
 }
 
@@ -82,27 +86,46 @@ export interface Spot {
   photos?: { url: string; kind: "building" | "food"; credit: string; link: string }[];
 }
 
+/**
+ * The kinds of food, in the order the plates show. A place gets the one or two it's best at,
+ * not every one it serves: a bar known for its burger is Bars + Burgers, a bistro with a
+ * famous burger is French + Burgers. "Special occasion" and "Date night" are collections.
+ */
 export const GENRES: Genre[] = [
-  { id: "southern", label: "Southern & Soul", short: "Southern", color: "#C8692F", icon: "drumstick", tagline: "Meat-and-threes, cornbread, and somebody's grandmother's recipe." },
+  { id: "southern", label: "Southern & Soul", short: "Southern", color: "#C8692F", icon: "drumstick", tagline: "Meat-and-threes, fried chicken, Lowcountry plates and somebody's grandmother's recipe." },
   { id: "bbq", label: "Barbecue", short: "BBQ", color: "#9E3B22", icon: "flame", tagline: "Hickory smoke and white sauce. This is Alabama." },
-  { id: "italian", label: "Italian & Pizza", short: "Italian", color: "#B8873A", icon: "pizza", tagline: "Red sauce, wood fire, and long wine lists." },
+  { id: "burgers", label: "Burgers & Sandwiches", short: "Burgers", color: "#A0612F", icon: "burger", tagline: "Smash burgers, hot dogs, Reubens and the Cuban." },
+  { id: "pizza", label: "Pizza", short: "Pizza", color: "#B8873A", icon: "pizza", tagline: "Cracker-thin, Neapolitan and sourdough." },
+  { id: "italian", label: "Italian", short: "Italian", color: "#7D7A33", icon: "pasta", tagline: "Handmade pasta, red sauce and long wine lists." },
   { id: "seafood", label: "Seafood & Oysters", short: "Seafood", color: "#4F7A80", icon: "fish", tagline: "Gulf-fresh, four hours from the coast." },
-  { id: "latin", label: "Mexican & Latin", short: "Latin", color: "#C2553F", icon: "sun", tagline: "Fresh-pressed tortillas and patio margaritas." },
-  { id: "asian", label: "Asian", short: "Asian", color: "#8C5A7A", icon: "soup", tagline: "Sushi counters, curry houses, and noodle bowls." },
-  { id: "mediterranean", label: "Greek & Mediterranean", short: "Greek", color: "#5D7A9E", icon: "salad", tagline: "Birmingham's Greek roots run deep." },
-  { id: "chefs", label: "Special occasion", short: "Special occasion", color: "#7A6A3A", icon: "chef", tagline: "Award-winning rooms for the big night out." },
-  { id: "brunch", label: "Brunch & Bakeries", short: "Brunch", color: "#C99A3F", icon: "croissant", tagline: "Biscuits, pastries, and a mimosa or two." },
+  { id: "steaks", label: "Steaks & Live Fire", short: "Steaks", color: "#7A3B2E", icon: "steak", tagline: "Steaks, the hearth and the charcoal grill." },
+  { id: "latin", label: "Mexican & Latin", short: "Latin", color: "#C2553F", icon: "pepper", tagline: "Taquerias, fresh-pressed tortillas and patio margaritas." },
+  { id: "asian", label: "Asian", short: "Asian", color: "#8C5A7A", icon: "bowl", tagline: "Sushi counters, Thai curries, pho and Indian kitchens." },
+  { id: "mediterranean", label: "Greek & Mediterranean", short: "Greek", color: "#5D7A9E", icon: "olive", tagline: "Birmingham's Greek roots run deep." },
+  { id: "french", label: "French", short: "French", color: "#4F5D8C", icon: "croissant", tagline: "Bistros, a brasserie and a tasting menu or two." },
+  { id: "brunch", label: "Breakfast & Brunch", short: "Brunch", color: "#C99A3F", icon: "egg", tagline: "Biscuits, bagels, eggs and a mimosa or two." },
+  { id: "sweets", label: "Bakeries & Sweets", short: "Sweets", color: "#C76F7E", icon: "icecream", tagline: "Bread, pastries, small-batch scoops and soda-fountain classics." },
   { id: "coffee", label: "Coffee", short: "Coffee", color: "#6E4B34", icon: "coffee", tagline: "Local roasters and slow mornings." },
-  { id: "sweets", label: "Sweets & Ice Cream", short: "Sweets", color: "#C76F7E", icon: "icecream", tagline: "Small-batch scoops and soda-fountain classics." },
-  { id: "drinks", label: "Drinks", short: "Drinks", color: "#D2A23C", icon: "martini", tagline: "Cocktail dens, taprooms, and wine bars." },
+  { id: "drinks", label: "Bars & Drinks", short: "Bars", color: "#D2A23C", icon: "martini", tagline: "Cocktail dens, dive bars, wine bars and taprooms." },
 ];
 
 export const DRINK_KINDS: { id: DrinkKind; label: string }[] = [
   { id: "cocktails", label: "Cocktails" },
+  { id: "bar", label: "Pubs & dives" },
+  { id: "wine", label: "Wine bars" },
   { id: "brewery", label: "Breweries" },
-  { id: "wine", label: "Wine" },
-  { id: "bar", label: "Bars & Pubs" },
 ];
+
+const KNOWN_GENRES = new Set<string>(["southern", "bbq", "burgers", "pizza", "italian", "seafood", "steaks", "latin", "asian", "mediterranean", "french", "brunch", "sweets", "coffee", "drinks"]);
+/**
+ * Kinds of food from stored data (member-added places, old links). Drops ones we no longer
+ * use (the old "chefs", Special occasion, is a collection now) so nothing looks up a kind
+ * that isn't there; a place left with none counts as Southern until someone sorts it.
+ */
+export function cleanGenres(g: readonly string[] | null | undefined): GenreId[] {
+  const out = (g ?? []).filter((x): x is GenreId => KNOWN_GENRES.has(x));
+  return out.length ? out : ["southern"];
+}
 
 /** The towns we cover today. Expansion: add towns here, or whole cities in lib/regions.ts. */
 export const TOWNS: Town[] = [
@@ -156,7 +179,7 @@ const onStS = (house: number, st: number) => grid(st, -(house / 100) - 0.5);
 const RAW_SPOTS: Omit<Spot, "city">[] = [
   /* ----------------------------- DOWNTOWN ----------------------------- */
   {
-    id: "helen", name: "Helen", genres: ["chefs"], area: "downtown",
+    id: "helen", name: "Helen", genres: ["steaks", "seafood"], area: "downtown",
     address: "2013 2nd Ave N", coords: onAveN(2013, 2), price: 4,
     knownFor: "Hearth-fired steaks & seafood",
     blurb: "Rob McDaniel's place on Second Avenue. Long, narrow brick room, most everything cooked over the hearth. It's on the Michelin list, so book ahead.",
@@ -177,14 +200,14 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["sushi", "cocktails", "late night"], pop: 74,
   },
   {
-    id: "the-essential", name: "The Essential", genres: ["brunch", "chefs"], area: "downtown",
+    id: "the-essential", name: "The Essential", genres: ["brunch", "sweets"], area: "downtown",
     address: "2018 Morris Ave", coords: grid(20.18, -0.4), price: 3,
     knownFor: "Brunch, and the pastry case",
     blurb: "Brunch and lunch on Morris Avenue, on the cobblestone stretch. Look at the pastry case before you order.",
     tags: ["brunch", "pastries", "Morris Ave"], pop: 84,
   },
   {
-    id: "brick-and-tin", name: "Brick & Tin", genres: ["southern", "brunch"], area: "downtown",
+    id: "brick-and-tin", name: "Brick & Tin", genres: ["burgers", "brunch"], area: "downtown",
     address: "214 20th St N", coords: onStN(214, 20), price: 2,
     knownFor: "Seasonal sandwiches & salads",
     blurb: "Lunch counter with a menu that changes with the season. Sandwiches, salads, and baked goods by the register.",
@@ -219,7 +242,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["cocktails", "date night", "happy hour"], pop: 72,
   },
   {
-    id: "paramount", name: "Paramount", genres: ["drinks"], drinks: ["bar"], area: "downtown",
+    id: "paramount", name: "Paramount", genres: ["drinks", "burgers"], drinks: ["bar"], area: "downtown",
     address: "200 20th St N", coords: onStN(200, 20), price: 2,
     knownFor: "Burgers & vintage arcade",
     blurb: "Old arcade cabinets, a good burger, and a crowd that ends up on the sidewalk on 20th Street.",
@@ -233,7 +256,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["live music", "dive-ish"], pop: 62,
   },
   {
-    id: "carrigans", name: "Carrigan's Public House", genres: ["drinks", "southern"], drinks: ["bar"], area: "downtown",
+    id: "carrigans", name: "Carrigan's Public House", genres: ["drinks", "burgers"], drinks: ["bar", "cocktails"], area: "downtown",
     address: "2430 Morris Ave", coords: grid(24.3, -0.4), price: 2,
     knownFor: "Patio pints & pub food",
     blurb: "Pub food and a long bar on Morris Avenue. The patio fills up when it's nice out.",
@@ -247,42 +270,42 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["brewery", "patio", "game day"], pop: 80,
   },
   {
-    id: "back-forty", name: "Back Forty Beer Co.", genres: ["drinks"], drinks: ["brewery"], area: "downtown",
+    id: "back-forty", name: "Back Forty Beer Co.", genres: ["drinks", "pizza"], drinks: ["brewery"], area: "downtown",
     address: "3201 1st Ave N", coords: onAveN(3201, 1), price: 2,
     knownFor: "Taproom pizza & Naked Pig ale",
     blurb: "Gadsden brewery with a big taproom near Sloss Furnaces. Pizza from the kitchen.",
     tags: ["brewery", "pizza", "Sloss Quarter"], pop: 64,
   },
   {
-    id: "bayonet", name: "Bayonet", genres: ["seafood", "chefs"], area: "downtown",
+    id: "bayonet", name: "Bayonet", genres: ["seafood", "drinks"], drinks: ["cocktails"], area: "downtown",
     address: "2015 2nd Ave N", coords: onAveN(2015, 2), price: 3,
     knownFor: "Raw-bar oysters & the tuna burger",
     blurb: "Rob and Emily McDaniel's seafood place, next door to Helen. About 20 kinds of oysters at the raw bar. The New York Times named it one of America's 50 best restaurants in 2025, so book ahead or try the bar early in the week.",
     tags: ["oysters", "raw bar", "date night"], pop: 91,
   },
   {
-    id: "la-fete", name: "La Fête", genres: ["chefs"], area: "downtown",
+    id: "la-fete", name: "La Fête", genres: ["french"], area: "downtown",
     address: "2018 Morris Ave", coords: grid(20.2, -0.42), price: 3,
     knownFor: "Roast chicken & potato gratin",
     blurb: "Kristen Hall's French bistro on Morris Avenue. Marble bar, tiled floors and a patio, with bread and pastry from its sister bakery, Bandit. Michelin gave it a Bib Gourmand in 2025.",
     tags: ["French", "bistro", "patio", "date night", "Morris Ave"], pop: 88,
   },
   {
-    id: "pizza-grace", name: "Pizza Grace", genres: ["italian"], area: "downtown",
+    id: "pizza-grace", name: "Pizza Grace", genres: ["pizza"], area: "downtown",
     address: "2212 Morris Ave", coords: grid(22.12, -0.4), price: 2,
     knownFor: "Sourdough pies & the meatballs",
     blurb: "Sourdough pizza with a lot going on (pesto, mortadella and pistachio, say) in the Mercantile on Morris building. Get the meatballs for the table. The Big Spoon Creamery owners bought it in 2025.",
     tags: ["pizza", "natural wine", "Morris Ave"], pop: 86,
   },
   {
-    id: "current-charcoal", name: "Current Charcoal Grill", genres: ["asian", "seafood"], area: "downtown",
+    id: "current-charcoal", name: "Current Charcoal Grill", genres: ["asian", "seafood", "steaks"], area: "downtown",
     address: "1625 2nd Ave S", coords: onAveS(1625, 2), price: 3,
     knownFor: "Crab fried rice & fish off the charcoal",
     blurb: "Adam Evans (of Automatic Seafood) and Luke Joseph cook Gulf seafood with Asian flavors over Japanese binchotan charcoal, next to Railroad Park. The Peking duck has to be ordered two weeks ahead.",
     tags: ["Gulf seafood", "charcoal grill", "date night"], pop: 84,
   },
   {
-    id: "reve", name: "Rêve", genres: ["chefs"], area: "downtown",
+    id: "reve", name: "Rêve", genres: ["french"], area: "downtown",
     address: "1821 2nd Ave N", coords: onAveN(1821, 2), price: 4,
     knownFor: "The French tasting menu",
     blurb: "Jacob Stull's French tasting-menu restaurant inside the Pizitz, across from McWane Science Center. Dinner only, a few nights a week. Book on Resy.",
@@ -291,18 +314,18 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
 
   /* ------------------------ SOUTHSIDE & FIVE POINTS ------------------------ */
   {
-    id: "bottega", name: "Bottega", genres: ["italian", "chefs"], area: "southside",
+    id: "bottega", name: "Bottega", genres: ["italian"], area: "southside",
     address: "2240 Highland Ave S", coords: [33.5006, -86.7917], price: 4,
     knownFor: "Handmade pasta & Parmesan soufflé",
     blurb: "Frank and Pardis Stitt's Italian restaurant in a big stone building on Highland Avenue. The cafe side is more casual.",
     tags: ["date night", "pasta", "wine"], pop: 93,
   },
   {
-    id: "chez-fonfon", name: "Chez Fonfon", genres: ["chefs"], area: "southside",
+    id: "chez-fonfon", name: "Chez Fonfon", genres: ["french", "burgers"], area: "southside",
     address: "2007 11th Ave S", coords: onAveS(2007, 11), price: 3,
     knownFor: "The burger, and the bocce court",
     blurb: "French bistro in Five Points South from the Stitts. Steak frites, a zinc bar, and a bocce court out back.",
-    tags: ["bistro", "French", "patio"], pop: 90,
+    tags: ["date night", "bistro", "French", "patio"], pop: 90,
   },
   {
     id: "surin-west", name: "Surin West", genres: ["asian"], area: "southside",
@@ -342,25 +365,25 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
 
   /* ------------------------ LAKEVIEW & PEPPER PLACE ------------------------ */
   {
-    id: "automatic-seafood", name: "Automatic Seafood & Oysters", genres: ["seafood", "chefs"], area: "lakeview",
+    id: "automatic-seafood", name: "Automatic Seafood & Oysters", genres: ["seafood"], area: "lakeview",
     address: "2824 5th Ave S", coords: onAveS(2824, 5), price: 4,
     knownFor: "Gulf oysters & whole fish",
     blurb: "Adam Evans's seafood place in an old industrial building in Lakeview. He won a James Beard award. Start with oysters.",
     tags: ["oysters", "James Beard", "date night"], pop: 94,
   },
   {
-    id: "ovenbird", name: "Ovenbird", genres: ["chefs"], area: "lakeview",
+    id: "ovenbird", name: "Ovenbird", genres: ["steaks"], area: "lakeview",
     address: "2805 2nd Ave S", coords: onAveS(2805, 2), price: 3,
     knownFor: "Live-fire small plates",
     blurb: "Chris Hastings's live-fire small plates at Pepper Place. Michelin gave it a Bib Gourmand in 2025. Order a bunch and share.",
-    tags: ["small plates", "live fire", "Pepper Place"], pop: 89,
+    tags: ["date night", "small plates", "live fire", "Pepper Place"], pop: 89,
   },
   {
-    id: "hot-and-hot", name: "Hot and Hot Fish Club", genres: ["seafood", "chefs"], area: "lakeview",
+    id: "hot-and-hot", name: "Hot and Hot Fish Club", genres: ["seafood", "southern"], area: "lakeview",
     address: "2901 2nd Ave S", coords: onAveS(2901, 2), price: 4,
     knownFor: "The summer tomato salad",
     blurb: "Chris and Idie Hastings have run it since 1995. It's at Pepper Place now. Sit at the counter if you can.",
-    tags: ["chef's counter", "Southern", "Pepper Place"], pop: 88,
+    tags: ["date night", "chef's counter", "Southern", "Pepper Place"], pop: 88,
   },
   {
     id: "red-cat", name: "Red Cat Coffee House", genres: ["coffee"], area: "lakeview",
@@ -459,7 +482,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["white sauce", "counter service", "original"], pop: 86,
   },
   {
-    id: "gianmarcos", name: "GianMarco's", genres: ["italian", "chefs"], area: "edgewood",
+    id: "gianmarcos", name: "GianMarco's", genres: ["italian"], area: "edgewood",
     address: "721 Broadway St", coords: [33.4689, -86.8070], price: 3,
     knownFor: "Old-world Italian & a deep wine list",
     blurb: "Family-run Italian with tablecloths, nightly specials and a big wine list.",
@@ -489,7 +512,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
 
   /* ---------------------------- ENGLISH VILLAGE ---------------------------- */
   {
-    id: "chez-lulu", name: "Chez Lulu & Continental Bakery", genres: ["brunch", "sweets"], area: "englishvillage",
+    id: "chez-lulu", name: "Chez Lulu & Continental Bakery", genres: ["sweets", "french"], area: "englishvillage",
     address: "1909 Cahaba Rd", coords: [33.4939, -86.7742], price: 2,
     knownFor: "European breads & bistro lunch",
     blurb: "Bakery up front, bistro in back, on Cahaba Road in English Village.",
@@ -505,14 +528,14 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
 
   /* ------------------------- MOUNTAIN BROOK VILLAGE ------------------------- */
   {
-    id: "davenports", name: "Davenport's Pizza Palace", genres: ["italian"], area: "mtnbrook",
+    id: "davenports", name: "Davenport's Pizza Palace", genres: ["pizza"], area: "mtnbrook",
     address: "2827 Cahaba Rd", coords: [33.4843, -86.7529], price: 1,
     knownFor: "Cracker-thin crust since 1964",
     blurb: "Thin, cracker-crust pizza in a wood-paneled room. Been in Mountain Brook Village since 1964.",
     tags: ["pizza", "classic", "kid-friendly"], pop: 84,
   },
   {
-    id: "gilchrist", name: "Gilchrist", genres: ["sweets", "southern"], area: "mtnbrook",
+    id: "gilchrist", name: "Gilchrist", genres: ["sweets", "burgers"], area: "mtnbrook",
     address: "2805 Cahaba Rd", coords: [33.4848, -86.7538], price: 1,
     knownFor: "Limeades & chicken salad",
     blurb: "Old soda fountain in Mountain Brook Village. Order a limeade and a chicken salad sandwich.",
@@ -535,7 +558,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["Lowcountry", "date night"], pop: 76,
   },
   {
-    id: "oteys", name: "Otey's", genres: ["drinks"], drinks: ["bar"], area: "crestline",
+    id: "oteys", name: "Otey's", genres: ["drinks", "burgers"], drinks: ["bar"], area: "crestline",
     address: "224 Country Club Blvd", coords: [33.4929, -86.7330], price: 2,
     knownFor: "Neighborhood tavern & game-day crowd",
     blurb: "Crestline's neighborhood bar. Bar food, cold beer, football on Saturdays.",
@@ -608,7 +631,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["breakfast", "work-friendly"], pop: 60,
   },
   {
-    id: "pizzeria-gm", name: "Pizzeria GM", genres: ["italian"], area: "west-homewood",
+    id: "pizzeria-gm", name: "Pizzeria GM", genres: ["pizza", "italian"], area: "west-homewood",
     address: "600 Oak Grove Rd", coords: [33.4571, -86.8268], price: 2,
     knownFor: "Neapolitan-style pies",
     blurb: "Italian bistro next to Patriot Park from the GianMarco's family. More on the menu than pizza.",
@@ -617,7 +640,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
 
   /* ---------------------- MOUNTAIN BROOK (added) ---------------------- */
   {
-    id: "little-betty", name: "Little Betty Steak Bar", genres: ["chefs"], area: "mtnbrook",
+    id: "little-betty", name: "Little Betty Steak Bar", genres: ["steaks"], area: "mtnbrook",
     address: "321 Rele St, Suite E8", coords: [33.4833, -86.7527], price: 4,
     knownFor: "Steaks with Italian and Japanese touches",
     blurb: "Steakhouse and bar in Lane Parke. Dressed up but not stiff.",
@@ -631,18 +654,18 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["oysters", "Lane Parke"], pop: 72,
   },
   {
-    id: "charbar-no-7", name: "CharBar No. 7", genres: ["southern"], area: "mtnbrook",
+    id: "charbar-no-7", name: "CharBar No. 7", genres: ["steaks", "burgers"], area: "mtnbrook",
     address: "900 Jemison Ln", coords: [33.4826, -86.7518], price: 3,
     knownFor: "Burgers and steaks",
     blurb: "Lane Parke grill that can go either way: a burger at the bar or a steak dinner.",
     tags: ["burgers", "patio", "Lane Parke"], pop: 74,
   },
   {
-    id: "locanda-brasato", name: "Locanda Brasato", genres: ["italian", "chefs"], area: "mtnbrook",
+    id: "locanda-brasato", name: "Locanda Brasato", genres: ["italian"], area: "mtnbrook",
     address: "270 Rele St", coords: [33.4838, -86.7533], price: 3,
     knownFor: "Slow-braised Italian",
     blurb: "Opened in 2026 in the old Post Office Pies space in Lane Parke, from the owners of Lé Fresca downtown. Braises and long-cooked sauces.",
-    tags: ["new", "pasta", "Lane Parke"], pop: 76,
+    tags: ["date night", "new", "pasta", "Lane Parke"], pop: 76,
   },
   {
     id: "rougaroux", name: "The Rougaroux", genres: ["seafood", "southern"], area: "mtnbrook",
@@ -652,7 +675,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["New Orleans", "lunch"], pop: 74,
   },
   {
-    id: "woodys", name: "Woody's Food + Bar", genres: ["drinks", "southern"], drinks: ["bar"], area: "mtnbrook",
+    id: "woodys", name: "Woody's Food + Bar", genres: ["drinks", "burgers"], drinks: ["bar"], area: "mtnbrook",
     address: "2721 Cahaba Rd, Suite A", coords: [33.4850, -86.7547], price: 2,
     knownFor: "Burgers and trivia night",
     blurb: "New in 2026 in the space that used to be Carrigan's Mountain Brook. Comfort food and a neighborhood bar.",
@@ -703,42 +726,42 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
 
   /* ---------------------- VESTAVIA HILLS (added) ---------------------- */
   {
-    id: "foodbar", name: "FoodBar", genres: ["chefs", "southern"], area: "cahaba",
+    id: "foodbar", name: "FoodBar", genres: ["southern"], area: "cahaba",
     address: "3156 Heights Village", coords: [33.4627, -86.7301], price: 3,
     knownFor: "Southern plates off Alabama farms",
     blurb: "Chef George McMillian's place in The Heights Village. The menu leans on Alabama farms.",
     tags: ["date night", "seasonal"], pop: 78,
   },
   {
-    id: "brick-and-tin-cahaba", name: "Brick & Tin (Cahaba Heights)", genres: ["southern", "brunch"], area: "cahaba",
+    id: "brick-and-tin-cahaba", name: "Brick & Tin (Cahaba Heights)", genres: ["burgers", "brunch"], area: "cahaba",
     address: "3151 Green Valley Rd", coords: [33.4612, -86.7268], price: 2,
     knownFor: "The brisket panini",
     blurb: "Opened March 2026 in Market Square. Bar, patio and a bakery case, same seasonal menu as downtown.",
     tags: ["new", "patio", "bakery"], pop: 72,
   },
   {
-    id: "mudtown", name: "Mudtown Eat & Drink", genres: ["southern", "drinks"], drinks: ["bar"], area: "cahaba",
+    id: "mudtown", name: "Mudtown Eat & Drink", genres: ["drinks", "burgers"], drinks: ["bar"], area: "cahaba",
     address: "3144 Green Valley Rd", coords: [33.4609, -86.7273], price: 2,
     knownFor: "A beer and a burger after the game",
     blurb: "Cahaba Heights bar and grill where the neighborhood shows up on a Friday.",
     tags: ["sports", "groups"], pop: 68,
   },
   {
-    id: "bistro-v", name: "Bistro V", genres: ["chefs", "drinks"], drinks: ["wine"], area: "vestavia-31",
+    id: "bistro-v", name: "Bistro V", genres: ["french", "drinks"], drinks: ["wine"], area: "vestavia-31",
     address: "521 Montgomery Hwy, Suite 113", coords: [33.4562, -86.7861], price: 3,
     knownFor: "French-Southern dinner and a wine list",
     blurb: "Vestavia Hills' dinner spot for a birthday or an anniversary, in the City Center. Open more than sixteen years.",
     tags: ["date night", "wine"], pop: 76,
   },
   {
-    id: "diplomat-deli", name: "Diplomat Deli", genres: ["southern"], area: "vestavia-31",
+    id: "diplomat-deli", name: "Diplomat Deli", genres: ["burgers"], area: "vestavia-31",
     address: "1425 Montgomery Hwy, Suite 101", coords: [33.4392, -86.7943], price: 1,
     knownFor: "The Reuben",
     blurb: "Old-school deli in Park South Plaza. Its Reuben made the state's 100 Dishes to Eat in Alabama list.",
     tags: ["sandwiches", "lunch", "classic"], pop: 74,
   },
   {
-    id: "kool-korner", name: "Kool Korner Sandwiches", genres: ["latin"], area: "vestavia-31",
+    id: "kool-korner", name: "Kool Korner Sandwiches", genres: ["burgers", "latin"], area: "vestavia-31",
     address: "1360 Montgomery Hwy, Suite 106", coords: [33.4406, -86.7935], price: 1,
     knownFor: "Cuban sandwiches",
     blurb: "Pressed Cubans and Caribbean plates on Highway 31. Mostly a lunch place, so check hours.",
@@ -752,14 +775,14 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["new", "shop"], pop: 56,
   },
   {
-    id: "iz-cafe", name: "Iz Cafe", genres: ["brunch", "sweets"], area: "rocky-ridge",
+    id: "iz-cafe", name: "Iz Cafe", genres: ["burgers", "sweets"], area: "rocky-ridge",
     address: "2514 Rocky Ridge Rd", coords: [33.4226, -86.7978], price: 1,
     knownFor: "Soup, sandwich and dessert",
     blurb: "Longtime lunch spot on Rocky Ridge. Save room for the cake case.",
     tags: ["lunch", "desserts"], pop: 64,
   },
   {
-    id: "napoli", name: "Napoli Italian Restaurant & Pizza", genres: ["italian"], area: "rocky-ridge",
+    id: "napoli", name: "Napoli Italian Restaurant & Pizza", genres: ["pizza", "italian"], area: "rocky-ridge",
     address: "2516 Rocky Ridge Rd", coords: [33.4224, -86.7975], price: 2,
     knownFor: "Pizza and baked pastas",
     blurb: "Neighborhood Italian next door to Iz Cafe. Good for takeout on a weeknight.",

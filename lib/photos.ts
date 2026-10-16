@@ -61,7 +61,7 @@ export const LIBRARY = {
   // Greek & Mediterranean
   "greek-salad": P("Greece_Food_Horiatiki.JPG", "a Greek village salad", "Jpatokal", "CC BY-SA 3.0"),
   gyro: P("Gyros_pita.jpg", "a gyro in pita", "Christo", "CC BY-SA 4.0"),
-  // Special occasion
+  // Steaks, French, burgers
   steak: P("Ribeyes.jpeg", "grilled ribeyes", "Jon Sullivan", "Public domain"),
   "steak-frites": P("Steak-frites_as_served_at_Le_Relais_de_Venise_-_L'Entrecote.jpg", "steak frites", "Dcollard", "Public domain"),
   burger: P("Gourmet_Burger_Kitchen_hamburger.jpg", "a burger with all the fixings", "Khedara Ariyaratne", "CC BY 2.0"),
@@ -185,15 +185,18 @@ const SPOT_DISHES: Record<string, DishKey[]> = {
 const GENRE_DISHES: Record<GenreId, DishKey[]> = {
   southern: ["soul-plate", "biscuits", "cornbread"],
   bbq: ["ribs", "white-sauce", "brisket"],
-  italian: ["pasta-ragu", "pizza-napoletana"],
+  italian: ["pasta-ragu", "pasta-fresh"],
   seafood: ["oysters", "shrimp-grits", "grilled-fish"],
   latin: ["tacos", "margarita"],
   asian: ["nigiri", "dumplings", "green-curry"],
   mediterranean: ["greek-salad", "gyro"],
-  chefs: ["steak", "wine"],
-  brunch: ["eggs-benedict", "croissant", "biscuits"],
+  burgers: ["burger", "reuben", "cubano"],
+  pizza: ["pizza-margherita", "pizza-napoletana"],
+  steaks: ["steak", "steak-frites"],
+  french: ["steak-frites", "croissant", "wine"],
+  brunch: ["eggs-benedict", "biscuits", "bagels"],
   coffee: ["latte", "pourover"],
-  sweets: ["cone", "banana-pudding"],
+  sweets: ["croissant", "cone", "banana-pudding"],
   drinks: ["old-fashioned", "beer-flight", "wine"],
 };
 

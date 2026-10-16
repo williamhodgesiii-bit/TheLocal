@@ -29,8 +29,22 @@ export const COLLECTIONS: Collection[] = [
     id: "date-night",
     title: "Date night",
     line: "Dim rooms, good wine, worth dressing up a little.",
-    match: (s) => has(s, "date night") || s.genres.includes("chefs"),
+    match: (s) => has(s, "date night"),
     leads: [{ from: 16, to: 23 }],
+  },
+  {
+    id: "special",
+    title: "Special occasion",
+    line: "Birthdays, anniversaries, the parents in town. Book ahead.",
+    match: (s) => s.price === 4 || has(s, "tasting menu", "special occasion"),
+    leads: [{ from: 17, to: 21, weekend: true }],
+  },
+  {
+    id: "cocktails",
+    title: "Cocktail bars",
+    line: "Bartenders who take it seriously, and rooms worth staying in.",
+    match: (s) => !!s.drinks?.includes("cocktails"),
+    leads: [{ from: 18, to: 24 }],
   },
   {
     id: "patio",

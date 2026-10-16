@@ -2,7 +2,7 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { resizeImage } from "./image";
-import { slugify, type DrinkKind, type GenreId, type Spot } from "./data";
+import { cleanGenres, slugify, type DrinkKind, type GenreId, type Spot } from "./data";
 
 export type User = { id: string; name: string; email: string; /** home city id (or "other:Town, ST"), see lib/regions */ home?: string };
 export type Review = {
@@ -148,13 +148,13 @@ function supabaseBackend(sb: SupabaseClient): Backend {
 
   const mapSub = (r: Record<string, any>): Submission => ({
     id: r.id, cityId: r.city_id, name: r.name, address: r.address, area: r.area, areaLabel: r.area_label, coords: [r.lat, r.lng],
-    genres: r.genres ?? [], drinks: r.drinks ?? [], price: r.price, knownFor: r.known_for, blurb: r.blurb, website: r.website ?? undefined,
+    genres: cleanGenres(r.genres), drinks: r.drinks ?? [], price: r.price, knownFor: r.known_for, blurb: r.blurb, website: r.website ?? undefined,
     phone: r.phone ?? undefined, tags: r.tags ?? [], status: r.status, submittedBy: r.submitted_by, submitterName: r.submitter_name,
     note: r.note ?? undefined, photoUrl: r.photo_url ?? undefined, rejectReason: r.reject_reason ?? undefined, reviewedAt: r.reviewed_at ?? undefined,
     spotId: r.spot_id ?? undefined, createdAt: r.created_at,
   });
   const mapSpot = (r: Record<string, any>): Spot => ({
-    id: r.id, city: r.city_id, name: r.name, genres: r.genres ?? [], drinks: r.drinks?.length ? r.drinks : undefined, area: r.area,
+    id: r.id, city: r.city_id, name: r.name, genres: cleanGenres(r.genres), drinks: r.drinks?.length ? r.drinks : undefined, area: r.area,
     areaLabel: r.area_label ?? undefined, address: r.address, coords: [r.lat, r.lng], price: r.price, knownFor: r.known_for, blurb: r.blurb,
     tags: r.tags ?? [], pop: r.pop ?? 60, sponsored: r.sponsored ?? false, website: r.website ?? undefined, phone: r.phone ?? undefined,
     addedBy: r.added_by ?? undefined, verifiedAt: r.verified_at ?? undefined,
@@ -492,10 +492,13 @@ function localBackend(): Backend {
       write(K.waitlist, [...read<unknown[]>(K.waitlist, []), { email, state, city, at: new Date().toISOString() }]);
     },
     async listSpots(cityId) {
-      return read<Spot[]>(K.spots, []).filter((s) => s.city === cityId);
+      return read<Spot[]>(K.spots, [])
+        .filter((s) => s.city === cityId)
+        .map((s) => ({ ...s, genres: cleanGenres(s.genres) }));
     },
     async getSpot(id) {
-      return read<Spot[]>(K.spots, []).find((s) => s.id === id) ?? null;
+      const s = read<Spot[]>(K.spots, []).find((x) => x.id === id);
+      return s ? { ...s, genres: cleanGenres(s.genres) } : null;
     },
     async submitSpot(input, note, photo) {
       const u = current();
@@ -510,7 +513,7 @@ function localBackend(): Backend {
     },
     async mySubmissions() {
       const u = current();
-      return u ? read<Submission[]>(K.submissions, []).filter((x) => x.submittedBy === u.id) : [];
+      return u ? read<Submission[]>(K.submissions, []).filter((x) => x.submittedBy === u.id).map((x) => ({ ...x, genres: cleanGenres(x.genres) })) : [];
     },
     async isAdmin() {
       const u = current();
@@ -518,7 +521,9 @@ function localBackend(): Backend {
       return ADMIN_EMAILS.length ? ADMIN_EMAILS.includes(u.email) : true; // demo: every member can moderate
     },
     async listSubmissions(status) {
-      const list = read<Submission[]>(K.submissions, []).filter((x) => x.status === status);
+      const list = read<Submission[]>(K.submissions, [])
+        .filter((x) => x.status === status)
+        .map((x) => ({ ...x, genres: cleanGenres(x.genres) }));
       return status === "pending" ? list.reverse() : list;
     },
     async approveSubmission(sub, edits) {

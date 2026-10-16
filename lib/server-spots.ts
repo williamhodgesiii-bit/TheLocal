@@ -1,4 +1,4 @@
-import type { Spot } from "./data";
+import { cleanGenres, type Spot } from "./data";
 
 /** Server-side read of a verified community spot (for SEO pages). Needs Supabase configured. */
 export async function fetchCommunitySpot(id: string): Promise<Spot | null> {
@@ -13,7 +13,7 @@ export async function fetchCommunitySpot(id: string): Promise<Spot | null> {
     const [row] = (await r.json()) as any[];
     if (!row) return null;
     return {
-      id: row.id, city: row.city_id, name: row.name, genres: row.genres, drinks: row.drinks?.length ? row.drinks : undefined, area: row.area,
+      id: row.id, city: row.city_id, name: row.name, genres: cleanGenres(row.genres), drinks: row.drinks?.length ? row.drinks : undefined, area: row.area,
       areaLabel: row.area_label ?? undefined, address: row.address, coords: [row.lat, row.lng], price: row.price, knownFor: row.known_for,
       blurb: row.blurb, tags: row.tags ?? [], pop: row.pop ?? 60, sponsored: row.sponsored, website: row.website ?? undefined,
       phone: row.phone ?? undefined, addedBy: row.added_by ?? undefined, verifiedAt: row.verified_at ?? undefined,
