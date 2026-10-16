@@ -7,7 +7,7 @@
 
 import { readdirSync } from "node:fs";
 
-const SITE_URL = (process.env.SITE_URL || "https://theplatenextdoor.com").replace(/\/$/, "");
+const SITE_URL = (process.env.SITE_URL || "https://www.theplatenextdoor.com").replace(/\/$/, "");
 const HOST = new URL(SITE_URL).host;
 
 // The key is public (it's served at /<key>.txt). Prefer env, else find the key file in public/.

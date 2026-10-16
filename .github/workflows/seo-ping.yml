@@ -25,7 +25,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SITE_URL: https://theplatenextdoor.com
+  SITE_URL: https://www.theplatenextdoor.com
   VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
 
 jobs:
