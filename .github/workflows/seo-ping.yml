@@ -1,0 +1,53 @@
+name: SEO ping (IndexNow + weekly refresh)
+
+# Keeps the site "indexed everywhere" automatically:
+#  - on every push to main (after a deploy), submit all URLs to IndexNow
+#    (Bing, Yandex and partners pick them up near-instantly)
+#  - every Thursday (when "this week's plate" turns over), optionally trigger a
+#    fresh Vercel build so the sitemap dates + weekly content refresh, then re-ping
+#
+# No secrets are required for the ping itself (the IndexNow key is public, served
+# at /<key>.txt). To enable the optional weekly redeploy, add a repository secret
+# VERCEL_DEPLOY_HOOK (Vercel → Project → Settings → Git → Deploy Hooks).
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 13 * * 4" # Thursdays ~13:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seo-ping
+  cancel-in-progress: false
+
+env:
+  SITE_URL: https://theplatenextdoor.com
+  VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Weekly refresh (optional redeploy)
+        if: github.event_name == 'schedule' && env.VERCEL_DEPLOY_HOOK != ''
+        run: |
+          echo "Triggering a fresh build so sitemap dates and the weekly plate update…"
+          curl -s -X POST "$VERCEL_DEPLOY_HOOK" >/dev/null || true
+          sleep 120
+
+      - name: Let the deploy publish before pinging
+        if: github.event_name == 'push'
+        run: sleep 90
+
+      - name: Submit sitemap URLs to IndexNow
+        run: node scripts/indexnow.mjs

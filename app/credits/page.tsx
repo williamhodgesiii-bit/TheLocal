@@ -9,6 +9,7 @@ import { BRAND } from "@/lib/brand";
 export const metadata: Metadata = {
   title: "Photo credits",
   description: `Who took the photos on ${BRAND}, and the licenses they're shared under.`,
+  alternates: { canonical: "/credits" },
 };
 
 type Row = { key: string; file: string; title: string; author: string; license: StockPhoto["license"] };

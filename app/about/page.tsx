@@ -7,6 +7,7 @@ import { SPOTS } from "@/lib/data";
 export const metadata: Metadata = {
   title: "How we pick",
   description: `How ${BRAND} decides what's on the list, how it makes money, and the rules for reviews. Nobody pays to rank.`,
+  alternates: { canonical: "/about" },
 };
 
 export default function About() {

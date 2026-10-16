@@ -7,6 +7,7 @@ import { BRAND, NEWSLETTER } from "@/lib/brand";
 export const metadata: Metadata = {
   title: "For restaurants",
   description: `Every locally owned place gets a free listing on ${BRAND}. Optional extras for owners; nobody can pay to rank.`,
+  alternates: { canonical: "/partners" },
 };
 
 const TIERS = [

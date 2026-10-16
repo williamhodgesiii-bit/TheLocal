@@ -8,9 +8,11 @@ import "@fontsource/nanum-pen-script/400.css";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import JsonLd from "@/components/JsonLd";
 import { MAP_FIRST_FETCH } from "@/lib/map-styles";
 import { siteUrl } from "@/lib/site";
 import { BRAND, MANTRA } from "@/lib/brand";
+import { organizationLd, websiteLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -20,6 +22,11 @@ export const metadata: Metadata = {
   openGraph: { type: "website", siteName: BRAND, locale: "en_US" },
   twitter: { card: "summary_large_image" },
   appleWebApp: { capable: true, title: "The Plate", statusBarStyle: "default" },
+  robots: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+  verification: {
+    ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } } : {}),
+  },
 };
 
 export const viewport: Viewport = {
@@ -38,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" href={MAP_FIRST_FETCH} as="fetch" crossOrigin="anonymous" />
       </head>
       <body>
+        <JsonLd data={[organizationLd(), websiteLd()]} />
         <Providers>{children}</Providers>
         <Analytics />
       </body>
