@@ -1,0 +1,591 @@
+{
+ "hot-dog": [
+  {
+   "file": "Flint_coney_island.jpg",
+   "w": 2400,
+   "h": 1300,
+   "license": "Public domain",
+   "artist": "LG2 (talk) (Transfered by Diádoco/Original uploaded by LG2)",
+   "desc": "Coney dog, a type of chili dog"
+  },
+  {
+   "file": "Mc_Hot_Dog_Chili.jpg",
+   "w": 2436,
+   "h": 1496,
+   "license": "CC BY-SA 3.0",
+   "artist": "7'o'7",
+   "desc": "マックホットドックチリ 2011年11月14日から期間限定発売 11/30購入"
+  },
+  {
+   "file": "Chili_dog_preparation.jpg",
+   "w": 799,
+   "h": 532,
+   "license": "CC BY 2.0",
+   "artist": "jeffreyw",
+   "desc": "Chili dog preparation - roll your own"
+  },
+  {
+   "file": "Chili_dogs.jpg",
+   "w": 2048,
+   "h": 1360,
+   "license": "CC BY 2.0",
+   "artist": "jeffreyw",
+   "desc": "Chili dogs"
+  },
+  {
+   "file": "Original_coney_dog.jpg",
+   "w": 400,
+   "h": 300,
+   "license": "CC BY-SA 3.0",
+   "artist": "Aspythonsss",
+   "desc": "Original Coney Dog @ Lafayette Coney Island"
+  },
+  {
+   "file": "2OriginalConeyDogs.jpg",
+   "w": 2542,
+   "h": 2477,
+   "license": "GFDL 1.2",
+   "artist": "Jonathunder",
+   "desc": "Two hot dogs from the Original Coney Island Restaurant and Bar in St. Paul, Minnesota, United States"
+  },
+  {
+   "file": "Carolina_hot_dog_with_bold_gold.jpg",
+   "w": 2268,
+   "h": 4032,
+   "license": "CC BY-SA 4.0",
+   "artist": "Bigeasydoesit",
+   "desc": "Hot dogs"
+  },
+  {
+   "file": "Coney_Island_Hot_Dog_chili_beans_grated_cheese_onions_Nathan's_Hot_Dog_(28282475604).jpg",
+   "w": 800,
+   "h": 800,
+   "license": "CC BY 2.0",
+   "artist": "Personal Creations",
+   "desc": "Coney Island Hot Dog chili beans grated cheese onions Nathan's Hot Dog"
+  },
+  {
+   "file": "Coney_Island_Hot_Dog_chili_beans_grated_cheese_onions_Nathan's_Hot_Dog_2_(28282478534).jpg",
+   "w": 2000,
+   "h": 1694,
+   "license": "CC BY 2.0",
+   "artist": "Personal Creations",
+   "desc": "Coney Island Hot Dog chili beans grated cheese onions Nathan's Hot Dog"
+  },
+  {
+   "file": "Turkey_Chili_Dog.jpg",
+   "w": 3648,
+   "h": 2736,
+   "license": "CC BY 2.0",
+   "artist": "Jeffrey_Allen",
+   "desc": "Applegate Turkey Hot Dog with homemade turkey/beef chili, cheddar and red onions"
+  },
+  {
+   "file": "Hot_dog_and_chili_at_Village_Burger,_Dunwoody_GA.jpg",
+   "w": 4032,
+   "h": 3024,
+   "license": "CC BY 4.0",
+   "artist": "John Phelan",
+   "desc": "Hot dog and chili at Village Burger, Dunwoody Georgia"
+  },
+  {
+   "file": "National_Coney_Island_coney_dog_and_Greek_salad.jpg",
+   "w": 4032,
+   "h": 3024,
+   "license": "CC BY-SA 2.0",
+   "artist": "Todd Van Hoosear",
+   "desc": "A Detroit-style Coney Island hot dog topped with chili, mustard and onions, served alongside a Greek salad and pita bread at National Coney "
+  }
+ ],
+ "fried-chicken": [
+  {
+   "file": "Fried_chicken_Burger_in_Milan,_Italy.jpg",
+   "w": 2758,
+   "h": 2160,
+   "license": "CC BY-SA 3.0 it",
+   "artist": "Pava",
+   "desc": "chicken &amp; chicken Stelvio Farini (Milano) panino pollo fritto insalata e maionese"
+  },
+  {
+   "file": "\"_15_-_ITALY_-_fried_chicken_Burger_crispy_in_Via_Carlo_Farini_(Milan)_front_view_.jpg",
+   "w": 2160,
+   "h": 2589,
+   "license": "CC BY-SA 3.0 it",
+   "artist": "Pava",
+   "desc": "chicken &amp; chicken Stelvio Farini (Milano) panino pollo fritto insalata e maionese"
+  },
+  {
+   "file": "Fried_rice_with_chicken_(17234644521).jpg",
+   "w": 2992,
+   "h": 2992,
+   "license": "CC BY 2.0",
+   "artist": "Vee Satayamas from Bangkok, Thailand",
+   "desc": "Fried rice with chicken"
+  },
+  {
+   "file": "Fried_Chicken_and_Donut.jpg",
+   "w": 4032,
+   "h": 3024,
+   "license": "CC BY-SA 4.0",
+   "artist": "ZhengZhou",
+   "desc": "Fried Chicken and Donut, served with gravy, coleslaw and street corn"
+  },
+  {
+   "file": "Fried_chicken_legs,_Rostov-on-Don,_Russia.jpg",
+   "w": 4912,
+   "h": 3264,
+   "license": "CC BY 4.0",
+   "artist": "Vyacheslav Argenberg",
+   "desc": "Fried chicken legs and a glass of beer, big red plate on black glass table. Rostov-on-Don, Russia."
+  },
+  {
+   "file": "Coop's_fried_chicken,_jambalaya,_gumbo,_New_Orleans_2014.jpg",
+   "w": 768,
+   "h": 1024,
+   "license": "CC BY 2.0",
+   "artist": "Krista",
+   "desc": "Coop's fried chicken, jambalaya, gumbo, New Orleans 2014"
+  },
+  {
+   "file": "Stuffed_Kimchi_Fried_Rice_in_Roasted_Chicken_Inasal.jpg",
+   "w": 1440,
+   "h": 1680,
+   "license": "CC BY-SA 4.0",
+   "artist": "ChefB13boomer",
+   "desc": "This is represents one Filipino delicacy in Iloilo and with a twist of korean taste."
+  },
+  {
+   "file": "Fried_chicken_and_sriracha.jpg",
+   "w": 2448,
+   "h": 3264,
+   "license": "CC0",
+   "artist": "Corn cheese",
+   "desc": "Fried chicken and sriracha."
+  },
+  {
+   "file": "Barka_Plate_DarSA_Fried_Chicken,_Bukit_Beruntung_(240730).jpg",
+   "w": 12000,
+   "h": 9000,
+   "license": "CC BY-SA 4.0",
+   "artist": "*angys*",
+   "desc": "DarSA Fried Chicken, Bukit Beruntung"
+  },
+  {
+   "file": "Fried_chicken_with_chips.jpg",
+   "w": 2916,
+   "h": 2000,
+   "license": "CC BY-SA 4.0",
+   "artist": "Jameswasswa",
+   "desc": "This is an image with the theme \"Farm to Plate\" from:"
+  },
+  {
+   "file": "Fried_Chicken_07.jpg",
+   "w": 6016,
+   "h": 4016,
+   "license": "CC BY-SA 4.0",
+   "artist": "Amuzujoe",
+   "desc": "This is an image with the theme \"Farm to Plate\" from:"
+  },
+  {
+   "file": "Fried_chicken_and_roasted_potatoes_01.jpg",
+   "w": 1200,
+   "h": 1600,
+   "license": "CC BY-SA 4.0",
+   "artist": "Roenashy",
+   "desc": "This is an image with the theme \"Farm to Plate\" from:"
+  }
+ ],
+ "ramen": [
+  {
+   "file": "BBQ_Pork_Ramen.jpg",
+   "w": 2048,
+   "h": 1536,
+   "license": "CC BY 2.5",
+   "artist": "Alasdair at en.wikipedia",
+   "desc": "A bowl of char siu ramen at Ajisen Ramen, taken with my Nokia N73 camera phone."
+  },
+  {
+   "file": "Ganko_Ramen,_Chiyoda_Ward,_Tokyo_(3217609888).jpg",
+   "w": 1536,
+   "h": 2048,
+   "license": "CC BY-SA 2.0",
+   "artist": "kc7fys",
+   "desc": "The bone is their trademark. I went in this place, and after having some trouble reading the menu outside, brought in my ticket. I like ever"
+  },
+  {
+   "file": "Empty_bowl,_Hakata_Choten,_Paris_001.jpg",
+   "w": 5472,
+   "h": 3648,
+   "license": "CC BY 2.0",
+   "artist": "Guilhem Vellut from Paris, France",
+   "desc": "Empty bowl @ Tonkotsu Miso Ramen @ Hakata Choten @ Paris"
+  },
+  {
+   "file": "A_perfectly_fine_bowl_of_spicy_and_sweet_and_sour_tonkotsu_ramen_at_an_unknown_place_in_the_Narita_airport_along_with_a_melon_pop_that_was_as_sweet_as_it_was_green_(25617762317).jpg",
+   "w": 3648,
+   "h": 2736,
+   "license": "CC BY 2.0",
+   "artist": "Daniel Zemans",
+   "desc": "A perfectly fine bowl of spicy and sweet and sour tonkotsu ramen at an unknown place in the Narita airport along with a melon pop that was a"
+  },
+  {
+   "file": "Ikkousha_tonkotsu_bowl.jpg",
+   "w": 1121,
+   "h": 1304,
+   "license": "CC BY-SA 4.0",
+   "artist": "Wesoree",
+   "desc": "A very scrumptious bowl of tonkostu ramen which was served in Toronto. The broth was very creamy, and was ordered with premium toppings. The"
+  },
+  {
+   "file": "Umami_Tonkotsu_ramen_bowlB.jpg",
+   "w": 2402,
+   "h": 2078,
+   "license": "CC BY-SA 4.0",
+   "artist": "",
+   "desc": ""
+  },
+  {
+   "file": "Tonkotsu_Kazan_Ramen_豚骨火山_Ishiyaki_豚骨ラーメン_26_January_2025_Philippines4.jpg",
+   "w": 4096,
+   "h": 3072,
+   "license": "CC BY-SA 4.0",
+   "artist": "",
+   "desc": ""
+  },
+  {
+   "file": "Tonkotsu_Kazan_Ramen_豚骨火山_Ishiyaki_26_January_2025_Philippines5.jpg",
+   "w": 4055,
+   "h": 2653,
+   "license": "CC BY-SA 4.0",
+   "artist": "",
+   "desc": ""
+  },
+  {
+   "file": "Tonkotsu_Kazan_Ramen_豚骨火山_Ishiyaki_豚骨ラーメン_lanterns_26_January_2025_Philippines1.jpg",
+   "w": 3953,
+   "h": 3072,
+   "license": "CC BY-SA 4.0",
+   "artist": "",
+   "desc": ""
+  },
+  {
+   "file": "Tonkotsu_Kazan_Ramen_豚骨火山_Ishiyaki_豚骨ラーメン_kitchen_26_January_2025_Philippines2.jpg",
+   "w": 3936,
+   "h": 2926,
+   "license": "CC BY-SA 4.0",
+   "artist": "",
+   "desc": ""
+  },
+  {
+   "file": "Tonkotsu_Kazan_Ramen_product_豚骨火山_Ishiyaki_豚骨ラーメン_26_January_2025_Philippines3.jpg",
+   "w": 4096,
+   "h": 3072,
+   "license": "CC BY-SA 4.0",
+   "artist": "",
+   "desc": ""
+  },
+  {
+   "file": "A_bowl_of_tonkotsu_ramen_at_Ichiran_in_Tokyo_in_July_2026.jpg",
+   "w": 4284,
+   "h": 5712,
+   "license": "CC BY-SA 4.0",
+   "artist": "Gatorfan252525",
+   "desc": "A bowl of tonkotsu ramen at Ichiran in Tokyo in July 2026"
+  }
+ ],
+ "catfish": [
+  {
+   "file": "Pla_duk_phat_phet.jpg",
+   "w": 1272,
+   "h": 1920,
+   "license": "CC BY-SA 3.0",
+   "artist": "Takeaway",
+   "desc": "Pla duk phat phet (Thai script: ปลาดุกผัดเผ็ด): catfish stir-fried in a spicy curry paste, with lime leaves and pea aubergine (solanum torvu"
+  },
+  {
+   "file": "Thin_Catfish_at_Middendorfs.jpg",
+   "w": 1600,
+   "h": 1200,
+   "license": "CC BY-SA 2.0",
+   "artist": "David Reber",
+   "desc": "I love me some thin catfish. Mark Spencer ordered the catfish and after hearing me order \"thin catfish\" he had to confirm that he was gettin"
+  },
+  {
+   "file": "Ultimate_Seafood_Platter_at_Landry's_Seafood_House.jpg",
+   "w": 1024,
+   "h": 683,
+   "license": "CC BY 2.0",
+   "artist": "pointnshoot",
+   "desc": "Stuffed crab, soft shell crab, crab fingers, catfish, shrimp and oysters, all fried to perfection. Landry's Seafood House 400 N. Peters St N"
+  },
+  {
+   "file": "Acme_Oyster_House_Shrimp_and_Catfish_Platter.jpg",
+   "w": 4288,
+   "h": 2848,
+   "license": "CC BY 2.0",
+   "artist": "Kimberly Vardeman",
+   "desc": "Shrimp and Catfish Platter at Acme Oyster House, New Orleans."
+  },
+  {
+   "file": "Elizabeth's_Restaurant_New_Orleans_Catfish_Po-boy.jpg",
+   "w": 3888,
+   "h": 5184,
+   "license": "CC BY 2.0",
+   "artist": "Infrogmation of New Orleans",
+   "desc": "At Elizabeth's Restaurant, Bywater, New Orleans. Catfish po-boy, Callas, praline bacon."
+  },
+  {
+   "file": "New_Orleans_-_shrimp_&_grits_in_one_hand,_fried_catfish_in_the_other.jpg",
+   "w": 612,
+   "h": 612,
+   "license": "CC BY-SA 2.0",
+   "artist": "Lori",
+   "desc": "\"They should serve this to people in IVs on the street.\" - @meredithtwhite, shrimp &amp; grits in one hand, fried catfish in the other"
+  },
+  {
+   "file": "All_American_Catfish_Plate_(6060757457).jpg",
+   "w": 2201,
+   "h": 1474,
+   "license": "CC BY 2.0",
+   "artist": "Paul Lowry from New York, EEUU de A",
+   "desc": "All American Catfish Plate"
+  },
+  {
+   "file": "Fried_catfish_-_Willie_Mae's_Scotch_House_restaurant_in_New_Orleans.jpg",
+   "w": 4272,
+   "h": 2848,
+   "license": "CC BY-SA 2.0",
+   "artist": "Kent Wang",
+   "desc": "I don't like cornmeal batter. Catfish tasted really iodine-y."
+  },
+  {
+   "file": "Fried_Catfish_&_Baked_Macaroni_-_Rocky_&_Carlo's.jpg",
+   "w": 640,
+   "h": 480,
+   "license": "CC BY-SA 2.0",
+   "artist": "Jason Lam",
+   "desc": "Rocky &amp; Carlo's restaurant, Chalmette, Louisiana"
+  },
+  {
+   "file": "Mississippi_Fried_Catfish.jpg",
+   "w": 3024,
+   "h": 3397,
+   "license": "CC BY-SA 4.0",
+   "artist": "Tallahatchie",
+   "desc": "Plate lunch containing pinto beans, cornbread, hot sauce, hushpuppies, and two filets of fried catfish from Mississippi."
+  },
+  {
+   "file": "Fried_Catfish_at_Middendorf's.jpg",
+   "w": 4896,
+   "h": 3264,
+   "license": "CC BY 2.0",
+   "artist": "leighklotz",
+   "desc": "Fried Catfish at Middendorf's"
+  },
+  {
+   "file": "Okra_and_Catfish_-_Willie_Mae's,_New_Orleans,_April_2025.jpg",
+   "w": 4080,
+   "h": 2295,
+   "license": "CC BY 2.0",
+   "artist": "Paul Lowry",
+   "desc": "Willie Mae's Lent Menu Southern Fried Catfish on Bun Crispy Fried Catfish, Crabmeat Tartar, Hi-Ho Pickles on a Brioche Bun"
+  }
+ ],
+ "tiki": [
+  {
+   "file": "Mai_Tai_mit_LPS_17y.jpg",
+   "w": 2304,
+   "h": 3456,
+   "license": "CC BY-SA 3.0",
+   "artist": "Marler",
+   "desc": "Mai Tai mixed in a traditional way with Long Pond Distillery Trelawny 17y, Duquesne Eleve Sous Bois, Pierre Ferrand Orange Curacao, Meneau O"
+  },
+  {
+   "file": "Mai_Tai_1.JPG",
+   "w": 3423,
+   "h": 2284,
+   "license": "CC BY-SA 3.0 de",
+   "artist": "Achim Schleuning (E-Mail: comander02_de@yahoo.de)",
+   "desc": "Mai Tai Cocktail with key ingredients (Jamaica rum, Orgeat, sugar syrup, Rhum Agricole, limes"
+  },
+  {
+   "file": "Mai_Tai_2.JPG",
+   "w": 2430,
+   "h": 2231,
+   "license": "CC BY-SA 3.0 de",
+   "artist": "Achim Schleuning (E-Mail: comander02_de@yahoo.de)",
+   "desc": "Mai Tai Cocktail with ingredients (Jamaica rum, Demerara Rum, Orgeat, sugar syrup, Falernum, Rhum Agricole, limes"
+  },
+  {
+   "file": "Mai_Tai_3.JPG",
+   "w": 3415,
+   "h": 2255,
+   "license": "CC BY-SA 3.0 de",
+   "artist": "Achim Schleuning (E-Mail: comander02_de@yahoo.de)",
+   "desc": "Mai Tai Cocktail in a frosted tumbler with some ingredients in the background (Rhum Agricole, Demarara Rum, Orgeat, Jamaica Rum"
+  },
+  {
+   "file": "Mai_Tai_4.JPG",
+   "w": 3228,
+   "h": 2274,
+   "license": "CC BY-SA 3.0 de",
+   "artist": "Achim Schleuning (E-Mail: comander02_de@yahoo.de)",
+   "desc": "Mai Tai Cocktail with some ingredients in the background (orange liqueur, dark rum, sugar syrup, orgeat)"
+  },
+  {
+   "file": "Mai_Tai_5.JPG",
+   "w": 3116,
+   "h": 2238,
+   "license": "CC BY-SA 3.0 de",
+   "artist": "Achim Schleuning (E-Mail: comander02_de@yahoo.de)",
+   "desc": "Mai Tai Cocktail)"
+  },
+  {
+   "file": "Mai_Tai_(Long_Pond).jpg",
+   "w": 2852,
+   "h": 3744,
+   "license": "CC BY-SA 4.0",
+   "artist": "Michael Wagner (www.mix-perience.de)",
+   "desc": "Mai Tai cocktail made with LPS Long Pond (1993) Jamaica Rum."
+  },
+  {
+   "file": "Sam's_Anchor_Cafe_-_April_2019_-_Stierch_12.jpg",
+   "w": 3870,
+   "h": 2902,
+   "license": "CC BY 4.0",
+   "artist": "Missvain",
+   "desc": "Mai Tai at Sam's Anchor Cafe in Tiburon, California. It's made with diplimatico dark rum, lime, orgeat, orange liquior, lilikoi foam"
+  },
+  {
+   "file": "Mai_Tai_(16304400706).jpg",
+   "w": 4519,
+   "h": 3239,
+   "license": "CC BY-SA 2.0",
+   "artist": "Johnny Silvercloud",
+   "desc": "Mai Tai in Honolulu, Hawaii."
+  },
+  {
+   "file": "Mai_Tai_ingredients.png",
+   "w": 1485,
+   "h": 1788,
+   "license": "CC BY-SA 4.0",
+   "artist": "GeoO",
+   "desc": "Mai Tai ingredients. The visual was created on the basis of free images."
+  },
+  {
+   "file": "MAI_TAI_-_Efes_Town_Turkish_Cuisine_2026-01-27.jpg",
+   "w": 8160,
+   "h": 6144,
+   "license": "CC0",
+   "artist": "Andy Li",
+   "desc": "Description on menu: \"Dark Rum, Spiced Rum, Lime, Orange &amp; Pineapple Juice\""
+  },
+  {
+   "file": "Love_in_Goa_&_Mai_Tai_-_Calcutta_16_2026-07-11.jpg",
+   "w": 6144,
+   "h": 8160,
+   "license": "CC0",
+   "artist": "Andy Li",
+   "desc": "Items and their descriptions on the menu: Love in Goa - \"Vodka mixed with Peach Schnapps shaken with orange and cranberry juice.\" Mai Tai - "
+  }
+ ],
+ "cookies": [
+  {
+   "file": "Snowflake_Christmas_sugar_cookies_(2),_December_2008.jpg",
+   "w": 2048,
+   "h": 1536,
+   "license": "CC BY-SA 2.0",
+   "artist": "Kristin Ausk",
+   "desc": "Snowflake Christmas sugar cookies decorated with royal icing"
+  },
+  {
+   "file": "Snowflake_Christmas_sugar_cookies,_December_2008.jpg",
+   "w": 2048,
+   "h": 1536,
+   "license": "CC BY-SA 2.0",
+   "artist": "Kristin Ausk",
+   "desc": "Snowflake Christmas sugar cookies decorated with royal icing."
+  },
+  {
+   "file": "Christmas_tree_sugar_cookies,_December_2008.jpg",
+   "w": 2048,
+   "h": 1536,
+   "license": "CC BY-SA 2.0",
+   "artist": "Kristin Ausk",
+   "desc": "Christmas tree sugar cookies decorated with royal icing."
+  },
+  {
+   "file": "Decorated_sugar_cookies,_December_2009.jpg",
+   "w": 3072,
+   "h": 2304,
+   "license": "CC BY 2.0",
+   "artist": "Selena N. B. H.",
+   "desc": "Decorated sugar cookies."
+  },
+  {
+   "file": "Decorated_sugar_cookies.jpg",
+   "w": 2952,
+   "h": 2788,
+   "license": "CC BY-SA 3.0",
+   "artist": "Julie Anne Workman",
+   "desc": "Home-baked sugar cut-out cookies, decorated with a minimum of equipment, utensils, or skill."
+  },
+  {
+   "file": "Decorated_sugar_cookies_2.jpg",
+   "w": 4092,
+   "h": 2848,
+   "license": "CC BY-SA 3.0",
+   "artist": "Julie Anne Workman",
+   "desc": "Home-baked sugar cut-out cookies, decorated with a minimum of equipment, utensils, or skill."
+  },
+  {
+   "file": "Christmas_Sugar_Cookies.jpg",
+   "w": 1152,
+   "h": 864,
+   "license": "CC BY-SA 3.0",
+   "artist": "ParentingPatch",
+   "desc": "Rolled sugar cookies decorated with colored sugar"
+  },
+  {
+   "file": "Cookie_decorating_(11540003385).jpg",
+   "w": 2592,
+   "h": 1728,
+   "license": "CC BY 2.0",
+   "artist": "photochem_PA from State College, PA, USA",
+   "desc": "Cookie decorating"
+  },
+  {
+   "file": "Sugar_Sprinkled_Sugar_Cookies.jpg",
+   "w": 2272,
+   "h": 1704,
+   "license": "CC BY-SA 4.0",
+   "artist": "HeatherMarieKosur",
+   "desc": "Festive sugar cookies decorated with colored sugar on a paper towel."
+  },
+  {
+   "file": "Rolled_Sugar_Cookies.jpg",
+   "w": 2272,
+   "h": 1704,
+   "license": "CC BY-SA 4.0",
+   "artist": "HeatherMarieKosur",
+   "desc": "Festive sugar cookies decorated with colored sugar on a paper towel."
+  },
+  {
+   "file": "Holiday_Sugar_Cookies.jpg",
+   "w": 4608,
+   "h": 3456,
+   "license": "CC BY-SA 4.0",
+   "artist": "HeatherMarieKosur",
+   "desc": "Festive sugar cookies decorated with colored sugar on a paper towel."
+  },
+  {
+   "file": "Gluten-Free_Sugar_Cookies.jpg",
+   "w": 2272,
+   "h": 1704,
+   "license": "CC BY-SA 4.0",
+   "artist": "HeatherMarieKosur",
+   "desc": "Gluten-free sugar cookies decorated with pink sanding sugar."
+  }
+ ],
+ "concert": []
+}
