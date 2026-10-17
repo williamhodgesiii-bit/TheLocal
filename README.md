@@ -130,10 +130,21 @@ Don't add a paid plan or a card anywhere in the steps below; none of them need o
 6. **Connect a free email sender (do this before the templates).** Supabase's built-in sender allows only a couple of emails an hour, and new free projects can't edit email templates until their own sender is connected (if Supabase says "upgrade your plan" on the templates page, this step is the free fix). Make a free [Resend](https://resend.com) account (Free plan: 3,000 emails a month, 100 a day, no card), add the domain `theplatenextdoor.com` (it asks for a few DNS records on a `send.` subdomain — add them in GoDaddy; they don't touch your Microsoft 365 email), then Supabase → **Authentication → Emails → SMTP Settings**: host `smtp.resend.com`, port `465`, user `resend`, password = your Resend API key, sender `emails@theplatenextdoor.com` (any address at the domain works; this one means replies reach your inbox), name `The Plate Next Door`.
 7. **Authentication → Emails → Templates** (unlocked once step 6 is saved): in both **Magic Link** and **Confirm signup**, set the subject to `{{ .Token }} is your Plate Next Door code` and the body to:
    ```html
-   <p>Your sign-in code:</p>
-   <p style="font-size:32px;letter-spacing:6px;font-weight:700;font-family:monospace">{{ .Token }}</p>
-   <p>Type it in on The Plate Next Door, or <a href="{{ .ConfirmationURL }}">tap here to sign in</a>.</p>
-   <p style="color:#6b665b;font-size:13px">It works once, for an hour. Didn't ask for it? Ignore this email.</p>
+   <div style="margin:0;padding:24px 12px;background:#f4efe1;font-family:Arial,Helvetica,sans-serif;color:#22201c">
+     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:460px;margin:0 auto;background:#fbf8ef;border:1px solid #22201c">
+       <tr><td style="padding:28px 28px 8px">
+         <p style="margin:0 0 6px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#2c5a43;font-weight:bold">The Plate Next Door</p>
+         <h1 style="margin:0 0 18px;font-family:Georgia,'Times New Roman',serif;font-weight:normal;font-size:26px;line-height:1.2">Here's your sign-in code</h1>
+         <p style="margin:0 0 8px;font-size:15px;line-height:1.5">Type this code where you're signing in:</p>
+         <p style="margin:0 0 22px;font-family:'Courier New',Courier,monospace;font-size:34px;font-weight:bold;letter-spacing:8px">{{ .Token }}</p>
+         <p style="margin:0 0 14px;font-size:15px;line-height:1.5">Or tap the button to sign in right here:</p>
+         <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#2c5a43;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px;padding:12px 22px">Sign me in</a>
+       </td></tr>
+       <tr><td style="padding:22px 28px 26px;font-size:12px;line-height:1.5;color:#6b665b">
+         The code and the button work once and expire in an hour. Didn't ask to sign in? You can ignore this email.
+       </td></tr>
+     </table>
+   </div>
    ```
 8. Optional, passkeys (free): **Authentication → Passkeys** → enable (relying party: `theplatenextdoor.com`), then add `NEXT_PUBLIC_PASSKEYS=on` in Vercel.
 
