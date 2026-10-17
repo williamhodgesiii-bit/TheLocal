@@ -13,7 +13,7 @@ import { Thumb } from "./Photo";
  * far more often than a blank one).
  */
 export default function StampPicker({ open, onClose, spots, areas }: { open: boolean; onClose: () => void; spots: Spot[]; areas: Area[] }) {
-  const { been, markBeen } = useApp();
+  const { backend, been, markBeen } = useApp();
   const [q, setQ] = useState("");
   const [start, setStart] = useState(0);
   useEffect(() => {
@@ -67,7 +67,9 @@ export default function StampPicker({ open, onClose, spots, areas }: { open: boo
               </button>
             </div>
             <div className="sheet-body">
-              <p className="muted">Tap every place you&apos;ve been. Each one is a stamp in your Plate Passport. It stays on this device.</p>
+              <p className="muted">Tap every place you&apos;ve been. Each one is a stamp in your Plate Passport.{" "}
+                {backend.mode === "supabase" ? "It's kept in your account, on every device." : "It stays on this device."}
+              </p>
               <label className="b-search sp-search">
                 <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
                   <path d="M10.5 18a7.5 7.5 0 1 1 5.3-2.2L21 21" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />

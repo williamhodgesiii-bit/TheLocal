@@ -28,7 +28,7 @@ export default function Profile({
   onAdd: () => void;
   admin: boolean;
 }) {
-  const { backend, user, openAuth, toast, home, setHome } = useApp();
+  const { backend, user, authReady, openAuth, toast, home, setHome } = useApp();
   const [tab, setTab] = useState<Tab>("reviews");
   const [reviews, setReviews] = useState<Review[] | null>(null);
   const [photos, setPhotos] = useState<Photo[] | null>(null);
@@ -83,16 +83,20 @@ export default function Profile({
   if (!user)
     return (
       <div className="profile">
-        <div className="profile-empty">
-          <h2 className="modal-title">Join your neighbors</h2>
-          <p className="muted">
-            Your passport works without an account. Sign in to keep it on every device, write reviews, post photos and add the places you love. Free, and
-            there&apos;s no password: we email you a code.
-          </p>
-          <button className="btn btn-green" onClick={() => openAuth()}>
-            Sign in or join
-          </button>
-        </div>
+        {authReady ? (
+          <div className="profile-empty">
+            <h2 className="modal-title">Your Plate Passport starts here</h2>
+            <p className="muted">
+              Exploring is free. Sign in to stamp your passport, save places to try, spin Surprise me, write reviews, post photos and add the places you love.
+              Free, and there&apos;s no password: we email you a code.
+            </p>
+            <button className="btn btn-green" onClick={() => openAuth()}>
+              Sign in or join
+            </button>
+          </div>
+        ) : (
+          <Loading />
+        )}
       </div>
     );
 

@@ -50,7 +50,6 @@ export function BeenButtons({ spot, onStamped }: { spot: Spot; onStamped?: () =>
   const { saved, toggleSaved, been, markBeen, toast } = useApp();
   const stamp = been[spot.id];
   const want = saved.includes(spot.id);
-  const count = Object.keys(been).length;
   return (
     <div className="been">
       <div className="been-row">
@@ -66,9 +65,11 @@ export function BeenButtons({ spot, onStamped }: { spot: Spot; onStamped?: () =>
           aria-pressed={!!stamp}
           onClick={() => {
             if (stamp) return;
-            markBeen(spot.id);
-            toast(count === 0 ? "First stamp in your Plate Passport" : `Stamped. ${count + 1} local plates so far`, "ok");
-            onStamped?.();
+            // a guest signs in first; the stamp (and this cheer) land once they're in
+            markBeen(spot.id, undefined, (n) => {
+              toast(n === 1 ? "First stamp in your Plate Passport" : `Stamped. ${n} local plates so far`, "ok");
+              onStamped?.();
+            });
           }}
         >
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>

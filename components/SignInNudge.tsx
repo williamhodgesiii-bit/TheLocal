@@ -132,8 +132,8 @@ export default function SignInNudge({ authOpen }: { authOpen: boolean }) {
     guest && synced
       ? `You've marked ${guest} ${guest === 1 ? "place" : "places"} on this device. Sign in — free, no password — to keep ${guest === 1 ? "it" : "them"} on every device you use.`
       : synced
-        ? "Sign in to keep your passport and want-to-try list on every device, write reviews and post photos. Free, and no password."
-        : "Sign in to write reviews, post photos and add the places you love. Free, and no password.";
+        ? "Exploring is free. Sign in to stamp your Plate Passport, save places to try, spin Surprise me and write reviews, on every device. Free, and no password."
+        : "Exploring is free. Sign in to stamp your Plate Passport, save places to try, spin Surprise me and write reviews. Free, and no password.";
 
   return (
     <AnimatePresence>

@@ -11,8 +11,8 @@ import { Thumb } from "./Photo";
 const VERDICT_LABEL = { loved: "Loved it", liked: "It was good", meh: "Not for me" } as const;
 
 /**
- * Your Plate Passport: every local place you've eaten at, stamped. Works without an account
- * (it lives on this device), so nobody has to sign up to start.
+ * Your Plate Passport: every local place you've eaten at, stamped. Members only: it lives in the
+ * account, so it follows you to every device (Explorer shows the way in to anyone signed out).
  */
 export default function Passport({ spots, areas, city, onOpen, onStampMany }: { spots: Spot[]; areas: Area[]; city: string; onOpen: (id: string) => void; onStampMany: () => void }) {
   const { been, saved, toast } = useApp();

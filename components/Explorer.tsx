@@ -60,6 +60,10 @@ function useIsMobile() {
 const MapView = dynamic(() => import("./MapView"), { ssr: false, loading: () => <div className="leaflet-host map-loading" /> });
 
 type Sort = "popular" | "rating" | "az" | "near";
+/* exploring is open to everyone; these belong to an account (stamps and saves are gated in Providers) */
+const SURPRISE_WHY = "Sign in to spin Surprise me. It takes a few seconds, no password.";
+const PASSPORT_WHY = "Sign in to open your Plate Passport. It takes a few seconds, no password.";
+const STAMP_WHY = "Sign in to stamp your Plate Passport. It takes a few seconds, no password.";
 /** an occasion collection or a trail, picked from the front page; filters the list and frames the map */
 type Theme = { kind: "collection" | "trail"; id: string } | null;
 const SEEN_KEY = "tl.seenApproved";
@@ -369,7 +373,9 @@ export default function Explorer({
     setView(v);
     scrollRef.current?.scrollTo({ top: 0 });
   }, []);
-  const openPassport = useCallback(() => goView("me"), [goView]);
+  const openPassport = useCallback(() => {
+    if (requireAuth(PASSPORT_WHY, () => goView("me"))) goView("me");
+  }, [goView, requireAuth]);
 
   const chooseGenre = (g: GenreId | "all") => {
     setGenre((cur) => (cur === g && g !== "all" ? "all" : g));
@@ -431,7 +437,7 @@ export default function Explorer({
         select(null);
         setTimeout(() => searchRef.current?.focus(), 50);
       } else if (e.key.toLowerCase() === "s" && !e.metaKey && !e.ctrlKey) {
-        setSurprise(true);
+        if (requireAuth(SURPRISE_WHY, () => setSurprise(true))) setSurprise(true);
       } else if (e.key === "Escape" && selectedId) {
         select(null);
       } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && list.length) {
@@ -443,7 +449,7 @@ export default function Explorer({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [list, selectedId, hoveredId, surprise, select]);
+  }, [list, selectedId, hoveredId, surprise, select, requireAuth]);
 
   const selected = selectedId ? spotById[selectedId] ?? null : null;
   useEffect(() => {
@@ -497,7 +503,9 @@ export default function Explorer({
   );
   const seeCollection = useCallback((id: string) => pickTheme({ kind: "collection", id }), [pickTheme]);
   const seeTrail = useCallback((id: string) => pickTheme({ kind: "trail", id }), [pickTheme]);
-  const openStamps = useCallback(() => setStampPicker(true), []);
+  const openStamps = useCallback(() => {
+    if (requireAuth(STAMP_WHY, () => setStampPicker(true))) setStampPicker(true);
+  }, [requireAuth]);
   const askNear = () => {
     if (!navigator.geolocation) return toast("This browser can't share your location.", "err");
     navigator.geolocation.getCurrentPosition(
@@ -539,7 +547,10 @@ export default function Explorer({
   };
   // the same picks anywhere, for the empty state
   const elsewhere = useMemo(() => allSpots.filter(matchesBase).length, [allSpots, matchesBase]);
-  const surpriseOrAdd = () => (allSpots.length ? setSurprise(true) : openAdd());
+  const surpriseOrAdd = () => {
+    if (!allSpots.length) return openAdd();
+    if (requireAuth(SURPRISE_WHY, () => setSurprise(true))) setSurprise(true);
+  };
 
   // phones: tuck the browse bar away while scrolling down the list, bring it back on the way up
   useEffect(() => {
@@ -651,7 +662,8 @@ export default function Explorer({
                       </button>
                     </div>
                   )}
-                  <Passport spots={allSpots} areas={areas} city={city.name} onOpen={(id) => select(id)} onStampMany={() => setStampPicker(true)} />
+                  {/* the passport is members-only; signed out, Profile below shows the way in */}
+                  {user && <Passport spots={allSpots} areas={areas} city={city.name} onOpen={(id) => select(id)} onStampMany={openStamps} />}
                   <Profile spotById={spotById} onOpen={(id) => select(id)} onAdd={openAdd} admin={admin} refreshKey={profileKey} />
                 </motion.div>
               ) : (
@@ -955,7 +967,7 @@ export default function Explorer({
           <TabGlyph k="spark" />
           Surprise
         </button>
-        <button className={view === "me" && !selected ? "on" : ""} onClick={() => goView("me")} aria-current={view === "me" && !selected ? "page" : undefined}>
+        <button className={view === "me" && !selected ? "on" : ""} onClick={openPassport} aria-current={view === "me" && !selected ? "page" : undefined}>
           <TabGlyph k="stamp" />
           Passport
         </button>

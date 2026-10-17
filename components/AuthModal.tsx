@@ -251,7 +251,7 @@ export default function AuthModal({
                   <h2 className="modal-title" id="auth-title">
                     Sign in or join
                   </h2>
-                  <p className="muted">{reason ?? "Keep your passport and want-to-try list on every device, write reviews and post photos. Free, and no password."}</p>
+                  <p className="muted">{reason ?? "Stamp your Plate Passport, save places to try, spin Surprise me, write reviews and post photos. Free, and no password."}</p>
 
                   {backend.googleClientId && (
                     <>

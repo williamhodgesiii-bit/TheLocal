@@ -9,7 +9,7 @@
 - **The browse bar** (same on computers and phones), top to bottom: one search box; **what sounds good**, every kind of food on its own little plate (Southern, BBQ, Burgers & Sandwiches, Pizza, Italian, Seafood, Steaks & Live Fire, Latin, Asian, Greek, French, Brunch, Sweets & Bakeries, Coffee, and **Bars** with cocktails, pubs & dives, wine bars and breweries). Plates are kinds of food only; occasions like Date night and Special occasion are rows on the front page; then three buttons that always show their current value: **Where** (a town, then a neighborhood; nobody is asked on the first visit), **Price**, and **Want to try**. Under it: how many places match, *Clear all*, and the sort.
 - **The map**: drag it with the mouse or one finger, zoom with the wheel, a pinch, double-click, the +/− buttons or keys. The camera frames your picks; once you move it yourself, **Recenter** brings it back.
 - **Front page** (until you narrow things down): **This week's plate** (one place for everyone, new every Thursday, the day the email goes out; `lib/collections.ts`), your **Plate Passport** card, three **occasion rows** picked for the time of day (Date night, Patio weather, Cheap & good, Brunch, Coffee to work from, Bring the kids, Big groups, Award winners, Breweries; built only from place tags, never padded), and a **trail**. "See all" turns a row into a filter that also reframes the map.
-- **Plate Passport** (`lib/passport.ts`, the Passport tab): tap **I've been** on any place to stamp it, then say how it went (Loved it / It was good / Not for me). Shows how many of the listed places you've stamped, stamps by neighborhood, milestones (1, 5, 10, 25, 50, all), a forgiving weekly streak (a quiet week doesn't break it), trails (`lib/trails.ts`: a seasonal coffee trail, Over the mountain, Meat-and-threes) and a share card drawn in the browser (progress, not places). **Where have you eaten already?** lets people stamp the places they've been in one go, so nobody starts at zero. It works without an account and stays on the device.
+- **Plate Passport** (`lib/passport.ts`, the Passport tab): tap **I've been** on any place to stamp it, then say how it went (Loved it / It was good / Not for me). Shows how many of the listed places you've stamped, stamps by neighborhood, milestones (1, 5, 10, 25, 50, all), a forgiving weekly streak (a quiet week doesn't break it), trails (`lib/trails.ts`: a seasonal coffee trail, Over the mountain, Meat-and-threes) and a share card drawn in the browser (progress, not places). **Where have you eaten already?** lets people stamp the places they've been in one go, so nobody starts at zero. It's for members (signing in takes seconds, no password) and follows them to every device.
 - **Restaurant page**: name, the basics and what to order first, then awards (dated, each links to where it was announced; `lib/honors.ts`), Want to try / I've been, Directions & hours, photos, the write-up, reviews, nearby places, and who checked it and when, with **Report a change**.
 - **Sort**: Most loved, **Nearest to me** (asks for your location only when you pick it), Top rated, A to Z. Nobody can pay to move up.
 - **Surprise me**: a random pick, a little more likely for well-loved places, never for paid ones. If you've narrowed things down it starts inside your picks.
@@ -80,7 +80,7 @@ Not built yet, in rough order:
 - [ ] **Owner setup:** Supabase, Google sign-in and Google Analytics (see **Accounts, database & analytics**), a terms page, payments for Partner and Sponsored (Stripe payment links are the simplest start), and turning on Vercel Analytics.
 - [ ] **Have a lawyer read** the review rules and the Sponsored labeling on `/about` and `/partners`.
 - [ ] **Real photos of every place** (owner uploads or a local photographer) to replace the labeled stock dish photos.
-- [ ] **Passport across devices** for signed-in members. Today it stays on the device.
+- [x] **Passport across devices**: kept in the account (`stamps`, `saved_spots`).
 - [x] **Passwordless sign-in**: one flow for new and returning members (Google one-tap, email code or link, passkeys), guest lists carried into the account. Needs the setup below.
 
 ## Deploy (Vercel)
@@ -94,9 +94,9 @@ See `.env.example`.
 
 ## Accounts, database & analytics
 
-**How sign-in works (and why).** Forcing people to make an account loses about 1 in 5 of them ([Baymard](https://baymard.com/blog/reduce-cart-abandonment)), so nothing here is gated except posting in public:
+**How sign-in works (and why).** Exploring is open to everyone, with no account: every place, the map, the guides and the front page. Anything personal needs one, so signing in is made as quick as it can be:
 
-- **Guest-first.** Browsing, the want-to-try list and the Plate Passport work with no account, saved on the device. The moment someone signs in, everything they did as a guest moves into their account; nothing is lost.
+- **Explore free, sign in to make it yours.** Stamping the Plate Passport, the want-to-try list, Surprise me, reviews, photos and adding places ask a guest to sign in first, and the thing they tapped happens the moment they're in (after their lists load, so nothing is overwritten). Lists a guest kept on a device from before this move into their account at sign-in; nothing is lost.
 - **One flow, no fork.** No "sign in" vs "sign up" choice and no password. Type an email (or tap Google) and you're in, new or returning — the same idea as [Uber's unified login](https://www.uber.com/blog/usl-ubers-unified-signup-and-login-stack/).
 - **Code or link, either works.** The email carries a 6-digit code (keeps you in the app on a phone) and a link (one tap on a laptop). The code box autofills from the email/SMS on iOS and Android, auto-submits on the last digit, and has a resend timer.
 - **Google one-tap** and **passkeys** (Face ID, fingerprint, device PIN; offered right after joining and from your page).

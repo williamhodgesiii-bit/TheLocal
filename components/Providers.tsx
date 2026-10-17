@@ -15,15 +15,21 @@ type Toast = { id: number; text: string; tone?: "ok" | "err" };
 type Ctx = {
   backend: Backend;
   user: User | null;
+  /** false until we know whether someone's signed in (so a member never sees the signed-out view flash) */
+  authReady: boolean;
   /** true when signed in; otherwise opens sign-in and, once they're in, runs `then` so nobody has to tap twice */
   requireAuth: (reason?: string, then?: () => void) => boolean;
   openAuth: (reason?: string, then?: () => void) => void;
   toast: (text: string, tone?: Toast["tone"]) => void;
   saved: string[];
+  /** members only: a guest is asked to sign in, and the place is saved the moment they're in */
   toggleSaved: (id: string) => void;
   been: BeenMap;
-  /** stamp a place (optionally with how it went); null takes the stamp back */
-  markBeen: (id: string, verdict?: Verdict | null) => void;
+  /**
+   * Stamp a place (optionally with how it went); null takes the stamp back. Members only, like
+   * toggleSaved. `done` gets the passport's new stamp count once the stamp has landed.
+   */
+  markBeen: (id: string, verdict?: Verdict | null, done?: (count: number) => void) => void;
   /** where the map opens every visit (lib/regions); null until someone picks one */
   home: string | null;
   setHome: (home: string) => void;
@@ -83,7 +89,9 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<{ open: boolean; reason?: string; step?: AuthStep }>({ open: false });
   const pending = useRef<(() => void) | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [authReady, setAuthReady] = useState(false);
   const [saved, setSaved] = useState<string[]>([]);
+  const savedRef = useRef<string[]>([]);
   const [been, setBeen] = useState<BeenMap>({});
   const beenRef = useRef<BeenMap>({});
   const [home, setHomeState] = useState<string | null>(null);
@@ -95,13 +103,41 @@ export default function Providers({ children }: { children: ReactNode }) {
     setUser(u);
   }, []);
 
+  /** whose lists are loaded; anything tapped before signing in waits for them, so the pull can't overwrite it */
+  const listsFor = useRef<string | null>(null);
+  const waiting = useRef<(() => void)[]>([]);
+  const listsLoaded = useCallback((id: string | null) => {
+    listsFor.current = id;
+    const run = waiting.current;
+    waiting.current = [];
+    run.forEach((f) => f());
+  }, []);
+  const afterLists = useCallback(
+    (fn: () => void) => {
+      const id = userRef.current?.id;
+      if (!synced || !id || listsFor.current === id) return fn();
+      waiting.current.push(fn);
+      // a slow or stuck pull never holds it up for long
+      setTimeout(() => {
+        if (!waiting.current.includes(fn)) return;
+        waiting.current = waiting.current.filter((f) => f !== fn);
+        fn();
+      }, 4000);
+    },
+    [synced]
+  );
+
   useEffect(() => {
-    backend.getUser().then(applyUser);
+    backend
+      .getUser()
+      .then(applyUser, () => {})
+      .finally(() => setAuthReady(true));
     return backend.onAuth(applyUser);
   }, [backend, applyUser]);
 
   useEffect(() => {
-    setSaved(readJson<string[]>(SAVED_KEY, []));
+    savedRef.current = readJson<string[]>(SAVED_KEY, []);
+    setSaved(savedRef.current);
     const b = readJson<BeenMap>(BEEN_KEY, {});
     beenRef.current = b;
     setBeen(b);
@@ -149,7 +185,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   }, [user?.id, user?.home]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The want-to-try list and the passport live in the account, so they follow a member to any device.
-  // Guests keep theirs on the device; the moment they sign in it all moves into the account.
+  // Lists a guest made on a device before these became members-only move into the account at sign-in.
   const lastUser = useRef<string | null>(null);
   useEffect(() => {
     const id = user?.id ?? null;
@@ -157,8 +193,11 @@ export default function Providers({ children }: { children: ReactNode }) {
     lastUser.current = id;
     if (!synced) return;
     if (!id) {
+      listsFor.current = null;
+      waiting.current = [];
       if (prev) {
         // signed out: the lists are safe in the account; take them off this device
+        savedRef.current = [];
         setSaved([]);
         beenRef.current = {};
         setBeen({});
@@ -205,6 +244,7 @@ export default function Providers({ children }: { children: ReactNode }) {
         }
       }
       if (cancelled) return;
+      savedRef.current = nextSaved;
       setSaved(nextSaved);
       beenRef.current = nextBeen;
       setBeen(nextBeen);
@@ -215,7 +255,10 @@ export default function Providers({ children }: { children: ReactNode }) {
       } catch {
         /* ignore */
       }
-    })();
+    })().finally(() => {
+      // however the pull went, the lists on screen are this member's now: let held taps through
+      if (!cancelled) listsLoaded(id);
+    });
     return () => {
       cancelled = true;
     };
@@ -237,9 +280,9 @@ export default function Providers({ children }: { children: ReactNode }) {
     setAuth({ open: false });
     const next = pending.current;
     pending.current = null;
-    // pick up right where they were: the review form opens, the photo picker opens…
-    if (next && userRef.current) setTimeout(next, 80);
-  }, []);
+    // pick up right where they were: the review form opens, the stamp lands… once their lists are in
+    if (next && userRef.current) setTimeout(() => afterLists(next), 80);
+  }, [afterLists]);
 
   // first name for a new member: Google already told us; anyone else gets one friendly question
   useEffect(() => {
@@ -252,21 +295,33 @@ export default function Providers({ children }: { children: ReactNode }) {
     setAuth((a) => (a.open ? a : { open: true, step: "welcome" }));
   }, [user?.id, user?.needsName]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Exploring is open to everyone; the want-to-try list and the passport belong to an account.
+  // A guest who taps one is asked to sign in, and what they tapped happens the moment they're in.
+  const setSavedOn = useCallback(
+    (id: string, on: boolean) => {
+      const cur = savedRef.current;
+      if (cur.includes(id) !== on) {
+        const next = on ? [...cur, id] : cur.filter((x) => x !== id);
+        savedRef.current = next;
+        setSaved(next);
+        persist(SAVED_KEY, next);
+        track(on ? "add_to_wishlist" : "remove_from_wishlist", { item_id: id });
+        if (synced && userRef.current) backend.putSaved(id, on).catch(() => toast("Couldn't save that to your account. Check your connection?", "err"));
+      }
+      toast(on ? "On your want-to-try list" : "Off your want-to-try list");
+    },
+    [toast, backend, synced]
+  );
   const toggleSaved = useCallback(
     (id: string) => {
-      const had = saved.includes(id);
-      const next = had ? saved.filter((x) => x !== id) : [...saved, id];
-      setSaved(next);
-      persist(SAVED_KEY, next);
-      toast(had ? "Off your want-to-try list" : "On your want-to-try list");
-      track(had ? "remove_from_wishlist" : "add_to_wishlist", { item_id: id });
-      if (synced && userRef.current) backend.putSaved(id, !had).catch(() => toast("Couldn't save that to your account. Check your connection?", "err"));
+      if (!userRef.current) return openAuth("Sign in to save places to your want-to-try list. It takes a few seconds, no password.", () => setSavedOn(id, true));
+      setSavedOn(id, !savedRef.current.includes(id));
     },
-    [saved, toast, backend, synced]
+    [openAuth, setSavedOn]
   );
 
-  const markBeen = useCallback(
-    (id: string, verdict?: Verdict | null) => {
+  const applyStamp = useCallback(
+    (id: string, verdict?: Verdict | null, done?: (count: number) => void) => {
       const cur = beenRef.current;
       const next = { ...cur };
       let stamp: Stamp | null = null;
@@ -281,8 +336,16 @@ export default function Providers({ children }: { children: ReactNode }) {
       persist(BEEN_KEY, next);
       track(stamp ? "stamp" : "unstamp", { id, ...(stamp?.verdict ? { verdict: stamp.verdict } : {}) });
       if (synced && userRef.current) backend.putStamp(id, stamp).catch(() => toast("Couldn't save that stamp to your account. Check your connection?", "err"));
+      done?.(Object.keys(next).length);
     },
     [backend, synced, toast]
+  );
+  const markBeen = useCallback(
+    (id: string, verdict?: Verdict | null, done?: (count: number) => void) => {
+      if (!userRef.current) return openAuth("Sign in to stamp your Plate Passport. It takes a few seconds, no password.", () => applyStamp(id, verdict, done));
+      applyStamp(id, verdict, done);
+    },
+    [openAuth, applyStamp]
   );
 
   const setHome = useCallback(
@@ -299,8 +362,8 @@ export default function Providers({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ backend, user, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome }),
-    [backend, user, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome]
+    () => ({ backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome }),
+    [backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome]
   );
 
   return (

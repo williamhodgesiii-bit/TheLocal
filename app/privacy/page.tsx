@@ -28,7 +28,7 @@ export default function Privacy() {
       <p className="cap-kicker">Privacy</p>
       <h1 className="guide-h1">What we keep, and why</h1>
       <p className="guide-lede">
-        The short version: you can use the whole map without an account. If you sign in, we keep what it takes to give you your stuff back on any device, and
+        The short version: you can explore the whole map without an account. If you sign in, we keep what it takes to give you your stuff back on any device, and
         nothing more. We don&apos;t sell your information or use it for ads.
       </p>
       <p className="guide-meta">Last updated {UPDATED}</p>
@@ -36,7 +36,10 @@ export default function Privacy() {
       <h2 className="menu-head">
         <span>Without an account</span>
       </h2>
-      <p>Your want-to-try list, Plate Passport stamps and home city are saved in your browser, on your device. We don&apos;t see them.</p>
+      <p>
+        You can browse every place, the map and the guides. The home city you pick is saved in your browser, on your device; we don&apos;t see it. The Plate
+        Passport, the want-to-try list, Surprise me and reviews need an account.
+      </p>
 
       <h2 className="menu-head">
         <span>With an account</span>
