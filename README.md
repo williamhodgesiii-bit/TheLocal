@@ -121,6 +121,13 @@ Don't add a paid plan or a card anywhere in the steps below; none of them need o
 
 ### Setup (one time, about 20 minutes)
 
+**Easiest: one tap, nothing to paste.** Supabase's editors don't take a paste on a phone, so `Set up Supabase` (in GitHub Actions) does the database, the sign-in settings, the free email sender and the sign-in email for you, and is safe to run again:
+1. Create the free project (step 1.1 below) and the free Resend account + domain (step 1.6).
+2. GitHub → this repo → **Settings → Secrets and variables → Actions → New repository secret**: `SUPABASE_ACCESS_TOKEN` (from [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens) → Generate new token) and `RESEND_API_KEY` (from [resend.com/api-keys](https://resend.com/api-keys)). Optional: `GOOGLE_CLIENT_SECRET`.
+3. GitHub → **Actions → Set up Supabase → Run workflow** → paste your Project URL (`https://….supabase.co`) → **Run**. Green check = done. Then add the three Vercel variables (step 1.2) and redeploy.
+
+The manual route, if you'd rather click through it:
+
 **1. Database — Supabase (free)**
 1. Go to [supabase.com](https://supabase.com) → **Start your project** → sign in with GitHub → **New project** → organization plan **Free** → name it `theplatenextdoor`, pick a strong database password (save it), region **East US**. No card is asked for.
 2. Project → **Settings → API Keys**. In Vercel → your project → **Settings → Environment Variables**, add `NEXT_PUBLIC_SUPABASE_URL` (the Project URL), `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the publishable key) and `SUPABASE_SECRET_KEY` (the secret key; server only, used for "Delete my account"). Older projects show `anon` / `service_role` keys instead; put them in `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`, both work. (Vercel's **Storage → Supabase** button also fills these in for you; if you use it, pick the **Free** plan.)
