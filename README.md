@@ -127,14 +127,14 @@ Don't add a paid plan or a card anywhere in the steps below; none of them need o
 3. Supabase → **SQL Editor** → paste all of `supabase/schema.sql` → **Run**. It's safe to run again after updates.
 4. Supabase → **Authentication → URL Configuration**: Site URL `https://www.theplatenextdoor.com`; Redirect URLs `https://www.theplatenextdoor.com/**`, `https://theplatenextdoor.com/**`, `http://localhost:3000/**`.
 5. **Authentication → Providers → Email**: keep it on, keep "Confirm email" on, set **Email OTP Length to 6**.
-6. **Authentication → Emails → Templates**: in both **Magic Link** and **Confirm signup**, set the subject to `{{ .Token }} is your Plate Next Door code` and the body to:
+6. **Connect a free email sender (do this before the templates).** Supabase's built-in sender allows only a couple of emails an hour, and new free projects can't edit email templates until their own sender is connected (if Supabase says "upgrade your plan" on the templates page, this step is the free fix). Make a free [Resend](https://resend.com) account (Free plan: 3,000 emails a month, 100 a day, no card), add the domain `theplatenextdoor.com` (it asks for a few DNS records on a `send.` subdomain — add them in GoDaddy; they don't touch your Microsoft 365 email), then Supabase → **Authentication → Emails → SMTP Settings**: host `smtp.resend.com`, port `465`, user `resend`, password = your Resend API key, sender `signin@theplatenextdoor.com`, name `The Plate Next Door`.
+7. **Authentication → Emails → Templates** (unlocked once step 6 is saved): in both **Magic Link** and **Confirm signup**, set the subject to `{{ .Token }} is your Plate Next Door code` and the body to:
    ```html
    <p>Your sign-in code:</p>
    <p style="font-size:32px;letter-spacing:6px;font-weight:700;font-family:monospace">{{ .Token }}</p>
    <p>Type it in on The Plate Next Door, or <a href="{{ .ConfirmationURL }}">tap here to sign in</a>.</p>
    <p style="color:#6b665b;font-size:13px">It works once, for an hour. Didn't ask for it? Ignore this email.</p>
    ```
-7. **Real email delivery, free (required before launch).** Supabase's built-in sender allows only a couple of emails an hour. Make a free [Resend](https://resend.com) account (Free plan: 3,000 emails a month, 100 a day, no card), add the domain `theplatenextdoor.com` (it asks for a few DNS records on a `send.` subdomain — add them in GoDaddy; they don't touch your Microsoft 365 email), then Supabase → **Authentication → Emails → SMTP Settings**: host `smtp.resend.com`, port `465`, user `resend`, password = your Resend API key, sender `signin@theplatenextdoor.com`, name `The Plate Next Door`.
 8. Optional, passkeys (free): **Authentication → Passkeys** → enable (relying party: `theplatenextdoor.com`), then add `NEXT_PUBLIC_PASSKEYS=on` in Vercel.
 
 **2. Google sign-in (free, recommended: it sends no email)**
