@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { track } from "@vercel/analytics";
+import { track } from "@/lib/analytics";
 import { DRINK_KINDS, GENRES, distanceKm, slugify, type Area, type DrinkKind, type GenreId, type Spot } from "@/lib/data";
 import { looksLikeChain, normalizeName } from "@/lib/chains";
 import type { City } from "@/lib/regions";

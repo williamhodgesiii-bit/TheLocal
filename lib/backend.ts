@@ -1,10 +1,28 @@
 "use client";
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient, type User as AuthUser } from "@supabase/supabase-js";
 import { resizeImage } from "./image";
 import { cleanGenres, slugify, type DrinkKind, type GenreId, type Spot } from "./data";
+import { SUPABASE_KEY, SUPABASE_URL, hasSupabase } from "./supabase-env";
 
-export type User = { id: string; name: string; email: string; /** home city id (or "other:Town, ST"), see lib/regions */ home?: string };
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  /** home city id (or "other:Town, ST"), see lib/regions */
+  home?: string;
+  /** hasn't picked the name people see yet (we show a one-field welcome) */
+  needsName?: boolean;
+  /** full name from Google, when they signed in that way */
+  fullName?: string;
+  /** this is the account's first sign-in */
+  isNew?: boolean;
+};
+/** how a visit went, Beli-style: three honest choices instead of five stars */
+export type Verdict = "loved" | "liked" | "meh";
+export type Stamp = { at: string; verdict?: Verdict };
+/** places you've eaten at: the Plate Passport */
+export type BeenMap = Record<string, Stamp>;
 export type Review = {
   id: string;
   spotId: string;
@@ -62,9 +80,29 @@ export interface Backend {
   mode: "supabase" | "local";
   getUser(): Promise<User | null>;
   onAuth(cb: (u: User | null) => void): () => void;
-  signUp(name: string, email: string, password: string, home?: string): Promise<User>;
-  signIn(email: string, password: string): Promise<User>;
+
+  /* sign-in: one flow for new and returning members, no passwords */
+  /** Email a one-time code (and a link). Demo mode signs in at once and returns the user as `instant`. */
+  sendCode(email: string): Promise<{ instant?: User }>;
+  verifyCode(email: string, code: string): Promise<User>;
+  /** Google client id when "Continue with Google" is set up */
+  googleClientId: string | null;
+  signInWithGoogleToken(idToken: string, nonce: string): Promise<User>;
+  signInWithGoogleRedirect(next: string): Promise<void>;
+  /** passkeys (Face ID, fingerprint, device PIN) are switched on and this browser supports them */
+  canUsePasskeys(): boolean;
+  signInWithPasskey(opts?: { conditional?: boolean; signal?: AbortSignal }): Promise<User | null>;
+  registerPasskey(): Promise<void>;
+  passkeyCount(): Promise<number>;
   signOut(): Promise<void>;
+  deleteAccount(): Promise<void>;
+
+  /* personal lists, kept in the account so they follow you to any device */
+  pullLists(): Promise<{ saved: string[]; been: BeenMap }>;
+  putSaved(spotId: string, on: boolean): Promise<void>;
+  putStamp(spotId: string, stamp: Stamp | null): Promise<void>;
+  pushLists(saved: string[], been: BeenMap): Promise<void>;
+
   listReviews(spotId: string): Promise<Review[]>;
   addReview(spotId: string, rating: number, body: string): Promise<Review>;
   deleteReview(id: string): Promise<void>;
@@ -96,6 +134,33 @@ export interface Backend {
 
 const newSpotId = (name: string) => `${slugify(name)}-${Math.random().toString(36).slice(2, 6)}`;
 
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || null;
+const PASSKEYS_ON = process.env.NEXT_PUBLIC_PASSKEYS === "on";
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/** "will.hodges@…" → "Will" */
+export function nameFromEmail(email: string) {
+  const first = (email.split("@")[0] || "").split(/[._\-+0-9]+/).find((p) => p.length >= 2) ?? "";
+  return first ? first[0].toUpperCase() + first.slice(1).toLowerCase() : "";
+}
+/** "Will Hodges" → "Will H.", the way reviews are signed */
+export function shortName(full?: string) {
+  const parts = (full ?? "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "";
+  return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.` : parts[0];
+}
+
+/** Supabase's error text, said the way we'd say it. */
+function friendly(e: { message?: string; code?: string; status?: number } | null): Error {
+  const m = e?.message ?? "";
+  if (/expired|invalid/i.test(m) && /token|otp|code/i.test(m)) return new Error("That code didn't work. Use the newest email from us, or send a new code.");
+  if (/only request this after|security purposes/i.test(m)) return new Error("Give it a few seconds before asking for another code.");
+  if (/rate limit/i.test(m)) return new Error("We're sending a lot of codes right now. Try again in a few minutes, or continue with Google.");
+  if (/signups? not allowed/i.test(m)) return new Error("New sign-ups are paused for a moment. Try again soon.");
+  if (/invalid.*email|email.*invalid/i.test(m)) return new Error("That email doesn't look right.");
+  return new Error(m || "Something went wrong. Try again?");
+}
+
 function spotFrom(sub: Submission, edits: SpotInput & { pop: number }, id: string, reviewedAt: string): Spot {
   return {
     id,
@@ -122,15 +187,31 @@ function spotFrom(sub: Submission, edits: SpotInput & { pop: number }, id: strin
 /* ============================== SUPABASE ============================== */
 
 function supabaseBackend(sb: SupabaseClient): Backend {
-  const toUser = (u: { id: string; email?: string; user_metadata?: Record<string, unknown> } | null | undefined): User | null =>
-    u
-      ? {
-          id: u.id,
-          email: u.email ?? "",
-          name: (u.user_metadata?.display_name as string) || (u.email ?? "Local").split("@")[0],
-          home: (u.user_metadata?.home_city as string) || undefined,
-        }
-      : null;
+  const toUser = (u: AuthUser | null | undefined): User | null => {
+    if (!u) return null;
+    const m = (u.user_metadata ?? {}) as Record<string, unknown>;
+    const email = u.email ?? "";
+    const fullName = ((m.full_name || m.name) as string) || undefined;
+    const display = (m.display_name as string) || undefined;
+    return {
+      id: u.id,
+      email,
+      name: display || shortName(fullName) || nameFromEmail(email) || "Local",
+      home: (m.home_city as string) || undefined,
+      needsName: !display,
+      fullName,
+      // a name is set on the very first sign-in (the welcome step, or from Google), so none yet means new
+      isNew: !display,
+    };
+  };
+  const callback = (next: string) => `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
+  /** the signed-in member's id from the local session (no network round trip; RLS enforces the rest) */
+  async function sessionUserId() {
+    const { data } = await sb.auth.getSession();
+    const id = data.session?.user.id;
+    if (!id) throw new Error("Sign in first.");
+    return id;
+  }
 
   const mapReview = (r: Record<string, any>): Review => ({
     id: r.id, spotId: r.spot_id, userId: r.user_id, userName: r.display_name, rating: r.rating, body: r.body, createdAt: r.created_at,
@@ -270,19 +351,111 @@ function supabaseBackend(sb: SupabaseClient): Backend {
       const { data } = sb.auth.onAuthStateChange((_e, session) => cb(toUser(session?.user)));
       return () => data.subscription.unsubscribe();
     },
-    async signUp(name, email, password, home) {
-      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name, ...(home ? { home_city: home } : {}) } } });
-      if (error) throw error;
-      if (!data.session) throw new Error("Check your inbox to confirm your email, then sign in.");
+    async sendCode(email) {
+      const e = email.trim().toLowerCase();
+      if (!EMAIL_RE.test(e)) throw new Error("That email doesn't look right.");
+      const { error } = await sb.auth.signInWithOtp({
+        email: e,
+        options: { shouldCreateUser: true, emailRedirectTo: callback(location.pathname + location.search) },
+      });
+      if (error) throw friendly(error);
+      return {};
+    },
+    async verifyCode(email, code) {
+      const { data, error } = await sb.auth.verifyOtp({ email: email.trim().toLowerCase(), token: code.replace(/\D/g, ""), type: "email" });
+      if (error || !data.user) throw friendly(error);
       return toUser(data.user)!;
     },
-    async signIn(email, password) {
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+    googleClientId: GOOGLE_CLIENT_ID,
+    async signInWithGoogleToken(idToken, nonce) {
+      const { data, error } = await sb.auth.signInWithIdToken({ provider: "google", token: idToken, nonce });
+      if (error || !data.user) throw friendly(error);
       return toUser(data.user)!;
+    },
+    async signInWithGoogleRedirect(next) {
+      const { error } = await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: callback(next) } });
+      if (error) throw friendly(error);
+    },
+    canUsePasskeys() {
+      return PASSKEYS_ON && typeof window !== "undefined" && "PublicKeyCredential" in window;
+    },
+    async signInWithPasskey(opts) {
+      const { data, error } = await sb.auth.signInWithPasskey({
+        options: { ...(opts?.conditional ? { mediation: "conditional" as const } : {}), ...(opts?.signal ? { signal: opts.signal } : {}) },
+      });
+      if (error) throw error;
+      return toUser(data?.user);
+    },
+    async registerPasskey() {
+      const { error } = await sb.auth.registerPasskey();
+      if (error) throw friendly(error);
+    },
+    async passkeyCount() {
+      const { data, error } = await sb.auth.passkey.list();
+      return error ? 0 : data?.length ?? 0;
     },
     async signOut() {
-      await sb.auth.signOut();
+      // this device only; signing out on your phone shouldn't sign you out on your laptop
+      await sb.auth.signOut({ scope: "local" });
+    },
+    async deleteAccount() {
+      const { data: s } = await sb.auth.getSession();
+      const token = s.session?.access_token;
+      if (!token) throw new Error("Sign in first.");
+      const r = await fetch("/api/account/delete", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+      if (r.status === 501) {
+        // the server key isn't configured: fall back to the database function
+        const { error } = await sb.rpc("delete_my_account");
+        if (error) throw new Error("We couldn't delete your account. Email us and we'll do it right away.");
+      } else if (!r.ok) {
+        const body = (await r.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? "We couldn't delete your account. Email us and we'll do it right away.");
+      }
+      await sb.auth.signOut({ scope: "local" }).catch(() => {});
+    },
+    async pullLists() {
+      const { data: auth } = await sb.auth.getSession();
+      if (!auth.session) return { saved: [], been: {} };
+      const [sv, st] = await Promise.all([sb.from("saved_spots").select("spot_id"), sb.from("stamps").select("spot_id, verdict, stamped_at")]);
+      if (sv.error) throw sv.error;
+      if (st.error) throw st.error;
+      return {
+        saved: (sv.data ?? []).map((r: any) => r.spot_id as string),
+        been: Object.fromEntries((st.data ?? []).map((r: any) => [r.spot_id, { at: r.stamped_at, ...(r.verdict ? { verdict: r.verdict } : {}) }])),
+      };
+    },
+    async putSaved(spotId, on) {
+      const uid = await sessionUserId();
+      const { error } = on
+        ? await sb.from("saved_spots").upsert({ user_id: uid, spot_id: spotId }, { onConflict: "user_id,spot_id", ignoreDuplicates: true })
+        : await sb.from("saved_spots").delete().eq("user_id", uid).eq("spot_id", spotId);
+      if (error) throw error;
+    },
+    async putStamp(spotId, stamp) {
+      const uid = await sessionUserId();
+      const { error } = stamp
+        ? await sb
+            .from("stamps")
+            .upsert(
+              { user_id: uid, spot_id: spotId, verdict: stamp.verdict ?? null, stamped_at: stamp.at, updated_at: new Date().toISOString() },
+              { onConflict: "user_id,spot_id" }
+            )
+        : await sb.from("stamps").delete().eq("user_id", uid).eq("spot_id", spotId);
+      if (error) throw error;
+    },
+    async pushLists(saved, been) {
+      const uid = await sessionUserId();
+      if (saved.length) {
+        const { error } = await sb
+          .from("saved_spots")
+          .upsert(saved.map((spot_id) => ({ user_id: uid, spot_id })), { onConflict: "user_id,spot_id", ignoreDuplicates: true });
+        if (error) throw error;
+      }
+      const rows = Object.entries(been).map(([spot_id, s]) => ({ user_id: uid, spot_id, verdict: s.verdict ?? null, stamped_at: s.at }));
+      if (rows.length) {
+        const { error } = await sb.from("stamps").upsert(rows, { onConflict: "user_id,spot_id" });
+        if (error) throw error;
+      }
     },
     async listReviews(spotId) {
       const { data, error } = await sb.from("reviews").select("*").eq("spot_id", spotId).order("created_at", { ascending: false });
@@ -383,7 +556,11 @@ function localBackend(): Backend {
   const listeners = new Set<(u: User | null) => void>();
   const current = (): User | null => read<User | null>(K.session, null);
   const emit = () => listeners.forEach((l) => l(current()));
-  type StoredUser = User & { hash: string };
+  type StoredUser = User & { hash?: string };
+  const signOutLocal = () => {
+    localStorage.removeItem(K.session);
+    emit();
+  };
 
   return {
     mode: "local",
@@ -394,31 +571,61 @@ function localBackend(): Backend {
       listeners.add(cb);
       return () => listeners.delete(cb);
     },
-    async signUp(name, email, password, home) {
+    // Preview mode has no mail server, so "continue with email" signs in on this device at once.
+    async sendCode(email) {
+      const e = email.trim().toLowerCase();
+      if (!EMAIL_RE.test(e)) throw new Error("That email doesn't look right.");
       const users = read<StoredUser[]>(K.users, []);
-      const e = email.trim().toLowerCase();
-      if (users.some((u) => u.email === e)) throw new Error("That email already has an account. Sign in instead.");
-      if (password.length < 6) throw new Error("Use at least 6 characters for your password.");
-      const u: StoredUser = { id: uid(), name: name.trim() || e.split("@")[0], email: e, home, hash: await sha(e + password) };
-      write(K.users, [...users, u]);
-      const pub = { id: u.id, name: u.name, email: u.email, home: u.home };
+      let u = users.find((x) => x.email === e);
+      const isNew = !u;
+      if (!u) {
+        u = { id: uid(), name: "", email: e };
+        write(K.users, [...users, u]);
+      }
+      const pub: User = { id: u.id, name: u.name || nameFromEmail(e) || "Local", email: e, home: u.home, needsName: !u.name, isNew };
       write(K.session, pub);
       emit();
-      return pub;
+      return { instant: pub };
     },
-    async signIn(email, password) {
-      const e = email.trim().toLowerCase();
-      const u = read<StoredUser[]>(K.users, []).find((x) => x.email === e);
-      if (!u || u.hash !== (await sha(e + password))) throw new Error("Email or password doesn't match.");
-      const pub = { id: u.id, name: u.name, email: u.email, home: u.home };
-      write(K.session, pub);
-      emit();
-      return pub;
+    async verifyCode() {
+      throw new Error("Preview mode signs you in without a code.");
+    },
+    googleClientId: null,
+    async signInWithGoogleToken() {
+      throw new Error("Google sign-in needs the live database.");
+    },
+    async signInWithGoogleRedirect() {
+      throw new Error("Google sign-in needs the live database.");
+    },
+    canUsePasskeys: () => false,
+    async signInWithPasskey() {
+      return null;
+    },
+    async registerPasskey() {
+      throw new Error("Passkeys need the live database.");
+    },
+    async passkeyCount() {
+      return 0;
     },
     async signOut() {
-      localStorage.removeItem(K.session);
-      emit();
+      signOutLocal();
     },
+    async deleteAccount() {
+      const u = current();
+      if (!u) return;
+      write(K.users, read<StoredUser[]>(K.users, []).filter((x) => x.id !== u.id));
+      write(K.reviews, read<Review[]>(K.reviews, []).filter((r) => r.userId !== u.id));
+      write(K.photos, read<Photo[]>(K.photos, []).filter((p) => p.userId !== u.id));
+      write(K.submissions, read<Submission[]>(K.submissions, []).filter((x) => x.submittedBy !== u.id));
+      signOutLocal();
+    },
+    // lists already live on this device in preview mode
+    async pullLists() {
+      return { saved: [], been: {} };
+    },
+    async putSaved() {},
+    async putStamp() {},
+    async pushLists() {},
     async listReviews(spotId) {
       return read<Review[]>(K.reviews, []).filter((r) => r.spotId === spotId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     },
@@ -474,7 +681,7 @@ function localBackend(): Backend {
       const clean = name.trim().slice(0, 40) || u.name;
       write(K.users, read<(User & { hash: string })[]>(K.users, []).map((x) => (x.id === u.id ? { ...x, name: clean } : x)));
       write(K.reviews, read<Review[]>(K.reviews, []).map((r) => (r.userId === u.id ? { ...r, userName: clean } : r)));
-      const next = { ...u, name: clean };
+      const next = { ...u, name: clean, needsName: false };
       write(K.session, next);
       emit();
       return next;
@@ -552,8 +759,13 @@ function localBackend(): Backend {
 let instance: Backend | null = null;
 export function getBackend(): Backend {
   if (instance) return instance;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  instance = url && key ? supabaseBackend(createClient(url, key)) : localBackend();
+  instance = hasSupabase
+    ? supabaseBackend(
+        createClient(SUPABASE_URL, SUPABASE_KEY, {
+          // implicit flow: an emailed sign-in link works even when it opens in a different browser than the one that asked
+          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit" },
+        })
+      )
+    : localBackend();
   return instance;
 }

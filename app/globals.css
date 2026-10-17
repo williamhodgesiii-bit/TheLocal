@@ -5355,3 +5355,125 @@ label.check input {
   .hub-list { columns: 1; }
   .guide-pill { font-size: 13px; }
 }
+
+/* ───────────────────────── Sign in / join ───────────────────────── */
+.modal.auth .form {
+  margin-top: 16px;
+}
+.modal.auth .g-btn {
+  margin-top: 18px;
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
+}
+.modal.auth .g-fallback {
+  margin-top: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.auth-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.auth-or::before,
+.auth-or::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--line);
+}
+.auth-or + .form {
+  margin-top: 6px;
+}
+.auth-passkey {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+.auth-passkey-add {
+  margin-top: 10px;
+}
+.auth-fine a {
+  color: var(--green);
+}
+.auth-fine .textbtn {
+  font-size: 12px;
+}
+.auth-fine + .auth-fine {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 6px;
+}
+.auth-wait {
+  font-variant-numeric: tabular-nums;
+}
+.auth-ok {
+  color: var(--green);
+  font-weight: 600;
+}
+.form input.code-input {
+  font-family: var(--f-receipt);
+  font-size: 30px !important;
+  letter-spacing: 0.42em;
+  text-align: center;
+  padding: 10px 0 8px !important;
+  font-variant-numeric: tabular-nums;
+}
+.form input.code-input::placeholder {
+  color: var(--line-2);
+}
+.auth-landing {
+  min-height: 60vh;
+}
+
+/* ───────────────────────── Account & privacy ───────────────────────── */
+.acct {
+  margin: 28px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px dashed var(--line-2);
+}
+.acct-head {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+.acct-row {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.acct-danger span {
+  color: var(--red);
+}
+.textbtn.danger {
+  color: var(--red);
+}
+.privacy p,
+.privacy-list {
+  font-family: var(--f-sans);
+  font-size: 15.5px;
+  line-height: 1.6;
+  max-width: 64ch;
+}
+.privacy-list {
+  padding-left: 20px;
+}
+.privacy-list li {
+  margin-bottom: 6px;
+}
+.optout {
+  padding: 10px 12px;
+  background: var(--check);
+  border: 1px solid var(--rule);
+}

@@ -1,9 +1,10 @@
 import { cleanGenres, type Spot } from "./data";
+import { SUPABASE_KEY, SUPABASE_URL } from "./supabase-env";
 
 /** Server-side read of a verified community spot (for SEO pages). Needs Supabase configured. */
 export async function fetchCommunitySpot(id: string): Promise<Spot | null> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = SUPABASE_URL;
+  const key = SUPABASE_KEY;
   if (!url || !key || !/^[a-z0-9-]{3,64}$/.test(id)) return null;
   try {
     const r = await fetch(`${url}/rest/v1/spots?id=eq.${id}&status=eq.live&select=*`, {
@@ -24,8 +25,8 @@ export async function fetchCommunitySpot(id: string): Promise<Spot | null> {
 }
 
 export async function fetchCommunitySpotIds(): Promise<string[]> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = SUPABASE_URL;
+  const key = SUPABASE_KEY;
   if (!url || !key) return [];
   try {
     const r = await fetch(`${url}/rest/v1/spots?status=eq.live&select=id`, { headers: { apikey: key, Authorization: `Bearer ${key}` }, next: { revalidate: 3600 } });

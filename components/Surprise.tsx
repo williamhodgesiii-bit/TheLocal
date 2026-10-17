@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { track } from "@vercel/analytics";
+import { track } from "@/lib/analytics";
 import { GENRE_BY_ID, areaLabelOf, priceLabel, type Spot } from "@/lib/data";
 import { BRAND } from "@/lib/brand";
 

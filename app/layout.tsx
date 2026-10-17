@@ -9,6 +9,7 @@ import "leaflet/dist/leaflet.css";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import JsonLd from "@/components/JsonLd";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { MAP_FIRST_FETCH } from "@/lib/map-styles";
 import { siteUrl } from "@/lib/site";
 import { BRAND, MANTRA } from "@/lib/brand";
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JsonLd data={[organizationLd(), websiteLd()]} />
         <Providers>{children}</Providers>
         <Analytics />
+        <GoogleAnalytics />
       </body>
     </html>
   );

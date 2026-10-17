@@ -77,23 +77,71 @@ Not built yet, in rough order:
 - [ ] **Founder name and email.** Fill in `FOUNDER` in `lib/brand.ts`. The "Who we are" part of `/about` shows up once a name is set. A named person you can write to is one of the strongest trust signals in the research.
 - [ ] **Michelin American South 2026** comes out Oct 21, 2026. Update `lib/honors.ts` (new badges, changed or dropped ones) and the Award winners row follows. Add any newly recognized local places to `lib/data.ts`.
 - [ ] **Re-check the list** every few months: closures, new owners, prices. Bump `CHECKED` in `lib/brand.ts` when done.
-- [ ] **Owner setup:** Supabase (see Deploy), the domain and `NEXT_PUBLIC_SITE_URL`, privacy and terms pages (before collecting emails), payments for Partner and Sponsored (Stripe payment links are the simplest start), and turning on Vercel Analytics.
+- [ ] **Owner setup:** Supabase, Google sign-in and Google Analytics (see **Accounts, database & analytics**), a terms page, payments for Partner and Sponsored (Stripe payment links are the simplest start), and turning on Vercel Analytics.
 - [ ] **Have a lawyer read** the review rules and the Sponsored labeling on `/about` and `/partners`.
 - [ ] **Real photos of every place** (owner uploads or a local photographer) to replace the labeled stock dish photos.
 - [ ] **Passport across devices** for signed-in members. Today it stays on the device.
-- [ ] **Sign in by email link** instead of a password, once an email service is set up (Supabase's built-in email is for testing only). Joining would then be just name, email and home.
+- [x] **Passwordless sign-in**: one flow for new and returning members (Google one-tap, email code or link, passkeys), guest lists carried into the account. Needs the setup below.
 
 ## Deploy (Vercel)
 
 1. Import the repo into Vercel (framework: Next.js). It deploys with **no environment variables**. Accounts, reviews and photos then run in on-device **demo mode**.
-2. To make reviews and photos shared and persistent, create a Supabase project and run `supabase/schema.sql` in its SQL editor. Then add the following to Vercel:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - In Supabase → Auth, you can turn off "Confirm email" for instant sign-ups.
+2. For real accounts and a shared database, follow **Accounts, database & analytics** below.
 3. Optional: add `GOOGLE_PLACES_API_KEY` (Places API "New") for real storefront and food photos, the Google rating and the website link on every spot. Pins snap to their exact locations automatically once the key is set (see `/api/pins`).
 4. Optional: set `NEXT_PUBLIC_SITE_URL` to your domain for the sitemap and OG tags.
 
 See `.env.example`.
+
+## Accounts, database & analytics
+
+**How sign-in works (and why).** Forcing people to make an account loses about 1 in 5 of them ([Baymard](https://baymard.com/blog/reduce-cart-abandonment)), so nothing here is gated except posting in public:
+
+- **Guest-first.** Browsing, the want-to-try list and the Plate Passport work with no account, saved on the device. The moment someone signs in, everything they did as a guest moves into their account; nothing is lost.
+- **One flow, no fork.** No "sign in" vs "sign up" choice and no password. Type an email (or tap Google) and you're in, new or returning — the same idea as [Uber's unified login](https://www.uber.com/blog/usl-ubers-unified-signup-and-login-stack/).
+- **Code or link, either works.** The email carries a 6-digit code (keeps you in the app on a phone) and a link (one tap on a laptop). The code box autofills from the email/SMS on iOS and Android, auto-submits on the last digit, and has a resend timer.
+- **Google one-tap** and **passkeys** (Face ID, fingerprint, device PIN; offered right after joining and from your page).
+- **One question, after.** New members are asked only "What should we call you?", prefilled. Home city is picked by using the map, never at sign-up.
+- **Back where you were.** Signing in to write a review, add a photo or add a place drops you straight back into it.
+- **In the database:** members (`profiles`, kept in step automatically), `saved_spots`, `stamps`, reviews, photos, submissions, spots, newsletter, waitlist and partner leads, all with row-level security. Members can delete their account (and everything in it) from their page.
+
+### Setup (one time, about 20 minutes)
+
+**1. Database — Supabase**
+1. In Vercel: your project → **Storage** (or **Integrations → Marketplace**) → **Supabase** → create and connect. It adds `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and the server-only `SUPABASE_SECRET_KEY` to Vercel for you. (Older projects use `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`; both work.)
+2. Supabase → **SQL Editor** → paste all of `supabase/schema.sql` → **Run**. It's safe to run again after updates.
+3. Supabase → **Authentication → URL Configuration**: Site URL `https://www.theplatenextdoor.com`; Redirect URLs `https://www.theplatenextdoor.com/**`, `https://theplatenextdoor.com/**`, `http://localhost:3000/**`.
+4. **Authentication → Providers → Email**: keep it on, keep "Confirm email" on, set **Email OTP Length to 6**.
+5. **Authentication → Emails → Templates**: in both **Magic Link** and **Confirm signup**, set the subject to `{{ .Token }} is your Plate Next Door code` and the body to:
+   ```html
+   <p>Your sign-in code:</p>
+   <p style="font-size:32px;letter-spacing:6px;font-weight:700;font-family:monospace">{{ .Token }}</p>
+   <p>Type it in on The Plate Next Door, or <a href="{{ .ConfirmationURL }}">tap here to sign in</a>.</p>
+   <p style="color:#6b665b;font-size:13px">It works once, for an hour. Didn't ask for it? Ignore this email.</p>
+   ```
+6. **Real email delivery (required before launch).** Supabase's built-in sender allows only a couple of emails an hour. Make a free [Resend](https://resend.com) account, add the domain `theplatenextdoor.com` (it asks for a few DNS records on a `send.` subdomain — add them in GoDaddy; they don't touch your Microsoft 365 email), then Supabase → **Authentication → Emails → SMTP Settings**: host `smtp.resend.com`, port `465`, user `resend`, password = your Resend API key, sender `signin@theplatenextdoor.com`, name `The Plate Next Door`.
+7. Optional, passkeys: **Authentication → Passkeys** → enable (relying party: `theplatenextdoor.com`), then add `NEXT_PUBLIC_PASSKEYS=on` in Vercel.
+
+**2. Google sign-in (recommended)**
+1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → **Create credentials → OAuth client ID → Web application**. Authorized JavaScript origins: `https://www.theplatenextdoor.com`, `https://theplatenextdoor.com`, `http://localhost:3000`. Authorized redirect URI: `https://<your-project-ref>.supabase.co/auth/v1/callback`. Fill in the OAuth consent screen (name, logo, support email) and publish it.
+2. Supabase → **Authentication → Providers → Google** → enable, paste the Client ID and Client Secret.
+3. Vercel: `NEXT_PUBLIC_GOOGLE_CLIENT_ID` = that Client ID.
+
+**3. Google Analytics 4**
+1. [analytics.google.com](https://analytics.google.com) → Admin → **Create property** → web stream for `https://www.theplatenextdoor.com` → copy the Measurement ID (`G-…`). Leave Enhanced measurement on (it counts page changes in the app).
+2. Vercel: `NEXT_PUBLIC_GA_ID` = that ID.
+3. Admin → Events → mark `sign_up`, `add_to_wishlist`, `newsletter_signup`, `review` and `directions` as **key events**. Leave Google signals off (the privacy page promises no ad use).
+
+Events sent (to GA4 and Vercel Analytics): `sign_up` / `login` (with method), `add_to_wishlist`, `stamp`, `spot_view`, `directions`, `website`, `share`, `review`, `photo_upload`, `surprise_spin`, `spot_submitted`, `newsletter_signup`, `passkey_added`. Signed-in sessions carry an anonymous member id (never an email) and a `home_city` user property. Visitors with Global Privacy Control never load Google Analytics, and anyone can switch it off on `/privacy`.
+
+**4. Redeploy** (Vercel → Deployments → Redeploy). Sign in with `emails@theplatenextdoor.com` and you're staff (the Verification desk shows up). To add more staff, in the SQL Editor: `insert into public.admin_emails values ('name@example.com');`
+
+| Variable | Where it comes from |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` | Supabase (added by the Vercel integration) |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google Cloud OAuth client |
+| `NEXT_PUBLIC_GA_ID` | Google Analytics web stream |
+| `NEXT_PUBLIC_PASSKEYS` | `on` once passkeys are enabled in Supabase |
+| `NEXT_PUBLIC_AUTH_CODE_LENGTH` | only if you change the code length from 6 |
 
 ## Local dev
 

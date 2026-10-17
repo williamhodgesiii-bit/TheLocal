@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import type { Spot } from "@/lib/data";
 import type { Photo, Review, Submission } from "@/lib/backend";
 import { DEFAULT_CITY, homeLabel, homeParts, isOpenCity } from "@/lib/regions";
+import { track } from "@/lib/analytics";
 import { useApp } from "./Providers";
 import HomeSelect from "./HomeSelect";
 import PhotoImg from "./Photo";
@@ -36,6 +37,40 @@ export default function Profile({
   const [name, setName] = useState("");
   /** the home being picked, while the picker is open */
   const [homeEdit, setHomeEdit] = useState<string | null>(null);
+  const [passkeys, setPasskeys] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!user || !backend.canUsePasskeys()) return setPasskeys(null);
+    backend.passkeyCount().then(setPasskeys).catch(() => setPasskeys(0));
+  }, [user, backend]);
+
+  async function addPasskey() {
+    try {
+      await backend.registerPasskey();
+      track("passkey_added");
+      toast("Passkey saved. Next time, sign in with Face ID, your fingerprint or your device PIN.", "ok");
+      setPasskeys((n) => (n ?? 0) + 1);
+    } catch (e) {
+      const m = e instanceof Error ? e.message : "";
+      if (!/abort|cancel|notallowed/i.test(`${(e as { name?: string })?.name ?? ""} ${m}`)) toast(m || "Couldn't save a passkey on this device.", "err");
+    }
+  }
+
+  async function deleteAccount() {
+    setDeleting(true);
+    try {
+      await backend.deleteAccount();
+      track("account_deleted");
+      toast("Your account and everything in it is deleted.", "ok");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Couldn't delete your account.", "err");
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -51,10 +86,11 @@ export default function Profile({
         <div className="profile-empty">
           <h2 className="modal-title">Join your neighbors</h2>
           <p className="muted">
-            Your passport works without an account. Sign up (it&apos;s free) to pick your home city, write reviews, post photos and add the places you love.
+            Your passport works without an account. Sign in to keep it on every device, write reviews, post photos and add the places you love. Free, and
+            there&apos;s no password: we email you a code.
           </p>
           <button className="btn btn-green" onClick={() => openAuth()}>
-            Sign in or make an account
+            Sign in or join
           </button>
         </div>
       </div>
@@ -234,6 +270,45 @@ export default function Profile({
           ))}
 
       </motion.section>
+
+      <section className="acct" aria-label="Sign-in and privacy">
+        <h2 className="acct-head">Sign-in &amp; privacy</h2>
+        <p className="acct-row">
+          Signed in as <strong>{user.email}</strong>. No password: we email you a code each time.
+        </p>
+        {passkeys !== null && (
+          <p className="acct-row">
+            {passkeys > 0
+              ? `${passkeys} passkey${passkeys === 1 ? "" : "s"} saved, so you can sign in with Face ID, your fingerprint or your device PIN.`
+              : "Skip the email code: sign in with Face ID, your fingerprint or your device PIN."}{" "}
+            <button className="textbtn" onClick={addPasskey}>
+              {passkeys > 0 ? "Add this device" : "Set up a passkey"}
+            </button>
+          </p>
+        )}
+        <p className="acct-row">
+          <Link href="/privacy" className="textbtn">
+            What we keep, and why
+          </Link>
+        </p>
+        <p className="acct-row acct-danger">
+          {confirmDelete ? (
+            <>
+              <span>This deletes your account, reviews, photos, passport and saved places for good.</span>{" "}
+              <button className="textbtn danger" disabled={deleting} onClick={deleteAccount}>
+                {deleting ? "Deleting…" : "Yes, delete everything"}
+              </button>{" "}
+              <button className="textbtn" onClick={() => setConfirmDelete(false)}>
+                Keep my account
+              </button>
+            </>
+          ) : (
+            <button className="textbtn" onClick={() => setConfirmDelete(true)}>
+              Delete my account
+            </button>
+          )}
+        </p>
+      </section>
 
       <footer className="profile-foot">
         {admin && (

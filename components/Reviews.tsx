@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { track } from "@vercel/analytics";
+import { track } from "@/lib/analytics";
 import type { Review } from "@/lib/backend";
 import type { Spot } from "@/lib/data";
 import { useApp } from "./Providers";
@@ -40,7 +40,7 @@ export default function Reviews({ spot }: { spot: Spot }) {
   }, [reviews]);
 
   function open() {
-    if (!requireAuth(`Sign in to review ${spot.name}.`)) return;
+    if (!requireAuth(`Sign in to review ${spot.name}. It takes a few seconds, no password.`, open)) return;
     if (mine) {
       setRating(mine.rating);
       setBody(mine.body);

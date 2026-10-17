@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { track } from "@vercel/analytics";
+import { track } from "@/lib/analytics";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { GENRE_BY_ID, areaLabelOf, distanceKm, mapsUrl, priceLabel, type Spot } from "@/lib/data";
@@ -140,7 +140,7 @@ export default function SpotDetail({
   );
 
   function startUpload(kind: PhotoKind) {
-    if (!requireAuth("Sign in to share your photos of " + spot.name + ".")) return;
+    if (!requireAuth(`Sign in to share your photos of ${spot.name}. It takes a few seconds, no password.`, () => startUpload(kind))) return;
     setUploadKind(kind);
     setTimeout(() => fileRef.current?.click(), 0);
   }

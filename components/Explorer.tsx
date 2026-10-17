@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { track } from "@/lib/analytics";
 import {
   DRINK_KINDS,
   GENRE_BY_ID,
@@ -464,7 +465,7 @@ export default function Explorer({
   }, [activeArea, activeTown, city]);
   const founding = city.status === "founding";
   const openAdd = () => {
-    if (requireAuth(`Sign in to add a place in ${city.name}.`)) setAdding(true);
+    if (requireAuth(`Sign in to add a place in ${city.name}. It takes a few seconds, no password.`, () => setAdding(true))) setAdding(true);
   };
   // anything narrowing the list beyond the town you're in
   const narrowed = genre !== "all" || !!query || prices.length > 0 || savedOnly || sort !== "popular" || !!activeArea || !!theme;
@@ -1123,6 +1124,7 @@ function Newsletter({ city }: { city: City }) {
         try {
           await backend.subscribe(email.trim());
           setDone(true);
+          track("newsletter_signup", { city: city.id });
         } catch {
           toast("That didn't go through. Try again?", "err");
         }

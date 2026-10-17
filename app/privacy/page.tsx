@@ -1,0 +1,121 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Logo } from "@/components/Brand";
+import AnalyticsOptOut from "@/components/AnalyticsOptOut";
+import { BRAND, FOUNDER, NEWSLETTER } from "@/lib/brand";
+
+export const metadata: Metadata = {
+  title: "Privacy",
+  description: `What ${BRAND} keeps, why, and how to delete it. Plain English.`,
+  alternates: { canonical: "/privacy" },
+};
+
+const UPDATED = "October 17, 2026";
+const CONTACT = FOUNDER.email || "emails@theplatenextdoor.com";
+
+export default function Privacy() {
+  return (
+    <main className="guide privacy">
+      <header className="partners-top">
+        <Link href="/" className="textbtn">
+          ← Back to the map
+        </Link>
+        <Link href="/" className="brand" aria-label={`${BRAND}, home`}>
+          <Logo size={36} />
+        </Link>
+      </header>
+
+      <p className="cap-kicker">Privacy</p>
+      <h1 className="guide-h1">What we keep, and why</h1>
+      <p className="guide-lede">
+        The short version: you can use the whole map without an account. If you sign in, we keep what it takes to give you your stuff back on any device, and
+        nothing more. We don&apos;t sell your information or use it for ads.
+      </p>
+      <p className="guide-meta">Last updated {UPDATED}</p>
+
+      <h2 className="menu-head">
+        <span>Without an account</span>
+      </h2>
+      <p>Your want-to-try list, Plate Passport stamps and home city are saved in your browser, on your device. We don&apos;t see them.</p>
+
+      <h2 className="menu-head">
+        <span>With an account</span>
+      </h2>
+      <ul className="privacy-list">
+        <li>
+          <b>Your email</b>, to send your sign-in code. There&apos;s no password, so there&apos;s no password for anyone to steal.
+        </li>
+        <li>
+          <b>The name you pick</b>, your <b>home city</b>, your <b>passport stamps</b> and your <b>want-to-try list</b>, so they follow you to every device.
+        </li>
+        <li>
+          <b>Reviews and photos you post</b>. These are public and signed with your name.
+        </li>
+        <li>
+          <b>Places you send us</b>, and the note you add, so we can check them.
+        </li>
+        <li>
+          <b>Sign in with Google</b>: Google tells us your name, email and profile picture. We never see your Google password.
+        </li>
+        <li>
+          <b>Passkeys</b> (Face ID, fingerprint, device PIN): your device keeps the secret part. We only store a public key that can&apos;t sign you in on its
+          own.
+        </li>
+      </ul>
+
+      <h2 className="menu-head">
+        <span>Email</span>
+      </h2>
+      <p>
+        {NEWSLETTER} goes only to people who ask for it, and every issue has an unsubscribe link. Sign-in codes aren&apos;t marketing; they only come when you
+        ask for one.
+      </p>
+
+      <h2 className="menu-head">
+        <span>Analytics</span>
+      </h2>
+      <p>
+        We use Vercel Analytics (no cookies, counts only) and Google Analytics (uses cookies) to see which pages and guides people use, so we know what to
+        improve. When you&apos;re signed in, analytics gets an anonymous member number, never your email or name. If your browser sends Global Privacy
+        Control, Google Analytics doesn&apos;t load at all.
+      </p>
+      <AnalyticsOptOut />
+
+      <h2 className="menu-head">
+        <span>Who holds it</span>
+      </h2>
+      <p>
+        Supabase (our database and sign-in), Vercel (hosting), Google (analytics, and Google sign-in if you use it) and our email provider (to deliver codes).
+        They process it for us under their own security and privacy terms.
+      </p>
+
+      <h2 className="menu-head">
+        <span>Deleting it</span>
+      </h2>
+      <p>
+        Open your page and tap <b>Delete my account</b>. Your account, reviews, photos, stamps and saved places are deleted right then. Or email{" "}
+        <a href={`mailto:${CONTACT}`}>{CONTACT}</a> and we&apos;ll do it for you.
+      </p>
+
+      <h2 className="menu-head">
+        <span>Kids</span>
+      </h2>
+      <p>{BRAND} isn&apos;t meant for children under 13, and we don&apos;t knowingly collect their information.</p>
+
+      <h2 className="menu-head">
+        <span>Questions</span>
+      </h2>
+      <p>
+        Write to <a href={`mailto:${CONTACT}`}>{CONTACT}</a>. A person reads it.
+      </p>
+
+      <footer className="guide-foot">
+        <Link href="/about">How we pick</Link>
+        <span> · </span>
+        <Link href="/best">Guides</Link>
+        <span> · </span>
+        <Link href="/">The map</Link>
+      </footer>
+    </main>
+  );
+}
