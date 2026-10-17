@@ -91,6 +91,8 @@ export default function GoogleButton({
     })();
     return () => {
       alive = false;
+      // close only the One Tap prompt this button opened; one without a prompt mustn't close another's
+      if (!oneTap) return;
       try {
         window.google?.accounts.id.cancel();
       } catch {

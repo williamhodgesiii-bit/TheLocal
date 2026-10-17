@@ -34,6 +34,9 @@ const SKIP = ["/admin", "/privacy", "/about", "/partners", "/credits", "/auth"];
 /** Opening the full sign-in dialog even once this visit means they don't need a reminder too. */
 let engagedThisVisit = false;
 
+/** "Will" → "Will." but "Will H." stays "Will H." */
+const stop = (name: string) => (name.endsWith(".") ? name : `${name}.`);
+
 type Memo = { seen: number; at: number; done?: boolean };
 
 function readMemo(): Memo {
@@ -112,14 +115,15 @@ export default function SignInNudge({ authOpen }: { authOpen: boolean }) {
       const u = await backend.signInWithGoogleToken(idToken, nonce);
       // the card hides itself once `user` turns truthy (and the welcome-name step, if any, is in Providers)
       track(u.isNew ? "sign_up" : "login", { method: "google" });
-      toast(u.isNew ? `Welcome to the neighborhood, ${u.name}.` : `Welcome back, ${u.name}.`, "ok");
+      toast(u.isNew ? `Welcome to the neighborhood, ${stop(u.name)}` : `Welcome back, ${stop(u.name)}`, "ok");
     } catch {
       openFull(); // anything odd: hand off to the full sign-in, which spells the error out
     }
   }
 
   const here = typeof window === "undefined" ? "/" : location.pathname + location.search;
-  const guest = saved.length + Object.keys(been).length;
+  // a place both saved and stamped is still one place
+  const guest = new Set([...saved, ...Object.keys(been)]).size;
   const hasGoogle = !!backend.googleClientId;
 
   // Say only what's true for this mode: cross-device sync is real only with a database behind it.
