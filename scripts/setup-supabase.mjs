@@ -55,8 +55,14 @@ ok(`Project found: ${me.json?.name ?? REF}`);
 // 1) database tables, security rules and staff list
 const sql = readFileSync(new URL("../supabase/schema.sql", import.meta.url), "utf8");
 const db = await call("POST", `/v1/projects/${REF}/database/query`, { query: sql, read_only: false });
-if (!db.ok) fail(`Database setup didn't go through: ${why(db)}`);
-ok("Database ready (members, passport, saved places, reviews, photos, staff)");
+let dbProblem = "";
+if (db.ok) ok("Database ready (members, passport, saved places, reviews, photos, staff)");
+else {
+  dbProblem = /read-only/i.test(why(db))
+    ? "The access token is read-only, so the database wasn't set up. Generate a new token with write access (Supabase → Account → Access Tokens), update the secret, and run this again."
+    : `Database setup didn't go through: ${why(db)}`;
+  warn(dbProblem);
+}
 
 // 2) sign-in basics
 const base = {
@@ -126,5 +132,9 @@ if (cfg.ok) {
   console.log(`  email sender ........ ${c.smtp_host ? `${c.smtp_sender_name} <${c.smtp_admin_email}> (${c.smtp_host})` : "Supabase default (2 emails an hour; add RESEND_API_KEY)"}`);
   console.log(`  email subject ....... ${c.mailer_subjects_magic_link}`);
   console.log(`  Google sign-in ...... ${c.external_google_enabled ? "on" : "off"}`);
+}
+if (dbProblem) {
+  console.log(`\n✗ Still to do: ${dbProblem}`);
+  process.exitCode = 1;
 }
 console.log(`\nVercel needs: NEXT_PUBLIC_SUPABASE_URL = https://${REF}.supabase.co, plus the publishable and secret keys from Supabase → Settings → API Keys.`);
