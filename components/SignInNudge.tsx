@@ -18,8 +18,9 @@ import GoogleButton from "./GoogleButton";
  *  - It never nags: once dismissed it waits (3 days, then 2 weeks), gives up after three asks, and
  *    the moment someone signs in — here or anywhere — it's done for good. This mirrors how Google
  *    One Tap caps itself (2h → 1d → 1w → 4w, reset on success); we do the same for the card.
- *  - Only where it makes sense: signed out, real accounts on (Supabase), on the map/passport pages,
- *    and never while the full sign-in dialog is already open.
+ *  - Only where it makes sense: signed out, on the map/passport pages, and never while the full
+ *    sign-in dialog is already open. The copy tells the truth for the mode it's in — "every device"
+ *    only when there's a real database behind it (Supabase); on-device otherwise.
  */
 const KEY = "tl.signinNudge";
 const DELAY = 4000; // let the page breathe first — value before the ask
@@ -64,7 +65,7 @@ export default function SignInNudge({ authOpen }: { authOpen: boolean }) {
   if (authOpen) engagedThisVisit = true;
   const synced = backend.mode === "supabase";
   const onSkipPage = SKIP.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-  const suppressed = !!user || !synced || authOpen || engagedThisVisit || onSkipPage;
+  const suppressed = !!user || authOpen || engagedThisVisit || onSkipPage;
 
   // Signed in — here or in another tab — means never ask again: they've found the way in.
   useEffect(() => {
@@ -121,6 +122,15 @@ export default function SignInNudge({ authOpen }: { authOpen: boolean }) {
   const guest = saved.length + Object.keys(been).length;
   const hasGoogle = !!backend.googleClientId;
 
+  // Say only what's true for this mode: cross-device sync is real only with a database behind it.
+  const title = guest && synced ? "Keep your passport safe" : "Make it yours";
+  const text =
+    guest && synced
+      ? `You've marked ${guest} ${guest === 1 ? "place" : "places"} on this device. Sign in — free, no password — to keep ${guest === 1 ? "it" : "them"} on every device you use.`
+      : synced
+        ? "Sign in to keep your passport and want-to-try list on every device, write reviews and post photos. Free, and no password."
+        : "Sign in to write reviews, post photos and add the places you love. Free, and no password.";
+
   return (
     <AnimatePresence>
       {show && !suppressed && (
@@ -136,12 +146,8 @@ export default function SignInNudge({ authOpen }: { authOpen: boolean }) {
             ×
           </button>
           <span className="cap-kicker">The Plate Next Door</span>
-          <h2 className="nudge-title">{guest ? "Keep your passport safe" : "Make it yours"}</h2>
-          <p className="nudge-text">
-            {guest
-              ? `You've marked ${guest} ${guest === 1 ? "place" : "places"} on this device. Sign in — free, no password — to keep ${guest === 1 ? "it" : "them"} on every device you use.`
-              : "Sign in to keep your passport and want-to-try list on every device, write reviews and post photos. Free, and no password."}
-          </p>
+          <h2 className="nudge-title">{title}</h2>
+          <p className="nudge-text">{text}</p>
 
           {hasGoogle ? (
             <>
