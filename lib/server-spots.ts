@@ -1,5 +1,5 @@
 import { cleanGenres, type Spot } from "./data";
-import { SUPABASE_KEY, SUPABASE_URL } from "./supabase-env";
+import { SUPABASE_KEY, SUPABASE_URL, restHeaders } from "./supabase-env";
 
 /** Server-side read of a verified community spot (for SEO pages). Needs Supabase configured. */
 export async function fetchCommunitySpot(id: string): Promise<Spot | null> {
@@ -8,7 +8,7 @@ export async function fetchCommunitySpot(id: string): Promise<Spot | null> {
   if (!url || !key || !/^[a-z0-9-]{3,64}$/.test(id)) return null;
   try {
     const r = await fetch(`${url}/rest/v1/spots?id=eq.${id}&status=eq.live&select=*`, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      headers: restHeaders(),
       next: { revalidate: 3600 },
     });
     const [row] = (await r.json()) as any[];
@@ -29,7 +29,7 @@ export async function fetchCommunitySpotIds(): Promise<string[]> {
   const key = SUPABASE_KEY;
   if (!url || !key) return [];
   try {
-    const r = await fetch(`${url}/rest/v1/spots?status=eq.live&select=id`, { headers: { apikey: key, Authorization: `Bearer ${key}` }, next: { revalidate: 3600 } });
+    const r = await fetch(`${url}/rest/v1/spots?status=eq.live&select=id`, { headers: restHeaders(), next: { revalidate: 3600 } });
     return ((await r.json()) as { id: string }[]).map((x) => x.id);
   } catch {
     return [];

@@ -104,36 +104,52 @@ See `.env.example`.
 - **Back where you were.** Signing in to write a review, add a photo or add a place drops you straight back into it.
 - **In the database:** members (`profiles`, kept in step automatically), `saved_spots`, `stamps`, reviews, photos, submissions, spots, newsletter, waitlist and partner leads, all with row-level security. Members can delete their account (and everything in it) from their page.
 
+### What it costs: $0
+
+Every piece of sign-in runs on a free plan. No credit card is needed for any of them.
+
+| Service | Free plan | What happens at the limit | How we stay under it |
+| --- | --- | --- | --- |
+| [Supabase](https://supabase.com/pricing) (database, sign-in, photo storage) | 50,000 monthly members, 500 MB database, 1 GB photos, 5 GB bandwidth, custom email server included | Pauses after a week with no activity | `.github/workflows/keepalive.yml` pings `/api/health` every 3 days, so it never goes idle. Photos are shrunk before upload. |
+| [Resend](https://resend.com/pricing) (sends the sign-in emails) | 3,000 emails a month, 100 a day, SMTP included | Sending pauses for the rest of the day | Google sign-in and passkeys send no email, and members stay signed in, so codes are only for new devices. If the cap is ever hit, the sign-in box says so and points to Google. |
+| Google sign-in (Google Cloud OAuth) | Free, no billing account needed | — | — |
+| Google Analytics 4 | Free | — | — |
+| Passkeys | Free (Supabase beta, switch it on) | — | — |
+| GitHub Actions (IndexNow pings, keepalive) | Free for public repos; 2,000 minutes a month for private | — | A few minutes a month |
+
+Don't add a paid plan or a card anywhere in the steps below; none of them need one.
+
 ### Setup (one time, about 20 minutes)
 
-**1. Database — Supabase**
-1. In Vercel: your project → **Storage** (or **Integrations → Marketplace**) → **Supabase** → create and connect. It adds `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and the server-only `SUPABASE_SECRET_KEY` to Vercel for you. (Older projects use `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`; both work.)
-2. Supabase → **SQL Editor** → paste all of `supabase/schema.sql` → **Run**. It's safe to run again after updates.
-3. Supabase → **Authentication → URL Configuration**: Site URL `https://www.theplatenextdoor.com`; Redirect URLs `https://www.theplatenextdoor.com/**`, `https://theplatenextdoor.com/**`, `http://localhost:3000/**`.
-4. **Authentication → Providers → Email**: keep it on, keep "Confirm email" on, set **Email OTP Length to 6**.
-5. **Authentication → Emails → Templates**: in both **Magic Link** and **Confirm signup**, set the subject to `{{ .Token }} is your Plate Next Door code` and the body to:
+**1. Database — Supabase (free)**
+1. Go to [supabase.com](https://supabase.com) → **Start your project** → sign in with GitHub → **New project** → organization plan **Free** → name it `theplatenextdoor`, pick a strong database password (save it), region **East US**. No card is asked for.
+2. Project → **Settings → API Keys**. In Vercel → your project → **Settings → Environment Variables**, add `NEXT_PUBLIC_SUPABASE_URL` (the Project URL), `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the publishable key) and `SUPABASE_SECRET_KEY` (the secret key; server only, used for "Delete my account"). Older projects show `anon` / `service_role` keys instead; put them in `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`, both work. (Vercel's **Storage → Supabase** button also fills these in for you; if you use it, pick the **Free** plan.)
+3. Supabase → **SQL Editor** → paste all of `supabase/schema.sql` → **Run**. It's safe to run again after updates.
+4. Supabase → **Authentication → URL Configuration**: Site URL `https://www.theplatenextdoor.com`; Redirect URLs `https://www.theplatenextdoor.com/**`, `https://theplatenextdoor.com/**`, `http://localhost:3000/**`.
+5. **Authentication → Providers → Email**: keep it on, keep "Confirm email" on, set **Email OTP Length to 6**.
+6. **Authentication → Emails → Templates**: in both **Magic Link** and **Confirm signup**, set the subject to `{{ .Token }} is your Plate Next Door code` and the body to:
    ```html
    <p>Your sign-in code:</p>
    <p style="font-size:32px;letter-spacing:6px;font-weight:700;font-family:monospace">{{ .Token }}</p>
    <p>Type it in on The Plate Next Door, or <a href="{{ .ConfirmationURL }}">tap here to sign in</a>.</p>
    <p style="color:#6b665b;font-size:13px">It works once, for an hour. Didn't ask for it? Ignore this email.</p>
    ```
-6. **Real email delivery (required before launch).** Supabase's built-in sender allows only a couple of emails an hour. Make a free [Resend](https://resend.com) account, add the domain `theplatenextdoor.com` (it asks for a few DNS records on a `send.` subdomain — add them in GoDaddy; they don't touch your Microsoft 365 email), then Supabase → **Authentication → Emails → SMTP Settings**: host `smtp.resend.com`, port `465`, user `resend`, password = your Resend API key, sender `signin@theplatenextdoor.com`, name `The Plate Next Door`.
-7. Optional, passkeys: **Authentication → Passkeys** → enable (relying party: `theplatenextdoor.com`), then add `NEXT_PUBLIC_PASSKEYS=on` in Vercel.
+7. **Real email delivery, free (required before launch).** Supabase's built-in sender allows only a couple of emails an hour. Make a free [Resend](https://resend.com) account (Free plan: 3,000 emails a month, 100 a day, no card), add the domain `theplatenextdoor.com` (it asks for a few DNS records on a `send.` subdomain — add them in GoDaddy; they don't touch your Microsoft 365 email), then Supabase → **Authentication → Emails → SMTP Settings**: host `smtp.resend.com`, port `465`, user `resend`, password = your Resend API key, sender `signin@theplatenextdoor.com`, name `The Plate Next Door`.
+8. Optional, passkeys (free): **Authentication → Passkeys** → enable (relying party: `theplatenextdoor.com`), then add `NEXT_PUBLIC_PASSKEYS=on` in Vercel.
 
-**2. Google sign-in (recommended)**
-1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → **Create credentials → OAuth client ID → Web application**. Authorized JavaScript origins: `https://www.theplatenextdoor.com`, `https://theplatenextdoor.com`, `http://localhost:3000`. Authorized redirect URI: `https://<your-project-ref>.supabase.co/auth/v1/callback`. Fill in the OAuth consent screen (name, logo, support email) and publish it.
+**2. Google sign-in (free, recommended: it sends no email)**
+1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials) (no billing account needed; skip any "start free trial" offer) → **Create credentials → OAuth client ID → Web application**. Authorized JavaScript origins: `https://www.theplatenextdoor.com`, `https://theplatenextdoor.com`, `http://localhost:3000`. Authorized redirect URI: `https://<your-project-ref>.supabase.co/auth/v1/callback`. Fill in the OAuth consent screen (name, logo, support email) and publish it.
 2. Supabase → **Authentication → Providers → Google** → enable, paste the Client ID and Client Secret.
 3. Vercel: `NEXT_PUBLIC_GOOGLE_CLIENT_ID` = that Client ID.
 
-**3. Google Analytics 4**
+**3. Google Analytics 4 (free)**
 1. [analytics.google.com](https://analytics.google.com) → Admin → **Create property** → web stream for `https://www.theplatenextdoor.com` → copy the Measurement ID (`G-…`). Leave Enhanced measurement on (it counts page changes in the app).
 2. Vercel: `NEXT_PUBLIC_GA_ID` = that ID.
 3. Admin → Events → mark `sign_up`, `add_to_wishlist`, `newsletter_signup`, `review` and `directions` as **key events**. Leave Google signals off (the privacy page promises no ad use).
 
 Events sent (to GA4 and Vercel Analytics): `sign_up` / `login` (with method), `add_to_wishlist`, `stamp`, `spot_view`, `directions`, `website`, `share`, `review`, `photo_upload`, `surprise_spin`, `spot_submitted`, `newsletter_signup`, `passkey_added`. Signed-in sessions carry an anonymous member id (never an email) and a `home_city` user property. Visitors with Global Privacy Control never load Google Analytics, and anyone can switch it off on `/privacy`.
 
-**4. Redeploy** (Vercel → Deployments → Redeploy). Sign in with `emails@theplatenextdoor.com` and you're staff (the Verification desk shows up). To add more staff, in the SQL Editor: `insert into public.admin_emails values ('name@example.com');`
+**4. Redeploy** (Vercel → Deployments → Redeploy). Then open `https://www.theplatenextdoor.com/api/health`; it should say the database and sign-in are awake. Sign in with `emails@theplatenextdoor.com` and you're staff (the Verification desk shows up). To add more staff, in the SQL Editor: `insert into public.admin_emails values ('name@example.com');`
 
 | Variable | Where it comes from |
 | --- | --- |

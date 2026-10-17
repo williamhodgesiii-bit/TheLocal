@@ -157,6 +157,9 @@ function friendly(e: { message?: string; code?: string; status?: number } | null
   if (/only request this after|security purposes/i.test(m)) return new Error("Give it a few seconds before asking for another code.");
   if (/rate limit/i.test(m)) return new Error("We're sending a lot of codes right now. Try again in a few minutes, or continue with Google.");
   if (/signups? not allowed/i.test(m)) return new Error("New sign-ups are paused for a moment. Try again soon.");
+  // the free email plan has a daily cap; Google and passkeys don't use email at all
+  if (/error sending|smtp|send.*(email|mail)|mail.*fail/i.test(m))
+    return new Error("We couldn't send a code just now. Continue with Google instead, or try again in a little while.");
   if (/invalid.*email|email.*invalid/i.test(m)) return new Error("That email doesn't look right.");
   return new Error(m || "Something went wrong. Try again?");
 }
@@ -358,7 +361,8 @@ function supabaseBackend(sb: SupabaseClient): Backend {
         email: e,
         options: { shouldCreateUser: true, emailRedirectTo: callback(location.pathname + location.search) },
       });
-      if (error) throw friendly(error);
+      // a server error here is almost always the email not going out (e.g. the free plan's daily cap)
+      if (error) throw (error.status ?? 0) >= 500 ? friendly({ message: "error sending" }) : friendly(error);
       return {};
     },
     async verifyCode(email, code) {
