@@ -6,6 +6,7 @@ import { getBackend, shortName, type Backend, type BeenMap, type Stamp, type Use
 import { identify, track } from "@/lib/analytics";
 import { HOME_KEY } from "@/lib/regions";
 import AuthModal, { type AuthStep } from "./AuthModal";
+import SignInNudge from "./SignInNudge";
 
 export type { BeenMap, Verdict } from "@/lib/backend";
 
@@ -306,6 +307,7 @@ export default function Providers({ children }: { children: ReactNode }) {
     <AppCtx.Provider value={value}>
       {children}
       <AuthModal open={auth.open} reason={auth.reason} step={auth.step} onSignedIn={applyUser} onClose={closeAuth} />
+      <SignInNudge authOpen={auth.open} />
       <div className="toasts" aria-live="polite">
         <AnimatePresence>
           {toasts.map((t) => (
