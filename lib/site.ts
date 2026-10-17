@@ -5,8 +5,12 @@
 // Override anytime by setting NEXT_PUBLIC_SITE_URL.
 export const CANONICAL_HOST = "https://www.theplatenextdoor.com";
 
+const APEX = "https://theplatenextdoor.com";
+
 export function siteUrl() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  const set = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  // the apex redirects to www, so a canonical on the apex would point at a redirect
+  if (set) return set === APEX ? CANONICAL_HOST : set;
   if (process.env.VERCEL_ENV === "production") return CANONICAL_HOST;
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
