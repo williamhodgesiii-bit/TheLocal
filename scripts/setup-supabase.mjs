@@ -54,7 +54,7 @@ ok(`Project found: ${me.json?.name ?? REF}`);
 
 // 1) database tables, security rules and staff list
 const sql = readFileSync(new URL("../supabase/schema.sql", import.meta.url), "utf8");
-const db = await call("POST", `/v1/projects/${REF}/database/query`, { query: sql });
+const db = await call("POST", `/v1/projects/${REF}/database/query`, { query: sql, read_only: false });
 if (!db.ok) fail(`Database setup didn't go through: ${why(db)}`);
 ok("Database ready (members, passport, saved places, reviews, photos, staff)");
 
@@ -83,7 +83,9 @@ if (RESEND) {
   if (!s2.ok) fail(`Email sender didn't save: ${why(s2)}`);
   ok(`Email sender connected: The Plate Next Door <${SENDER}> via Resend (free)`);
 } else {
-  warn("No RESEND_API_KEY secret yet, so the email sender wasn't connected. Add it and run this again.");
+  const cur = await call("GET", `/v1/projects/${REF}/config/auth`);
+  if (cur.ok && cur.json?.smtp_host) ok(`Email sender already connected: ${cur.json.smtp_sender_name ?? ""} <${cur.json.smtp_admin_email}> (${cur.json.smtp_host})`);
+  else warn("No RESEND_API_KEY secret yet, so the email sender wasn't connected. Add it and run this again.");
 }
 
 // 4) the sign-in email (same for new and returning people)
