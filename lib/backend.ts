@@ -204,11 +204,13 @@ function friendly(e: { message?: string; code?: string; status?: number } | null
   const m = e?.message ?? "";
   if (/expired|invalid/i.test(m) && /token|otp|code/i.test(m)) return new Error("That code didn't work. Use the newest email from us, or send a new code.");
   if (/only request this after|security purposes/i.test(m)) return new Error("Give it a few seconds before asking for another code.");
-  if (/rate limit/i.test(m)) return new Error("We're sending a lot of codes right now. Try again in a few minutes, or continue with Google.");
+  // only point to Google when the site actually offers it
+  const orGoogle = GOOGLE_CLIENT_ID ? ", or continue with Google" : "";
+  if (/rate limit/i.test(m)) return new Error(`We're sending a lot of codes right now. Try again in a few minutes${orGoogle}.`);
   if (/signups? not allowed/i.test(m)) return new Error("New sign-ups are paused for a moment. Try again soon.");
   // the free email plan has a daily cap; Google and passkeys don't use email at all
   if (/error sending|smtp|send.*(email|mail)|mail.*fail/i.test(m))
-    return new Error("We couldn't send a code just now. Continue with Google instead, or try again in a little while.");
+    return new Error(GOOGLE_CLIENT_ID ? "We couldn't send a code just now. Continue with Google instead, or try again in a little while." : "We couldn't send a code just now. Try again in a little while.");
   if (/invalid.*email|email.*invalid/i.test(m)) return new Error("That email doesn't look right.");
   return new Error(m || "Something went wrong. Try again?");
 }
