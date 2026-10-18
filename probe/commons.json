@@ -1,94 +1,13 @@
 {
- "chubbfathers": [],
- "little-betty": [
-  {
-   "q": "Lane Parke, Mountain Brook, Alabama",
-   "lat": 33.4882739,
-   "lon": -86.7720984,
-   "type": "road",
-   "name": "Lane Parke Court, Lane Park, Mountain Brook Village, Mountain Brook, Jefferson County, Alabama, 3520"
-  },
-  {
-   "q": "Lane Parke, Mountain Brook, Alabama",
-   "lat": 33.4873274,
-   "lon": -86.7721753,
-   "type": "road",
-   "name": "Lane Parke Court, Lane Park, Mountain Brook Village, Mountain Brook, Jefferson County, Alabama, 3520"
+ "pages": {
+  "https://www.theplatenextdoor.com": {
+   "status": 200,
+   "url": "https://www.theplatenextdoor.com/",
+   "size": 82853,
+   "chunks": 18
   }
- ],
- "seabar": [],
- "charbar-no-7": [],
- "locanda-brasato": [],
- "miss-astrids": [],
- "foodbar": [
-  {
-   "q": "Heights Village, Vestavia Hills, Alabama",
-   "lat": 33.4639953,
-   "lon": -86.7319322,
-   "type": "village",
-   "name": "Cahaba Heights, Vestavia Hills, Jefferson County, Alabama, 35243, United States"
-  }
- ],
- "the-ridge": [],
- "rojo": [
-  {
-   "q": "Rojo, Birmingham, Alabama",
-   "lat": 33.5061745,
-   "lon": -86.7809392,
-   "type": "amenity",
-   "name": "Rojo, 2921, Highland Avenue, Chestnut Hill Historic District, Highland Residence Park, Birmingham, J"
-  },
-  {
-   "q": "2921 Highland Ave S, Birmingham, Alabama",
-   "lat": 33.5067338,
-   "lon": -86.8032683,
-   "type": "aeroway",
-   "name": "University of Alabama Hospital Heliport, 5th Avenue South, Automotive Historic District, Highland Re"
-  }
- ],
- "freddys-wine-bar": [
-  {
-   "q": "2251 Highland Ave S, Birmingham, Alabama",
-   "lat": 33.5067338,
-   "lon": -86.8032683,
-   "type": "aeroway",
-   "name": "University of Alabama Hospital Heliport, 5th Avenue South, Automotive Historic District, Highland Re"
-  }
- ],
- "liberty-park": [
-  {
-   "q": "Liberty Park, Vestavia Hills, Alabama",
-   "lat": 33.4806256,
-   "lon": -86.676253,
-   "type": "suburb",
-   "name": "Liberty Park, Vestavia Hills, Jefferson County, Alabama, United States"
-  }
- ],
- "irondale-downtown": [
-  {
-   "q": "Irondale, Alabama",
-   "lat": 33.5381601,
-   "lon": -86.7072102,
-   "type": "town",
-   "name": "Irondale, Jefferson County, Alabama, 35210, United States"
-  }
- ],
- "hoover-city": [
-  {
-   "q": "Hoover, Alabama",
-   "lat": 33.350293,
-   "lon": -86.851123,
-   "type": "town",
-   "name": "Hoover, Jefferson County, Alabama, United States"
-  }
- ],
- "alabaster-city": [
-  {
-   "q": "Alabaster, Alabama",
-   "lat": 33.2442813,
-   "lon": -86.8163773,
-   "type": "town",
-   "name": "Alabaster, Shelby County, Alabama, 35007, United States"
-  }
+ },
+ "found": [
+  "https://wylpbzopmpqaahtbkvkn.supabase.co"
  ]
 }
