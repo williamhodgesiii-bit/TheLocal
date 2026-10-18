@@ -4,7 +4,24 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { LANDMARKS, RED_MOUNTAIN } from "@/lib/data";
 import { OSM_CREDIT, OSM_TILES } from "@/lib/map-style-load";
-import { LANDMARK_SVG, Recenter, declutter as declutterIn, esc, pinHtml, zoomKey, type MapProps } from "./map-shared";
+import {
+  LANDMARK_SVG,
+  NAME_ZOOM,
+  Recenter,
+  coverBoxes,
+  declutter as declutterIn,
+  dotBox,
+  esc,
+  nameSize,
+  pinHtml,
+  placeNames,
+  showNames,
+  zoomKey,
+  type MapProps,
+  type NameCandidate,
+  type NameSide,
+  type ScreenBox,
+} from "./map-shared";
 
 /**
  * Fallback map for devices that can't draw vector maps (no WebGL): Leaflet with
@@ -21,15 +38,58 @@ export default function MapViewLeaflet(props: MapProps) {
   /** true while the camera is moving on its own (framing picks), so that doesn't count as "moved" */
   const auto = useRef(false);
 
+  // Zoomed in, each pin carries its name where there's room (placeNames in map-shared).
+  const named = useRef<Map<string, NameSide>>(new Map());
+  const sizes = useRef<Map<string, [number, number]>>(new Map());
+  /** the caption, key and buttons over the map, read when it stops moving */
+  const covers = useRef<ScreenBox[]>([]);
+  const names = () => {
+    const m = map.current;
+    if (!m) return;
+    const { x: w, y: h } = m.getSize();
+    const p = cb.current;
+    const els = new Map<string, HTMLElement>();
+    markers.current.forEach((mk, id) => {
+      const n = mk.getElement()?.querySelector<HTMLElement>(".pin");
+      if (n) els.set(id, n);
+    });
+    const cands: NameCandidate[] = [];
+    const blocked: ScreenBox[] = [...covers.current];
+    if (w > 10 && m.getZoom() >= NAME_ZOOM) {
+      for (const s of p.spots) {
+        const sel = s.id === p.selectedId;
+        if (!sel && !p.visible.has(s.id)) continue;
+        const pt = m.latLngToContainerPoint(s.coords);
+        if (pt.x < -40 || pt.y < -40 || pt.x > w + 40 || pt.y > h + 40) continue;
+        blocked.push(dotBox(pt.x, pt.y));
+        const pin = els.get(s.id);
+        if (sel) {
+          const lab = pin?.querySelector<HTMLElement>(".pin-label");
+          if (lab) blocked.push({ l: pt.x + 19, r: pt.x + 19 + lab.offsetWidth, t: pt.y - 14, b: pt.y - 14 + lab.offsetHeight });
+          continue;
+        }
+        const size = nameSize(sizes.current, s.id, pin);
+        if (size) cands.push({ id: s.id, x: pt.x, y: pt.y, w: size[0], h: size[1], rank: p.numbers[s.id] ?? 1000 - s.pop, prev: named.current.get(s.id) });
+      }
+    }
+    const next = placeNames(cands, blocked, w, h);
+    showNames(els, next, named.current);
+    named.current = next;
+  };
+
   /**
-   * Labels never sit on pins or on each other. Pins win, then the active
+   * Labels never sit on pins or on each other. Pins and their names win, then the active
    * neighborhood, then other neighborhoods, then the ridge and landmarks.
    * Whatever doesn't fit is hidden until the camera moves.
    */
   const raf = useRef(0);
   const declutter = useRef(() => {
     cancelAnimationFrame(raf.current);
-    raf.current = requestAnimationFrame(() => el.current && declutterIn(el.current));
+    raf.current = requestAnimationFrame(() => {
+      if (el.current) covers.current = coverBoxes(el.current);
+      names();
+      if (el.current) declutterIn(el.current);
+    });
   });
 
   // init once
@@ -81,6 +141,10 @@ export default function MapViewLeaflet(props: MapProps) {
     m.on("zoomend resize", density);
     density();
     m.on("moveend zoomend resize", () => declutter.current());
+    document.fonts?.ready.then(() => {
+      sizes.current.clear();
+      declutter.current();
+    });
     m.on("dragstart", () => setMoved(true));
     m.on("zoomstart", () => !auto.current && setMoved(true));
     m.on("moveend", () => (auto.current = false));
@@ -95,6 +159,7 @@ export default function MapViewLeaflet(props: MapProps) {
     ro.observe(el.current);
     map.current = m;
     return () => {
+      cancelAnimationFrame(raf.current);
       ro.disconnect();
       m.remove();
       map.current = null;
@@ -112,6 +177,8 @@ export default function MapViewLeaflet(props: MapProps) {
       if (!ids.has(id)) {
         mk.remove();
         markers.current.delete(id);
+        named.current.delete(id);
+        sizes.current.delete(id);
       }
     });
     for (const s of props.spots) {

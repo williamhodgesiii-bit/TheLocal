@@ -1722,6 +1722,60 @@ select {
 .pin.dim:hover .pin-dot {
   transform: scale(1.3);
 }
+/* Zoomed in, a pin's name prints beside it wherever placeNames (map-shared) finds room.
+   The side offsets match SIDE_GAP and TOP_GAP there. Tapping the name opens the place. */
+.pin-name {
+  position: absolute;
+  left: 15px;
+  top: 0;
+  transform: translateY(-50%);
+  width: max-content;
+  max-width: 132px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font: 650 11.5px/1.2 var(--f-sans);
+  color: var(--ink);
+  text-shadow: 0 0 2px #f4efe1, 0 0 2px #f4efe1, 0 0 3px #f4efe1, 0 0 4px #f4efe1;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.15s, visibility 0s linear 0.15s;
+}
+.pin.named .pin-name {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.15s;
+}
+.pin[data-side="l"] .pin-name {
+  left: auto;
+  right: 15px;
+  text-align: right;
+}
+.pin[data-side="b"] .pin-name,
+.pin[data-side="t"] .pin-name {
+  left: 0;
+  text-align: center;
+}
+.pin[data-side="b"] .pin-name {
+  top: 13px;
+  transform: translateX(-50%);
+}
+.pin[data-side="t"] .pin-name {
+  top: -13px;
+  transform: translate(-50%, -100%);
+}
+/* the boxed full name takes over on hover, but the name under it stays tappable
+   (hiding it outright would drop the click onto the map, and iOS would eat the first tap) */
+.pin:hover .pin-name,
+.pin.hot .pin-name {
+  opacity: 0;
+}
+.pin.selected .pin-name,
+.pin-wrap:focus-visible .pin-name {
+  visibility: hidden;
+  opacity: 0;
+}
 
 .hood {
   background: none;
@@ -2351,8 +2405,32 @@ label.check input {
   flex-wrap: wrap;
   gap: 6px;
 }
-.address-row {
-  align-items: flex-end;
+/* add a place: what the address lookup found, under the address box */
+.where-line {
+  margin: -4px 0 2px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.where-line.found,
+.where-line.pinned {
+  color: var(--ink-2);
+}
+.where-line.missing {
+  color: var(--red-2);
+}
+.where-ok {
+  font-weight: 700;
+  color: var(--green);
+}
+.where-ok::before {
+  content: "✓ ";
+}
+.where-line .textbtn {
+  font-size: inherit;
+}
+.where-line .hit-bad {
+  margin-left: 6px;
 }
 .grow {
   flex: 1;

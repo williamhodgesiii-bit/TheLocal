@@ -149,7 +149,7 @@ function ReviewCard({ sub, onDone }: { sub: Submission; onDone: () => void }) {
   async function verifyLookup() {
     setLooking(true);
     try {
-      const r = await fetch(`/api/geocode?city=${sub.cityId}&q=${encodeURIComponent(`${name}, ${address}`)}`);
+      const r = await fetch(`/api/geocode?${new URLSearchParams({ city: sub.cityId, name, address })}`);
       setLookup((await r.json()).results ?? []);
     } catch {
       setLookup([]);

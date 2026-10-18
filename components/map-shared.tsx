@@ -65,7 +65,91 @@ export function Recenter({ show, onClick }: { show: boolean; onClick: () => void
   );
 }
 
-export const pinHtml = (name: string) => `<div class="pin"><span class="pin-dot"><b class="pin-n"></b></span><span class="pin-label">${esc(name)}</span></div>`;
+/** The name printed beside a pin: no "(West Homewood)" tail, since the map already shows where it is. */
+export const mapName = (name: string) => name.replace(/\s*\([^)]*\)\s*$/, "") || name;
+
+export const pinHtml = (name: string) =>
+  `<div class="pin"><span class="pin-dot"><b class="pin-n"></b></span><span class="pin-name" aria-hidden="true">${esc(mapName(name))}</span><span class="pin-label">${esc(name)}</span></div>`;
+
+/** Names print beside the pins from this zoom in (Leaflet numbers), wherever they fit. */
+export const NAME_ZOOM = 14;
+
+export type NameSide = "r" | "l" | "b" | "t";
+export type ScreenBox = { l: number; r: number; t: number; b: number };
+/** a pin that wants its name shown: where it is on screen, the size of its name, and its place in line */
+export type NameCandidate = { id: string; x: number; y: number; w: number; h: number; rank: number; prev?: NameSide };
+
+const SIDES: NameSide[] = ["r", "l", "b", "t"];
+// matches the .pin-name offsets in globals.css
+const SIDE_GAP = 15;
+const TOP_GAP = 13;
+/** a pin's dot, as room a name can't take */
+export const dotBox = (x: number, y: number): ScreenBox => ({ l: x - 12, r: x + 12, t: y - 12, b: y + 12 });
+const overlaps = (a: ScreenBox, b: ScreenBox) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+
+function nameBox(c: NameCandidate, side: NameSide): ScreenBox {
+  if (side === "r") return { l: c.x + SIDE_GAP, r: c.x + SIDE_GAP + c.w, t: c.y - c.h / 2, b: c.y + c.h / 2 };
+  if (side === "l") return { l: c.x - SIDE_GAP - c.w, r: c.x - SIDE_GAP, t: c.y - c.h / 2, b: c.y + c.h / 2 };
+  if (side === "b") return { l: c.x - c.w / 2, r: c.x + c.w / 2, t: c.y + TOP_GAP, b: c.y + TOP_GAP + c.h };
+  return { l: c.x - c.w / 2, r: c.x + c.w / 2, t: c.y - TOP_GAP - c.h, b: c.y - TOP_GAP };
+}
+
+/**
+ * Which pins get their name printed, and on which side. The best-ranked places (the top of
+ * the list) claim room first; each name tries the right, then the left, below and above,
+ * starting with the side it had last time so names don't hop around while you zoom. A name
+ * never covers a pin, another name or the edge of the map; one that fits nowhere waits until
+ * you zoom in further. Plain arithmetic on screen points, so it can run every frame.
+ */
+export function placeNames(cands: NameCandidate[], blocked: ScreenBox[], w: number, h: number): Map<string, NameSide> {
+  const out = new Map<string, NameSide>();
+  const taken = [...blocked];
+  for (const c of [...cands].sort((a, b) => a.rank - b.rank)) {
+    const order = c.prev ? [c.prev, ...SIDES.filter((x) => x !== c.prev)] : SIDES;
+    for (const side of order) {
+      const box = nameBox(c, side);
+      if (box.l < 4 || box.t < 4 || box.r > w - 4 || box.b > h - 4) continue;
+      if (taken.some((t) => overlaps(box, t))) continue;
+      taken.push({ l: box.l - 3, r: box.r + 3, t: box.t - 2, b: box.b + 2 });
+      out.set(c.id, side);
+      break;
+    }
+  }
+  return out;
+}
+
+/** Things printed over the map (caption, key, buttons, the card strip): names keep clear of them. */
+const COVERS = ".map-caption, .map-key, .map-cards, .m-round, .recenter.show, .zoom-ctl, .leaflet-control-zoom, .maplibregl-ctrl-attrib, .leaflet-control-attribution";
+/** Where those sit, in the map's own screen points. They hold still while the map moves, so read them once per stop. */
+export function coverBoxes(host: HTMLElement): ScreenBox[] {
+  const h = host.getBoundingClientRect();
+  const root = host.closest(".map-plate") ?? host.parentElement ?? host;
+  return [...root.querySelectorAll<HTMLElement>(COVERS)]
+    .map((n) => n.getBoundingClientRect())
+    .filter((r) => r.width && r.height)
+    .map((r) => ({ l: r.left - h.left, r: r.right - h.left, t: r.top - h.top, b: r.bottom - h.top }));
+}
+
+/** Puts each pin's name where placeNames said, touching only the pins that changed. */
+export function showNames(pins: Map<string, HTMLElement>, next: Map<string, NameSide>, prev: Map<string, NameSide>) {
+  pins.forEach((pin, id) => {
+    const side = next.get(id);
+    if (side === prev.get(id)) return;
+    pin.classList.toggle("named", !!side);
+    if (side) pin.dataset.side = side;
+  });
+}
+
+/** The size of each pin's name, read once (and again after the web fonts arrive). */
+export function nameSize(cache: Map<string, [number, number]>, id: string, pin: Element | null | undefined): [number, number] | null {
+  const have = cache.get(id);
+  if (have) return have;
+  const n = pin?.querySelector<HTMLElement>(".pin-name");
+  if (!n || !n.offsetWidth) return null;
+  const size: [number, number] = [n.offsetWidth, n.offsetHeight];
+  cache.set(id, size);
+  return size;
+}
 
 /** Is a key press meant for the map (+/-) rather than a text field? */
 export function zoomKey(e: KeyboardEvent): 1 | -1 | 0 {
@@ -77,7 +161,7 @@ export function zoomKey(e: KeyboardEvent): 1 | -1 | 0 {
 }
 
 /**
- * Labels never sit on pins or on each other. Pins win, then the active
+ * Labels never sit on pins or on each other. Pins and their names win, then the active
  * neighborhood, then other neighborhoods, then the ridge and landmarks. A label that
  * doesn't fit tries a few nearby spots, else hides until the camera moves.
  */
@@ -93,7 +177,7 @@ export function declutter(root: HTMLElement) {
   // writes first, then one round of reads, then the writes that place things
   for (const n of labels) n.style.translate = "";
   const taken: Box[] = [];
-  root.querySelectorAll<HTMLElement>(".pin:not(.dim) .pin-dot, .pin.selected .pin-label, .pin.hot .pin-label").forEach((n) => {
+  root.querySelectorAll<HTMLElement>(".pin:not(.dim) .pin-dot, .pin.named .pin-name, .pin.selected .pin-label, .pin.hot .pin-label").forEach((n) => {
     const r = n.getBoundingClientRect();
     if (r.width) taken.push(pad(r, 3));
   });

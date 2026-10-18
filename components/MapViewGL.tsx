@@ -6,7 +6,25 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { LANDMARKS, RED_MOUNTAIN } from "@/lib/data";
 import { BLANK_STYLE, OFM_CREDIT, OSM_CREDIT, RASTER_STYLE, loadStyle, type Style } from "@/lib/map-style-load";
 import { MAP_STYLES } from "@/lib/map-styles";
-import { LANDMARK_SVG, Recenter, declutter, esc, onTap, pinHtml, zoomKey, type MapProps } from "./map-shared";
+import {
+  LANDMARK_SVG,
+  NAME_ZOOM,
+  Recenter,
+  coverBoxes,
+  declutter,
+  dotBox,
+  esc,
+  nameSize,
+  onTap,
+  pinHtml,
+  placeNames,
+  showNames,
+  zoomKey,
+  type MapProps,
+  type NameCandidate,
+  type NameSide,
+  type ScreenBox,
+} from "./map-shared";
 
 /**
  * The main map, drawn and moved by MapLibre itself, so pinching, scrolling and
@@ -67,16 +85,68 @@ export default function MapViewGL(props: MapProps) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<GLMap | null>(null);
   const pins = useRef<Map<string, Marker>>(new Map());
+  /** each pin's .pin node, so naming them every frame doesn't search the page */
+  const pinEls = useRef<Map<string, HTMLElement>>(new Map());
   const hoods = useRef<Map<string, Marker>>(new Map());
   const cb = useRef(props);
   cb.current = props;
   /** the visitor moved the map themselves, so offer a way back to their picks */
   const [moved, setMoved] = useState(false);
 
+  // Zoomed in, each pin carries its name where there's room (placeNames). Redone every frame
+  // the map moves, so names make way and come back as pins spread apart or crowd together.
+  const named = useRef<Map<string, NameSide>>(new Map());
+  const sizes = useRef<Map<string, [number, number]>>(new Map());
+  /** the caption, key and buttons over the map, read when it stops moving */
+  const covers = useRef<ScreenBox[]>([]);
+  const names = () => {
+    const m = map.current;
+    const box = el.current;
+    if (!m || !box) return;
+    const w = box.clientWidth;
+    const h = box.clientHeight;
+    const p = cb.current;
+    const cands: NameCandidate[] = [];
+    const blocked: ScreenBox[] = [...covers.current];
+    if (w > 10 && m.getZoom() >= Z(NAME_ZOOM)) {
+      for (const s of p.spots) {
+        const sel = s.id === p.selectedId;
+        if (!sel && !p.visible.has(s.id)) continue;
+        const pt = m.project(ll(s.coords));
+        if (pt.x < -40 || pt.y < -40 || pt.x > w + 40 || pt.y > h + 40) continue;
+        blocked.push(dotBox(pt.x, pt.y));
+        const pin = pinEls.current.get(s.id);
+        if (sel) {
+          // the open place already shows its full name: keep the others off it
+          const lab = pin?.querySelector<HTMLElement>(".pin-label");
+          if (lab) blocked.push({ l: pt.x + 19, r: pt.x + 19 + lab.offsetWidth, t: pt.y - 14, b: pt.y - 14 + lab.offsetHeight });
+          continue;
+        }
+        const size = nameSize(sizes.current, s.id, pin);
+        if (size) cands.push({ id: s.id, x: pt.x, y: pt.y, w: size[0], h: size[1], rank: p.numbers[s.id] ?? 1000 - s.pop, prev: named.current.get(s.id) });
+      }
+    }
+    const next = placeNames(cands, blocked, w, h);
+    showNames(pinEls.current, next, named.current);
+    named.current = next;
+  };
+  const nameRaf = useRef(0);
+  const nameSoon = () => {
+    if (nameRaf.current) return;
+    nameRaf.current = requestAnimationFrame(() => {
+      nameRaf.current = 0;
+      names();
+    });
+  };
+
   const raf = useRef(0);
   const tidy = () => {
     cancelAnimationFrame(raf.current);
-    raf.current = requestAnimationFrame(() => el.current && declutter(el.current));
+    raf.current = requestAnimationFrame(() => {
+      if (el.current) covers.current = coverBoxes(el.current);
+      names();
+      if (el.current) declutter(el.current);
+    });
   };
 
   // init once
@@ -183,8 +253,15 @@ export default function MapViewGL(props: MapProps) {
     // small screens zoomed out: drop secondary labels so pins stay legible
     const density = () => el.current?.classList.toggle("compact", (el.current?.clientWidth ?? 0) < 700 && m.getZoom() < Z(14.2));
     m.on("zoomend", density);
+    m.on("move", nameSoon);
     m.on("moveend", tidy);
     density();
+    // names were measured in the fallback font; measure again once the real one is in
+    document.fonts?.ready.then(() => {
+      if (!alive) return;
+      sizes.current.clear();
+      tidy();
+    });
 
     let lastW = el.current.clientWidth;
     let lastH = el.current.clientHeight;
@@ -210,10 +287,14 @@ export default function MapViewGL(props: MapProps) {
     return () => {
       alive = false;
       clearTimeout(watchdog);
+      cancelAnimationFrame(nameRaf.current);
+      cancelAnimationFrame(raf.current);
       ro.disconnect();
       m.remove();
       map.current = null;
       pins.current.clear();
+      pinEls.current.clear();
+      named.current.clear();
       hoods.current.clear();
     };
   }, []);
@@ -227,6 +308,9 @@ export default function MapViewGL(props: MapProps) {
       if (!ids.has(id)) {
         mk.remove();
         pins.current.delete(id);
+        pinEls.current.delete(id);
+        named.current.delete(id);
+        sizes.current.delete(id);
       }
     });
     for (const s of props.spots) {
@@ -247,6 +331,8 @@ export default function MapViewGL(props: MapProps) {
       node.addEventListener("mouseenter", () => cb.current.onHover(s.id));
       node.addEventListener("mouseleave", () => cb.current.onHover(null));
       pins.current.set(s.id, mk);
+      const pin = node.querySelector<HTMLElement>(".pin");
+      if (pin) pinEls.current.set(s.id, pin);
     }
   }, [props.spots]);
 
