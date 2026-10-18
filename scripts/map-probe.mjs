@@ -1,9 +1,18 @@
-// Temporary, read-only: check the live database has the review update, using the site's
-// public (publishable) key from its own JavaScript. Only status codes are saved, never the key.
+// Temporary, read-only: is sign-up email ready? DNS for the Resend domain, and Supabase's
+// public sign-in settings (via the site's own publishable key; the key is never saved).
 import { mkdir, writeFile } from "node:fs/promises";
 const SB = "https://wylpbzopmpqaahtbkvkn.supabase.co";
-const out = { key: false, checks: {} };
-const site = "https://www.theplatenextdoor.com";
+const out = { dns: {}, auth: null };
+const q = async (name, type) => {
+  const r = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(name)}&type=${type}`);
+  const j = await r.json();
+  return (j.Answer ?? []).map((a) => `${a.type === 15 ? "MX" : a.type === 16 ? "TXT" : a.type === 5 ? "CNAME" : a.type} ${a.data}`);
+};
+const D = "theplatenextdoor.com";
+for (const [n, t] of [[D, "MX"], [D, "TXT"], [`send.${D}`, "MX"], [`send.${D}`, "TXT"], [`resend._domainkey.${D}`, "TXT"], [`_dmarc.${D}`, "TXT"], [`www.${D}`, "CNAME"]]) {
+  out.dns[`${n} ${t}`] = await q(n, t);
+}
+const site = `https://www.${D}`;
 const html = await (await fetch(site)).text();
 let key = null;
 for (const c of [...new Set([...html.matchAll(/\/_next\/static\/[^"']+\.js/g)].map((m) => m[0]))]) {
@@ -12,17 +21,11 @@ for (const c of [...new Set([...html.matchAll(/\/_next\/static\/[^"']+\.js/g)].m
   key = js.match(/sb_publishable_[A-Za-z0-9_-]{20,}/)?.[0] ?? js.match(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/)?.[0] ?? null;
   if (key) break;
 }
-out.key = !!key;
-const get = async (name, path) => {
-  const r = await fetch(`${SB}/rest/v1/${path}`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
-  const t = await r.text();
-  out.checks[name] = { status: r.status, note: r.ok ? `rows: ${(() => { try { return JSON.parse(t).length; } catch { return "?"; } })()}` : t.slice(0, 160) };
-};
 if (key) {
-  await get("reviews new columns", "reviews?select=id,go_back,ordered,good_for,visited_on,status&limit=1");
-  await get("ratings with go-back share", "spot_ratings?select=spot_id,go_back_pct&limit=1");
-  await get("helpful counts", "review_helpful?select=review_id,helpful&limit=1");
-  await get("reviewer totals", "reviewer_totals?select=user_id,reviews&limit=1");
+  const r = await fetch(`${SB}/auth/v1/settings`, { headers: { apikey: key } });
+  out.auth = { status: r.status, body: await r.json().catch(() => null) };
+  const h = await fetch(`${site}/api/health`);
+  out.health = { status: h.status, body: (await h.text()).slice(0, 400) };
 }
 await mkdir("probe", { recursive: true });
 await writeFile("probe/commons.json", JSON.stringify(out, null, 1));
