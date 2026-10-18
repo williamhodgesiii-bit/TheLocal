@@ -2,7 +2,7 @@
 
 import { memo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { areaLabelOf, priceLabel, type Spot } from "@/lib/data";
+import { GENRE_BY_ID, areaLabelOf, priceLabel, type Spot } from "@/lib/data";
 import { coverFor } from "@/lib/photos";
 import { honorsOf } from "@/lib/honors";
 import { milestoneName, nextMilestone, weeklyStreak } from "@/lib/passport";
@@ -117,29 +117,37 @@ export function Honors({ id, max = 3 }: { id: string; max?: number }) {
   );
 }
 
-/** This week's plate: one place, big, new every Thursday. */
+/**
+ * This week's plate: one place, new every Thursday. Compact on purpose: the name, what to
+ * order and why come first with a small photo beside them, so the rest of the page peeks in.
+ */
 export const WeekPlate = memo(function WeekPlate({ spot, since, onOpen }: { spot: Spot; since: Date; onOpen: (id: string) => void }) {
   const c = cover(spot);
   return (
-    <article className="week">
-      <button className="week-img" onClick={() => onOpen(spot.id)} aria-label={`This week's plate: ${spot.name}`}>
-        <Photo src={c.src} srcSet={c.srcSet} sizes="(max-width: 900px) 100vw, 420px" alt={c.alt} genre={spot.genres[0]} eager />
-        <span className="week-kicker">This week&apos;s plate</span>
+    <article className="week" aria-label={`This week's plate: ${spot.name}`}>
+      <button className="week-img" onClick={() => onOpen(spot.id)} tabIndex={-1} aria-hidden>
+        <Photo src={c.src} srcSet={c.srcSet} sizes="(max-width: 900px) 34vw, 180px" alt="" genre={spot.genres[0]} eager />
       </button>
       <div className="week-body">
-        <p className="week-date">New every Thursday · picked {since.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+        <p className="week-kicker">
+          This week&apos;s plate <span>· picked {since.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+        </p>
         <h2 className="week-name">
           <button onClick={() => onOpen(spot.id)}>{spot.name}</button>
         </h2>
         <p className="week-meta">
-          {areaLabelOf(spot)} · {priceLabel(spot.price)}
+          {spot.genres.map((g) => GENRE_BY_ID[g].short).join(", ")} · {areaLabelOf(spot)} · {priceLabel(spot.price)}
         </p>
-        <Honors id={spot.id} max={1} />
         <p className="week-order">
           <span className="cl">Order</span> <span className="pen">{spot.knownFor}</span>
         </p>
-        <p className="week-why">{spot.blurb}</p>
+      </div>
+      <p className="week-why">{spot.blurb}</p>
+      <div className="week-foot">
         <BeenButtons spot={spot} />
+        <button type="button" className="textbtn week-go" onClick={() => onOpen(spot.id)}>
+          See the place →
+        </button>
       </div>
     </article>
   );

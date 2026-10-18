@@ -4938,23 +4938,35 @@ label.check input {
   display: none; /* computers: the best four; "See all" for the rest */
 }
 
-/* this week's plate */
+/* this week's plate: text first, a small photo beside it */
 .week {
+  container: week / inline-size;
   margin: 0 22px;
+  display: grid;
+  grid-template-columns: minmax(96px, 30%) minmax(0, 1fr);
+  grid-template-areas:
+    "img body"
+    "why why"
+    "foot foot";
+  column-gap: 14px;
+  padding: 12px;
   border-radius: 16px;
-  overflow: hidden;
   background: #fff;
   box-shadow: 0 1px 2px rgba(34, 32, 28, 0.08), 0 12px 28px -14px rgba(34, 32, 28, 0.35);
 }
 .week-img {
+  grid-area: img;
   position: relative;
   display: block;
+  align-self: start;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 1;
   padding: 0;
   border: 0;
+  border-radius: 12px;
   background: #e9e2cf;
   overflow: hidden;
+  cursor: pointer;
 }
 .week-img img,
 .week-img .img-fallback {
@@ -4964,32 +4976,30 @@ label.check input {
   height: 100%;
   object-fit: cover;
 }
-.week-kicker {
-  position: absolute;
-  left: 12px;
-  top: 12px;
-  padding: 5px 11px 4px;
-  border-radius: 14px;
-  background: var(--red);
-  color: #fff;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
 .week-body {
-  padding: 14px 18px 18px;
+  grid-area: body;
+  min-width: 0;
+  padding-top: 1px;
 }
-.week-date {
+.week-kicker {
   margin: 0;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.week-kicker span {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
   color: var(--muted);
 }
 .week-name {
-  margin: 2px 0 0;
+  margin: 3px 0 0;
   font-family: var(--f-serif);
   font-weight: 400;
-  font-size: 26px;
+  font-size: 23px;
   line-height: 1.1;
 }
 .week-name button {
@@ -5003,27 +5013,60 @@ label.check input {
 }
 .week-meta {
   margin: 3px 0 0;
-  font-size: 13.5px;
+  font-size: 13px;
   color: var(--muted);
 }
 .week-order {
   display: flex;
   align-items: baseline;
-  gap: 10px;
-  margin: 12px 0 0;
-  padding: 9px 12px 8px;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  margin: 8px 0 0;
+  padding: 6px 10px 5px;
   border-radius: 10px;
   background: var(--check);
 }
 .week-order .pen {
-  font-size: 22px;
+  font-size: 19px;
   line-height: 1.05;
 }
 .week-why {
-  margin: 10px 0 0;
-  font-size: 14.5px;
-  line-height: 1.55;
+  grid-area: why;
+  margin: 10px 2px 0;
+  font-size: 14px;
+  line-height: 1.5;
   color: var(--ink-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.week-foot {
+  grid-area: foot;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 10px;
+}
+.week-foot .been {
+  margin-top: 0;
+}
+.week-foot .been-btn {
+  flex: none;
+  padding: 0 14px;
+  white-space: nowrap;
+}
+.week-go {
+  font-size: 14px;
+  white-space: nowrap;
+}
+/* a narrow card (a phone, or the side list on a computer): the name and photo already open the place */
+@container week (max-width: 440px) {
+  .week-go {
+    display: none;
+  }
 }
 
 /* Want to try / I've been, then how it went */
