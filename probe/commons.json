@@ -1,11 +1,29 @@
 {
- "google": false,
- "gsi": true,
- "passkeyCalls": false,
- "callback": 200,
- "apex": {
-  "status": 308,
-  "to": "https://www.theplatenextdoor.com/"
+ "newReviewCode": true,
+ "oldReviewCode": false,
+ "chunks": 19,
+ "reviews": {
+  "status": 200,
+  "rows": [
+   {
+    "spot_id": "salice",
+    "rating": 4,
+    "created_at": "2026-10-18T23:02:49.666614+00:00",
+    "status": "live",
+    "go_back": true
+   }
+  ]
  },
- "chunks": 20
+ "ratings": {
+  "status": 200,
+  "rows": [
+   {
+    "spot_id": "salice",
+    "avg_rating": 4,
+    "review_count": 1,
+    "go_back_pct": 100
+   }
+  ]
+ },
+ "builtAt": null
 }
