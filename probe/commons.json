@@ -1,72 +1,11 @@
 {
- "dns": {
-  "theplatenextdoor.com MX": [
-   "MX 0 theplatenextdoor-com.mail.protection.outlook.com."
-  ],
-  "theplatenextdoor.com TXT": [
-   "TXT v=spf1 include:secureserver.net -all",
-   "TXT NETORGFT21230461.onmicrosoft.com"
-  ],
-  "send.theplatenextdoor.com MX": [
-   "CNAME send.forge.rmta.net.",
-   "MX 10 feedback.forge.rmta.net."
-  ],
-  "send.theplatenextdoor.com TXT": [
-   "CNAME send.forge.rmta.net.",
-   "TXT v=spf1 ip4:52.3.252.119 ip4:44.222.39.36 ip4:199.249.231.0/24 ~all"
-  ],
-  "resend._domainkey.theplatenextdoor.com TXT": [
-   "TXT p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDe7fQgW7DguKVggVsTkKUCoR+5B0ZMehkNFB/xjSl+LKIhbMy6560tW8GdK8zVM6mu4198XgDRqfym3cpe8o0kTytfM6vI7xJVyxtQclmfSBy2rseTmiTB9F8XWj/u5A+GLhpBVw9kSs+tOEvlZxt8jcROeJGw9M8Rz9LgFSHGyQIDAQAB"
-  ],
-  "_dmarc.theplatenextdoor.com TXT": [
-   "TXT v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:dmarc_rua@onsecureserver.net;"
-  ],
-  "www.theplatenextdoor.com CNAME": [
-   "CNAME ca2f744e1ba5d298.vercel-dns-017.com."
-  ]
+ "google": false,
+ "gsi": true,
+ "passkeyCalls": false,
+ "callback": 200,
+ "apex": {
+  "status": 308,
+  "to": "https://www.theplatenextdoor.com/"
  },
- "auth": {
-  "status": 200,
-  "body": {
-   "external": {
-    "anonymous_users": false,
-    "apple": false,
-    "azure": false,
-    "bitbucket": false,
-    "discord": false,
-    "facebook": false,
-    "snapchat": false,
-    "figma": false,
-    "fly": false,
-    "github": false,
-    "gitlab": false,
-    "google": false,
-    "keycloak": false,
-    "kakao": false,
-    "linkedin": false,
-    "linkedin_oidc": false,
-    "notion": false,
-    "spotify": false,
-    "slack": false,
-    "slack_oidc": false,
-    "workos": false,
-    "twitch": false,
-    "twitter": false,
-    "email": true,
-    "phone": false,
-    "zoom": false
-   },
-   "disable_signup": false,
-   "mailer_autoconfirm": false,
-   "phone_autoconfirm": false,
-   "sms_provider": "twilio",
-   "saml_enabled": false,
-   "saml_private_key_next_configured": true,
-   "passkeys_enabled": false
-  }
- },
- "health": {
-  "status": 200,
-  "body": "{\"ok\":true,\"database\":\"awake\",\"signIn\":\"awake\"}"
- }
+ "chunks": 20
 }
