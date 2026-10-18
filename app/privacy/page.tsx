@@ -4,6 +4,10 @@ import { Logo } from "@/components/Brand";
 import AnalyticsOptOut from "@/components/AnalyticsOptOut";
 import { BRAND, FOUNDER, NEWSLETTER } from "@/lib/brand";
 
+// only describe the sign-in ways the site actually offers right now
+const GOOGLE_ON = !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+const PASSKEYS_ON = process.env.NEXT_PUBLIC_PASSKEYS === "on";
+
 export const metadata: Metadata = {
   title: "Privacy",
   description: `What ${BRAND} keeps, why, and how to delete it. Plain English.`,
@@ -57,13 +61,17 @@ export default function Privacy() {
         <li>
           <b>Places you send us</b>, and the note you add, so we can check them.
         </li>
-        <li>
-          <b>Sign in with Google</b>: Google tells us your name, email and profile picture. We never see your Google password.
-        </li>
-        <li>
-          <b>Passkeys</b> (Face ID, fingerprint, device PIN): your device keeps the secret part. We only store a public key that can&apos;t sign you in on its
-          own.
-        </li>
+        {GOOGLE_ON && (
+          <li>
+            <b>Sign in with Google</b>: Google tells us your name, email and profile picture. We never see your Google password.
+          </li>
+        )}
+        {PASSKEYS_ON && (
+          <li>
+            <b>Passkeys</b> (Face ID, fingerprint, device PIN): your device keeps the secret part. We only store a public key that can&apos;t sign you in on its
+            own.
+          </li>
+        )}
       </ul>
 
       <h2 className="menu-head">
@@ -88,7 +96,7 @@ export default function Privacy() {
         <span>Who holds it</span>
       </h2>
       <p>
-        Supabase (our database and sign-in), Vercel (hosting), Google (analytics, and Google sign-in if you use it) and our email provider (to deliver codes).
+        Supabase (our database and sign-in), Vercel (hosting), Google ({GOOGLE_ON ? "analytics, and Google sign-in if you use it" : "analytics"}) and our email provider (to deliver codes).
         They process it for us under their own security and privacy terms.
       </p>
 
