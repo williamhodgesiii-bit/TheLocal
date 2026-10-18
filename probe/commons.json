@@ -1,29 +1,175 @@
 {
- "newReviewCode": true,
- "oldReviewCode": false,
- "chunks": 19,
- "reviews": {
+ "home": {
   "status": 200,
-  "rows": [
-   {
-    "spot_id": "salice",
-    "rating": 4,
-    "created_at": "2026-10-18T23:02:49.666614+00:00",
-    "status": "live",
-    "go_back": true
-   }
-  ]
+  "title": "The Plate Next Door · Birmingham&#x27;s locally owned restaurants, coffee &amp; bars",
+  "description": "Skip the chains. Eat next door. Locally owned restaurants, coffee shops and bars in Birmingham, Homewood, Mountain Brook and Vestavia Hills, by neighborhood. No",
+  "canonical": "https://www.theplatenextdoor.com",
+  "robots": "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
+  "ogImage": true,
+  "jsonLd": [
+   "Organization",
+   "Person",
+   "City",
+   "State",
+   "WebSite"
+  ],
+  "h1": "Skip the chains. Eat next door.",
+  "words": 999,
+  "gscMeta": "missing"
  },
- "ratings": {
+ "robots": "User-Agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin\nDisallow: /auth/\nDisallow: /me\n\nSitemap: https://www.theplatenextdoor.com/sitemap.xml\n",
+ "sitemap": {
   "status": 200,
-  "rows": [
-   {
-    "spot_id": "salice",
-    "avg_rating": 4,
-    "review_count": 1,
-    "go_back_pct": 100
-   }
-  ]
+  "count": 188,
+  "spots": 138,
+  "guides": 43,
+  "removedOrMerged": [],
+  "nonWww": 0
  },
- "builtAt": null
+ "/spot/the-battery": {
+  "status": 200,
+  "title": "The Battery, bars &amp; drinks in Downtown Homewood, Birmingham · The Plate Next Door",
+  "description": "Smoked, then fried wings. A sports bar in downtown Homewood, opened in 2022. The wings are smoked for hours, then flash-fried, with Alabama white, buffalo or Ko",
+  "canonical": "https://www.theplatenextdoor.com/spot/the-battery",
+  "robots": "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
+  "ogImage": true,
+  "jsonLd": [
+   "Organization",
+   "Person",
+   "City",
+   "State",
+   "WebSite",
+   "Restaurant",
+   "PostalAddress",
+   "GeoCoordinates",
+   "BreadcrumbList",
+   "ListItem"
+  ],
+  "h1": "The Battery",
+  "words": 285
+ },
+ "/spot/salice": {
+  "status": 200,
+  "title": "Salice, italian in Downtown Homewood, Birmingham · The Plate Next Door",
+  "description": "Handmade pasta. Italian bistro in downtown Homewood, run by chef Rita Bernhardt. It used to be Luca Lagotto; same kitchen, new name and owners.",
+  "canonical": "https://www.theplatenextdoor.com/spot/salice",
+  "robots": "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
+  "ogImage": true,
+  "jsonLd": [
+   "Organization",
+   "Person",
+   "City",
+   "State",
+   "WebSite",
+   "Restaurant",
+   "PostalAddress",
+   "GeoCoordinates",
+   "BreadcrumbList",
+   "ListItem"
+  ],
+  "h1": "Salice",
+  "words": 256
+ },
+ "/best/bbq": {
+  "status": 404,
+  "robots": null,
+  "ogImage": false,
+  "jsonLd": [],
+  "h1": null,
+  "words": 0
+ },
+ "/best": {
+  "status": 200,
+  "title": "Birmingham restaurant guides · The Plate Next Door",
+  "description": "Every The Plate Next Door guide to Birmingham — the best by cuisine (barbecue, seafood, pizza, Italian, Southern) and by occasion (date night, brunch, cocktails",
+  "canonical": "https://www.theplatenextdoor.com/best",
+  "robots": "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
+  "ogImage": false,
+  "jsonLd": [
+   "Organization",
+   "Person",
+   "City",
+   "State",
+   "WebSite",
+   "BreadcrumbList",
+   "ListItem",
+   "CollectionPage",
+   "SiteNavigationElement"
+  ],
+  "h1": "Where to eat in Birmingham",
+  "words": 254
+ },
+ "/neighborhood/avondale": {
+  "status": 200,
+  "title": "Best restaurants in Avondale &amp; Forest Park, Birmingham (2026) · The Plate Next Door",
+  "description": "Where to eat and drink in Avondale &amp; Forest Park (Birmingham, Alabama). 41st Street South and the park, and Clairmont Avenue in Forest Park. Locally owned, ",
+  "canonical": "https://www.theplatenextdoor.com/neighborhood/avondale",
+  "robots": "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
+  "ogImage": true,
+  "jsonLd": [
+   "Organization",
+   "Person",
+   "City",
+   "State",
+   "WebSite",
+   "CollectionPage",
+   "ItemList",
+   "ListItem",
+   "BreadcrumbList",
+   "FAQPage",
+   "Question",
+   "Answer"
+  ],
+  "h1": "Where to eat in Avondale &amp; Forest Park",
+  "words": 623
+ },
+ "/neighborhood": {
+  "status": 200,
+  "title": "Birmingham neighborhoods — where to eat · The Plate Next Door",
+  "description": "Where to eat and drink in every Birmingham neighborhood — Avondale, Downtown, Five Points South, Lakeview, Homewood, Mountain Brook and Vestavia Hills. Locally ",
+  "canonical": "https://www.theplatenextdoor.com/neighborhood",
+  "robots": "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
+  "ogImage": false,
+  "jsonLd": [
+   "Organization",
+   "Person",
+   "City",
+   "State",
+   "WebSite",
+   "BreadcrumbList",
+   "ListItem",
+   "CollectionPage",
+   "SiteNavigationElement"
+  ],
+  "h1": "Where to eat, neighborhood by neighborhood",
+  "words": 131
+ },
+ "/spot/big-spoon-edgewood": {
+  "status": 308,
+  "location": "/spot/big-spoon",
+  "robots": null
+ },
+ "/spot/eagles": {
+  "status": 200,
+  "location": null,
+  "robots": "noindex"
+ },
+ "/llms.txt": {
+  "status": 200,
+  "location": null,
+  "robots": null
+ },
+ "/45c4878c9c60706ce2d60d079da711bc.txt": {
+  "status": 200,
+  "location": null,
+  "robots": null
+ },
+ "apex": {
+  "status": 308,
+  "to": "https://www.theplatenextdoor.com/spot/salice"
+ },
+ "analytics": {
+  "measurementId": null,
+  "gtagLoader": true
+ }
 }
