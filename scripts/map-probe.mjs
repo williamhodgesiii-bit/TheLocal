@@ -1,31 +1,40 @@
-// Temporary, read-only: is the live site on the new review code, and did reviews reach the
-// database? Reviews are public on the site; only place ids, scores and dates are saved here.
+// Temporary, read-only: what search engines see on the live site, and whether Google Analytics is installed.
 import { mkdir, writeFile } from "node:fs/promises";
-const SB = "https://wylpbzopmpqaahtbkvkn.supabase.co";
-const site = "https://www.theplatenextdoor.com";
-const out = { newReviewCode: false, oldReviewCode: false, chunks: 0, reviews: null, ratings: null, builtAt: null };
-const seen = new Set();
-let key = null;
-for (const p of ["/", "/spot/the-battery"]) {
-  const html = await (await fetch(site + p, { headers: { "cache-control": "no-cache" } })).text();
-  out.builtAt ??= html.match(/"NEXT_PUBLIC_BUILT_AT"[^0-9]*([0-9]{10,})/)?.[1] ?? null;
-  for (const c of [...html.matchAll(/\/_next\/static\/[^"']+\.js/g)].map((m) => m[0])) {
-    if (seen.has(c)) continue;
-    seen.add(c);
-    const js = await (await fetch(new URL(c, site))).text();
-    if (js.includes("Would you go back?")) out.newReviewCode = true;
-    if (js.includes("What people are saying")) out.oldReviewCode = true;
-    if (!key && js.includes("wylpbzopmpqaahtbkvkn")) key = js.match(/sb_publishable_[A-Za-z0-9_-]{20,}/)?.[0] ?? js.match(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/)?.[0] ?? null;
-  }
+const S = "https://www.theplatenextdoor.com";
+const out = {};
+const get = async (p, opt = {}) => { const r = await fetch(S + p, { redirect: "manual", ...opt }); return { r, t: r.status < 300 ? await r.text() : "" }; };
+const head = (t) => ({
+  title: t.match(/<title>([^<]*)<\/title>/)?.[1],
+  description: t.match(/<meta name="description" content="([^"]*)"/)?.[1]?.slice(0, 160),
+  canonical: t.match(/<link rel="canonical" href="([^"]*)"/)?.[1],
+  robots: t.match(/<meta name="robots" content="([^"]*)"/)?.[1] ?? null,
+  ogImage: !!t.match(/<meta property="og:image"/),
+  jsonLd: [...t.matchAll(/"@type":"([A-Za-z]+)"/g)].map((m) => m[1]).filter((v, i, a) => a.indexOf(v) === i).slice(0, 12),
+  h1: t.match(/<h1[^>]*>(.*?)<\/h1>/)?.[1]?.replace(/<[^>]+>/g, "").slice(0, 80) ?? null,
+  words: t.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length,
+});
+const home = await get("/");
+out.home = { status: home.r.status, ...head(home.t), gscMeta: home.t.match(/google-site-verification" content="([^"]{4})/)?.[1] ? "present" : "missing" };
+const robots = await get("/robots.txt"); out.robots = robots.t.slice(0, 300);
+const sm = await get("/sitemap.xml");
+const urls = [...sm.t.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+out.sitemap = { status: sm.r.status, count: urls.length, spots: urls.filter((u) => u.includes("/spot/")).length, guides: urls.filter((u) => /\/best\/|\/neighborhood\//.test(u)).length,
+  removedOrMerged: urls.filter((u) => /\/spot\/(eagles|fifes|green-acres|dg|big-spoon-edgewood|cala-coffee-mb|taco-mama-crestline)$/.test(u)), nonWww: urls.filter((u) => !u.startsWith(S)).length };
+for (const p of ["/spot/the-battery", "/spot/salice", "/best/bbq", "/best", "/neighborhood/avondale", "/neighborhood"]) {
+  const g = await get(p); out[p] = { status: g.r.status, ...head(g.t) };
 }
-out.chunks = seen.size;
-if (key) {
-  const h = { apikey: key, Authorization: `Bearer ${key}` };
-  const r = await fetch(`${SB}/rest/v1/reviews?select=spot_id,rating,created_at,status,go_back&order=created_at.desc&limit=10`, { headers: h });
-  out.reviews = { status: r.status, rows: await r.json().catch(() => null) };
-  const s = await fetch(`${SB}/rest/v1/spot_ratings?select=*`, { headers: h });
-  out.ratings = { status: s.status, rows: await s.json().catch(() => null) };
+for (const p of ["/spot/big-spoon-edgewood", "/spot/eagles", "/llms.txt", "/45c4878c9c60706ce2d60d079da711bc.txt"]) {
+  const g = await get(p); out[p] = { status: g.r.status, location: g.r.headers.get("location"), robots: g.t.match(/<meta name="robots" content="([^"]*)"/)?.[1] ?? null };
 }
+const apex = await fetch("https://theplatenextdoor.com/spot/salice", { redirect: "manual" }); out.apex = { status: apex.status, to: apex.headers.get("location") };
+// Google Analytics: the measurement id is built into the site's JavaScript when NEXT_PUBLIC_GA_ID is set
+let ga = null, gtag = false;
+for (const c of [...new Set([...home.t.matchAll(/\/_next\/static\/[^"']+\.js/g)].map((m) => m[0]))]) {
+  const js = await (await fetch(new URL(c, S))).text();
+  ga ??= js.match(/["'`](G-[A-Z0-9]{6,12})["'`]/)?.[1] ?? null;
+  if (js.includes("googletagmanager.com/gtag/js")) gtag = true;
+}
+out.analytics = { measurementId: ga ? ga.slice(0, 4) + "…" : null, gtagLoader: gtag };
 await mkdir("probe", { recursive: true });
 await writeFile("probe/commons.json", JSON.stringify(out, null, 1));
 console.log(JSON.stringify(out));
