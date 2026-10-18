@@ -3,7 +3,7 @@
 import { memo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { areaLabelOf, priceLabel, type Spot } from "@/lib/data";
-import { commonsSrc, commonsSrcSet, coverFor } from "@/lib/photos";
+import { coverFor } from "@/lib/photos";
 import { honorsOf } from "@/lib/honors";
 import { milestoneName, nextMilestone, weeklyStreak } from "@/lib/passport";
 import { useApp, type Verdict } from "./Providers";
@@ -13,7 +13,7 @@ import Photo from "./Photo";
 
 const cover = (s: Spot) => {
   const c = coverFor(s);
-  return { src: commonsSrc(c.file, 500), srcSet: commonsSrcSet(c.file, [330, 500, 960]), alt: c.alt };
+  return { src: c.src(500), srcSet: c.srcSet([330, 500, 960]), alt: c.alt };
 };
 
 /** A photo card: the dish or the place, the name, what to order. */
@@ -260,7 +260,7 @@ export const TrailCard = memo(function TrailCard({
       <span className="trail-dots" aria-hidden>
         {peek.map((s) => (
           <span key={s.id} className={`trail-dot ${been[s.id] ? "on" : ""}`}>
-            <Photo src={commonsSrc(coverFor(s).file, 330)} sizes="40px" alt="" genre={s.genres[0]} />
+            <Photo src={coverFor(s).src(330)} sizes="40px" alt="" genre={s.genres[0]} />
           </span>
         ))}
       </span>

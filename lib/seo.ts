@@ -12,7 +12,7 @@ import { siteUrl } from "./site";
 import { AREA_BY_ID, GENRE_BY_ID, TOWN_BY_ID, type Spot } from "./data";
 import { CITY_BY_ID } from "./regions";
 import { honorsOf } from "./honors";
-import { coverFor, commonsSrc } from "./photos";
+import { coverFor } from "./photos";
 
 /** an absolute URL for a site-relative path */
 export const abs = (path: string) => `${siteUrl()}${path.startsWith("/") ? path : `/${path}`}`;
@@ -25,8 +25,8 @@ const DESCRIPTION = `${MANTRA} A hand-checked guide to locally owned restaurants
 /** A large, absolute cover-image URL for a spot (for OpenGraph + structured data). */
 export function spotImage(s: Spot, width = 1200): string | undefined {
   try {
-    const c = coverFor(s);
-    return c?.file ? commonsSrc(c.file, width) : undefined;
+    const src = coverFor(s).src(width);
+    return src.startsWith("/") ? abs(src) : src;
   } catch {
     return undefined;
   }

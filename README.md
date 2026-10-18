@@ -18,7 +18,7 @@
 
 ## Coverage today
 
-The **Birmingham area**, by town: Birmingham (Downtown, Southside, Lakeview, Avondale), **Homewood** (downtown/SoHo, Edgewood, West Homewood), **Mountain Brook** (Mountain Brook Village and Lane Parke, English Village, Crestline) and **Vestavia Hills** (Cahaba Heights, Highway 31, Rocky Ridge).
+The **Birmingham area**, by town: Birmingham (Downtown, Southside, Lakeview, Avondale), **Homewood** (downtown/SoHo, Edgewood, West Homewood), **Mountain Brook** (Mountain Brook Village and Lane Parke, English Village, Crestline) **Vestavia Hills** (Cahaba Heights, Highway 31, Rocky Ridge) and, just starting, **Hoover** (Patton Chapel).
 - 123 locally owned places, including all 11 Birmingham places in Michelin's first American South guide (2025), and the city's bars: cocktail bars, dives, wine bars and breweries. Checked against local news (Bham Now, Homewood Star, Village Living, Vestavia Voice, Over the Mountain Journal) in October 2026. Known closures were left off: Satterfield's, Sol y Luna, Post Office Pies, DeVinci's, Iron City Pizza, Revelator Coffee downtown, Ghost Train Brewing, Nabeel's, Ocean, Tasty Town, Queen's Park and Nana Funks. Franchised names (Taco Mama, Dreamland) and drive-thru-only shops aren't listed.
 - **Exact pins, free**: a GitHub Action (`.github/workflows/pins.yml`) looks every place up on OpenStreetMap, which needs no key and no card. It saves the results to `lib/geo-overrides.json` and commits them, and Vercel redeploys. It runs by itself whenever `lib/data.ts` changes and on the 1st of every month, and keeps its own schedule switched on, so there is nothing to do by hand. A pin only moves if the match is within 3 km of where it was.
 - **Optional Google key** (`GOOGLE_PLACES_API_KEY`, paid after Google's free allowance): adds Google photos and ratings, refines pins further, and drops places Google marks *permanently* closed (never closed-for-the-night or temporarily closed). See `/api/pins`.
@@ -37,6 +37,7 @@ On a phone the site works like an app. A bottom tab bar has **Explore · Map · 
 ## Real photos
 
 Photos come from these sources, in this order:
+0. **A cover the restaurant supplied** (Galley & Garden). It leads the place page and its cards, credited and linked to the restaurant, and is listed on `/credits`. Put the file in `public/photos/` (a full size and a 600px one) and add it to `HOUSE_PHOTOS` in `lib/photos.ts`.
 1. Member uploads.
 2. Openly licensed photos taken at the place itself (Johnny's, Good People), credited on the page. Add more in `PLACE_PHOTOS` in `lib/photos.ts`.
 3. **Google Places photos** of the building and the food, once `GOOGLE_PLACES_API_KEY` is set. `npm run geocode` also saves each place's Google ID, so photo lookups are a single cheap call.
@@ -44,7 +45,7 @@ Photos come from these sources, in this order:
 
 Images are served at sizes that fit the screen (`srcset`), load lazily, and fade in once decoded. On a phone the food photos are a strip you swipe sideways. The viewer shows each photo whole, not cropped, and you can swipe between them.
 
-Photos copied off restaurants' websites or Instagram aren't used. They're copyrighted.
+Photos copied off restaurants' websites or Instagram aren't used unless the restaurant says yes. They're copyrighted. A restaurant's cover goes in only with its OK.
 
 ## Community spots & verification
 

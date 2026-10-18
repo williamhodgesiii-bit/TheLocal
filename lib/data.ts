@@ -32,7 +32,7 @@ export interface Genre {
   tagline: string;
 }
 
-export type TownId = "birmingham" | "homewood" | "mountain-brook" | "vestavia-hills";
+export type TownId = "birmingham" | "homewood" | "mountain-brook" | "vestavia-hills" | "hoover";
 
 export interface Town {
   id: TownId;
@@ -133,6 +133,7 @@ export const TOWNS: Town[] = [
   { id: "homewood", label: "Homewood", center: [33.4715, -86.806], zoom: 14.6, blurb: "Over the mountain. 18th Street, SoHo, Edgewood and West Homewood." },
   { id: "mountain-brook", label: "Mountain Brook", center: [33.4885, -86.7535], zoom: 14.4, blurb: "Three villages: Mountain Brook Village, English Village and Crestline." },
   { id: "vestavia-hills", label: "Vestavia Hills", center: [33.452, -86.765], zoom: 13.6, blurb: "Cahaba Heights, Highway 31 and Rocky Ridge." },
+  { id: "hoover", label: "Hoover", center: [33.4034, -86.806], zoom: 14.6, blurb: "Down Highway 31 past the Vestavia line, starting at Patton Chapel Road." },
 ];
 
 export const AREAS: Area[] = [
@@ -150,6 +151,7 @@ export const AREAS: Area[] = [
   { id: "cahaba", town: "vestavia-hills", label: "Cahaba Heights", center: [33.462, -86.7275], zoom: 15.75, blurb: "Barbecue, patios and the Heights Village shops.", labelAt: [33.4542, -86.7275] },
   { id: "vestavia-31", town: "vestavia-hills", label: "Highway 31", center: [33.448, -86.79], zoom: 14.8, blurb: "Montgomery Highway, from the City Center down past the library.", labelAt: [33.4525, -86.7985] },
   { id: "rocky-ridge", town: "vestavia-hills", label: "Rocky Ridge", center: [33.4225, -86.7975], zoom: 16, blurb: "A small strip of local spots on Rocky Ridge Road.", labelAt: [33.4192, -86.7975] },
+  { id: "patton-chapel", town: "hoover", label: "Patton Chapel", center: [33.4034, -86.806], zoom: 16, blurb: "Highway 31 at Patton Chapel Road, where the same family has run a barbecue pit since 1976.", labelAt: [33.4002, -86.806] },
 ];
 export const TOWN_BY_ID = Object.fromEntries(TOWNS.map((t) => [t.id, t])) as Record<TownId, Town>;
 
@@ -328,6 +330,13 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["date night", "late night", "agave"], pop: 79,
   },
   {
+    id: "moon-shine", name: "Moon Shine", genres: ["drinks"], drinks: ["cocktails"], area: "downtown",
+    address: "1928 1st Ave N", coords: [33.5146, -86.806], price: 3,
+    knownFor: "Rooftop cocktails over downtown",
+    blurb: "The rooftop bar on top of the Elyton Hotel, 16 floors up in the old Empire Building. Cocktails, small plates and wood-fired pizza, and some of the best views of downtown and Railroad Park. Go at sunset.",
+    tags: ["rooftop", "date night", "views"], pop: 76,
+  },
+  {
     id: "tucana-tiki", name: "Tucana Tiki Bar", genres: ["drinks"], drinks: ["cocktails"], area: "downtown",
     address: "1143 1st Ave S, Suite 101", coords: onAveS(1143, 1), price: 3,
     knownFor: "Rum cocktails, tiki style",
@@ -419,6 +428,13 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["work-friendly", "breakfast"], pop: 74,
   },
   /* ------------------------ SOUTHSIDE & FIVE POINTS ------------------------ */
+  {
+    id: "galley-and-garden", name: "Galley & Garden", genres: ["southern"], area: "southside",
+    address: "2220 Highland Ave S", coords: [33.5011, -86.7907], price: 4,
+    knownFor: "Shrimp and grits & the wine list",
+    blurb: "White-tablecloth dinner in an 1898 house on Highland Avenue, one of the few original Highland homes still standing. Chef Jessica Lindeen cooks seasonal, Southern plates like braised pork belly and shrimp and grits, and the wine list has won Wine Spectator's Award of Excellence every year since 2016. There's a patio with a fireplace for cool nights.",
+    tags: ["date night", "special occasion", "patio", "wine"], pop: 80,
+  },
   {
     id: "bottega", name: "Bottega", genres: ["italian"], area: "southside",
     address: "2240 Highland Ave S", coords: [33.5006, -86.7917], price: 4,
@@ -977,6 +993,13 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["wine shop", "after work"], pop: 62,
   },
   {
+    id: "olexas", name: "Olexa's", genres: ["sweets", "brunch"], area: "mtnbrook",
+    address: "2838 Culver Rd", coords: [33.4828, -86.7719], price: 2,
+    knownFor: "Crepes, quiche and a slice of cake",
+    blurb: "Diane Olexa's cafe, bakery and caterer on Culver Road. It grew out of the wedding cakes she made with her mother. Crepes and quiche at lunch, then cake. Mostly a daytime place, so check hours.",
+    tags: ["lunch", "cakes", "family-owned"], pop: 72,
+  },
+  {
     id: "bongiorno", name: "Bongiorno", genres: ["italian"], area: "crestline",
     address: "68A Church St", coords: [33.4943, -86.7319], price: 2,
     knownFor: "Red-sauce Italian since 1988",
@@ -1068,6 +1091,15 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     knownFor: "Bourbon list & Wagyu smash burgers",
     blurb: "Bourbon bar on Highway 31 in the old Hillside Music & Que space, under new owner Kiran Sunkavalli. Smash burgers, tacos and Southern comfort food.",
     tags: ["patio", "game day"], pop: 72,
+  },
+
+  /* -------------------------------- HOOVER -------------------------------- */
+  {
+    id: "archies-bbq", name: "Archie's Bar-B-Q & Burgers", sign: "Archie's", genres: ["bbq", "burgers"], area: "patton-chapel",
+    address: "1571 Montgomery Hwy", coords: [33.4034, -86.806], price: 1,
+    knownFor: "Pit barbecue & burgers",
+    blurb: "Nick Manakides bought this Highway 31 barbecue joint in 1976, when it was the first Golden Rule franchise. He went independent in 2020 and named it for his father, Archie. The menu and most of the staff stayed, and his son Michael runs it now.",
+    tags: ["family-owned", "classic", "lunch"], pop: 74,
   },
 ];
 

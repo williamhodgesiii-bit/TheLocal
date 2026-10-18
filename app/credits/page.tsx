@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Photo from "@/components/Photo";
-import { LIBRARY, PLACE_PHOTOS, commonsPage, commonsSrc, commonsSrcSet, licenseUrl, type StockPhoto } from "@/lib/photos";
+import { HOUSE_PHOTOS, LIBRARY, PLACE_PHOTOS, commonsPage, commonsSrc, commonsSrcSet, houseSrcSet, licenseUrl, type StockPhoto } from "@/lib/photos";
 import { SPOT_BY_ID } from "@/lib/data";
 import { Logo } from "@/components/Brand";
 import { BRAND } from "@/lib/brand";
@@ -18,6 +18,7 @@ export default function Credits() {
   const places: Row[] = Object.entries(PLACE_PHOTOS).flatMap(([id, list]) =>
     list.map((p) => ({ key: p.file, file: p.file, title: `${SPOT_BY_ID[id]?.name ?? id}: ${p.caption.toLowerCase()}`, author: p.author, license: p.license }))
   );
+  const house = Object.entries(HOUSE_PHOTOS).flatMap(([id, list]) => list.map((p) => ({ ...p, title: `${SPOT_BY_ID[id]?.name ?? id}: ${p.caption.toLowerCase()}` })));
   const stock: Row[] = Object.entries(LIBRARY).map(([k, p]) => ({ key: k, file: p.file, title: p.dish.charAt(0).toUpperCase() + p.dish.slice(1), author: p.author, license: p.license }));
 
   return (
@@ -33,10 +34,40 @@ export default function Credits() {
       <p className="cap-kicker">Photo credits</p>
       <h1>Who took the pictures</h1>
       <p>
-        Member photos come first on every page, credited to the member. Until a place has enough of them, we fill in with openly licensed photos from
+        When a restaurant gives us a photo of its own, that leads its page, credited to the restaurant. After that, member photos come first, credited to
+        the member. Until a place has enough of them, we fill in with openly licensed photos from
         Wikimedia Commons. The ones of the dishes a place is known for are marked <span className="stock-tag">stock</span>, because they weren&rsquo;t
         taken there. Thanks to the photographers below.
       </p>
+
+      {house.length > 0 && (
+        <>
+          <h2 className="menu-head">
+            <span>From the restaurants</span>
+          </h2>
+          <ul className="credit-grid">
+            {house.map((h) => (
+              <li key={h.src}>
+                <figure className="snap">
+                  <div className="snap-img">
+                    <Photo src={h.small} srcSet={houseSrcSet(h)} sizes="(max-width: 900px) 46vw, 230px" alt={h.title} />
+                  </div>
+                  <figcaption>
+                    <strong>{h.title}</strong>
+                    {h.link ? (
+                      <a href={h.link} target="_blank" rel="noreferrer">
+                        {h.credit}
+                      </a>
+                    ) : (
+                      h.credit
+                    )}
+                  </figcaption>
+                </figure>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       <h2 className="menu-head">
         <span>Taken at the place</span>

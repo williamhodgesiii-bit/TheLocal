@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { GENRE_BY_ID, type GenreId, type Spot } from "@/lib/data";
-import { commonsSrc, coverFor } from "@/lib/photos";
+import { coverFor } from "@/lib/photos";
 
 /**
  * One image, done properly: responsive srcset, lazy by default, fades in over a
@@ -71,7 +71,7 @@ export function Thumb({ spot, w = 64 }: { spot: Spot; w?: number }) {
   const c = coverFor(spot);
   return (
     <span className="thumb" aria-hidden>
-      <Photo src={commonsSrc(c.file, 330)} srcSet={`${commonsSrc(c.file, 330)} 330w, ${commonsSrc(c.file, 500)} 500w`} sizes={`${w}px`} alt="" genre={spot.genres[0]} />
+      <Photo src={c.src(330)} srcSet={c.srcSet([330, 500])} sizes={`${w}px`} alt="" genre={spot.genres[0]} />
     </span>
   );
 }

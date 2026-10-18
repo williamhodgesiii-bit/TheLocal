@@ -100,6 +100,26 @@ export const PLACE_PHOTOS: Record<string, { file: string; kind: "building" | "in
   "good-people": [{ file: "Good_People_Brewing_Company_(Interior).jpg", kind: "inside", caption: "The bar inside", author: "GreaterPonce665", license: "CC BY-SA 4.0" }],
 };
 
+/**
+ * Photos a place supplied itself (its own promotional shots), served from public/photos.
+ * Credited to the place. These lead the place page and its cards, ahead of everything else.
+ */
+export type HousePhoto = { src: string; small: string; width: number; kind: "building" | "inside"; caption: string; credit: string; link?: string };
+export const HOUSE_PHOTOS: Record<string, HousePhoto[]> = {
+  "galley-and-garden": [
+    {
+      src: "/photos/galley-and-garden.jpg",
+      small: "/photos/galley-and-garden-600.jpg",
+      width: 1179,
+      kind: "building",
+      caption: "Out front on Highland Avenue",
+      credit: "Galley & Garden",
+      link: "https://www.galleyandgarden.com/",
+    },
+  ],
+};
+export const houseSrcSet = (h: HousePhoto) => `${h.small} 600w, ${h.src} ${h.width}w`;
+
 /** Each place's signature dishes, most telling first. */
 const SPOT_DISHES: Record<string, DishKey[]> = {
   helen: ["steak", "grilled-fish", "old-fashioned"],
@@ -225,6 +245,10 @@ const SPOT_DISHES: Record<string, DishKey[]> = {
   "paramount-west-homewood": ["burger", "beer-sampler"],
   "the-ridge": ["burger", "beer-sampler"],
   "the-local-bourbon": ["old-fashioned", "burger"],
+  "moon-shine": ["cocktail-bar", "pizza-napoletana", "old-fashioned"],
+  "galley-and-garden": ["shrimp-grits", "wine", "grilled-fish"],
+  olexas: ["croissant", "cookies", "latte"],
+  "archies-bbq": ["ribs", "burger"],
 };
 
 /** Fallback for member-added places, by kind of food. */
@@ -276,10 +300,15 @@ const LICENSE_URL: Record<StockPhoto["license"], string> = {
 };
 export const licenseUrl = (l: StockPhoto["license"]) => LICENSE_URL[l];
 
+export type Cover = { alt: string; real: boolean; src: (width: number) => string; srcSet: (widths: number[]) => string };
+
 /** The single best picture to represent a place in lists and cards. */
-export function coverFor(spot: Spot): { file: string; alt: string; real: boolean } {
+export function coverFor(spot: Spot): Cover {
+  const own = HOUSE_PHOTOS[spot.id]?.[0];
+  if (own) return { alt: `${spot.name}: ${own.caption.toLowerCase()}`, real: true, src: (w) => (w <= 600 ? own.small : own.src), srcSet: () => houseSrcSet(own) };
   const real = PLACE_PHOTOS[spot.id]?.[0];
-  if (real) return { file: real.file, alt: `${spot.name}: ${real.caption.toLowerCase()}`, real: true };
+  const commons = (file: string, alt: string, isReal: boolean): Cover => ({ alt, real: isReal, src: (w) => commonsSrc(file, w), srcSet: (ws) => commonsSrcSet(file, ws) });
+  if (real) return commons(real.file, `${spot.name}: ${real.caption.toLowerCase()}`, true);
   const d = dishesFor(spot)[0];
-  return { file: d.file, alt: `Stock photo of ${d.dish}`, real: false };
+  return commons(d.file, `Stock photo of ${d.dish}`, false);
 }

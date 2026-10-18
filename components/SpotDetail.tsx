@@ -9,7 +9,7 @@ import { createPortal } from "react-dom";
 import { GENRE_BY_ID, areaLabelOf, distanceKm, mapsUrl, priceLabel, type Spot } from "@/lib/data";
 import { BRAND, CHECKED } from "@/lib/brand";
 import { hash } from "@/lib/images";
-import { PLACE_PHOTOS, commonsPage, commonsSrc, commonsSrcSet, dishesFor, shortDish } from "@/lib/photos";
+import { HOUSE_PHOTOS, PLACE_PHOTOS, commonsPage, commonsSrc, commonsSrcSet, dishesFor, houseSrcSet, shortDish, type HousePhoto } from "@/lib/photos";
 import type { Photo as MemberPhoto, PhotoKind } from "@/lib/backend";
 import { useApp } from "./Providers";
 import Storefront from "./Storefront";
@@ -19,9 +19,20 @@ import { BeenButtons, Honors } from "./FrontPage";
 
 type GPhoto = { url: string; author: string; authorUri: string | null };
 type Places = { enabled: boolean; photos: GPhoto[]; rating?: number | null; ratingCount?: number | null; website?: string | null };
-type Slide = { key: string; kind: "svg" | "img"; url?: string; file?: string; label: string; alt: string; credit?: string; link?: string; stock?: boolean };
+type Slide = { key: string; kind: "svg" | "img"; url?: string; file?: string; srcSet?: string; label: string; alt: string; credit?: string; link?: string; stock?: boolean };
 
 const NONE: (typeof PLACE_PHOTOS)[string] = [];
+const NO_HOUSE: HousePhoto[] = [];
+const fromHouse = (h: HousePhoto, name: string): Slide => ({
+  key: h.src,
+  kind: "img",
+  url: h.src,
+  srcSet: houseSrcSet(h),
+  label: h.caption,
+  alt: `${name}: ${h.caption.toLowerCase()}`,
+  credit: `photo from ${h.credit}`,
+  link: h.link,
+});
 const fromCommons = (file: string, label: string, alt: string, author: string, license: string, stock = false): Slide => ({
   key: file,
   kind: "img",
@@ -74,8 +85,11 @@ export default function SpotDetail({
 
   // Building first, then food, the way you size a place up from the sidewalk.
   // Real pictures of this place always beat stock; stock is labeled as such.
+  // A cover the place gave us leads, ahead of everything else.
   const real = PLACE_PHOTOS[spot.id] ?? NONE;
+  const house = HOUSE_PHOTOS[spot.id] ?? NO_HOUSE;
   const hero: Slide = useMemo(() => {
+    if (house[0]) return fromHouse(house[0], spot.name);
     const b = photos.find((p) => p.kind === "building");
     if (b) return { key: b.id, kind: "img", url: b.url, label: "Out front", alt: `${spot.name} from the street`, credit: `photo by ${b.userName}` };
     const r = real[0];
@@ -85,10 +99,11 @@ export default function SpotDetail({
     const gp = places?.photos?.[0];
     if (gp) return { key: gp.url, kind: "img", url: gp.url, label: "Out front", alt: `${spot.name}`, credit: `via Google, ${gp.author}` };
     return { key: "svg", kind: "svg", label: "Our sketch of the front", alt: `Drawing of ${spot.name}` };
-  }, [photos, places, spot, real]);
+  }, [photos, places, spot, real, house]);
 
   const food: Slide[] = useMemo(() => {
     const out: Slide[] = [];
+    house.slice(1).forEach((h) => out.push(fromHouse(h, spot.name)));
     photos
       .filter((p) => p.url !== hero.url)
       .forEach((p) => {
@@ -107,7 +122,7 @@ export default function SpotDetail({
         .slice(0, 3 - out.length)
         .forEach((d) => out.push(fromCommons(d.file, shortDish(d), `Stock photo of ${d.dish}, not taken at ${spot.name}`, d.author, d.license, true)));
     return out;
-  }, [photos, places, hero, spot, real]);
+  }, [photos, places, hero, spot, real, house]);
 
   const slides = useMemo(() => [hero, ...food], [hero, food]);
 
@@ -365,8 +380,8 @@ function SlideImg({ s, spot, sizes, eager }: { s: Slide; spot: Spot; sizes: stri
   return (
     <Photo
       src={s.url!}
-      srcSet={s.file ? commonsSrcSet(s.file) : undefined}
-      sizes={s.file ? sizes : undefined}
+      srcSet={s.file ? commonsSrcSet(s.file) : s.srcSet}
+      sizes={s.file || s.srcSet ? sizes : undefined}
       alt={s.alt}
       genre={spot.genres[0]}
       eager={eager}
@@ -430,7 +445,7 @@ function Lightbox({ slides, index, spot, onIndex, onClose }: { slides: Slide[]; 
         </button>
       )}
       <motion.figure key={s.key} initial={{ scale: 0.97, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.18 }} onClick={(e) => e.stopPropagation()}>
-        <div className="lb-frame">{s.kind === "svg" ? <Storefront spot={spot} /> : <Photo src={s.url!} srcSet={s.file ? commonsSrcSet(s.file) : undefined} sizes="100vw" alt={s.alt} genre={spot.genres[0]} eager />}</div>
+        <div className="lb-frame">{s.kind === "svg" ? <Storefront spot={spot} /> : <Photo src={s.url!} srcSet={s.file ? commonsSrcSet(s.file) : s.srcSet} sizes="100vw" alt={s.alt} genre={spot.genres[0]} eager />}</div>
         <figcaption>
           <span>
             {s.stock ? "Stock photo: " : ""}
