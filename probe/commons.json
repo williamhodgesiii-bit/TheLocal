@@ -1,13 +1,21 @@
 {
- "pages": {
-  "https://www.theplatenextdoor.com": {
+ "key": true,
+ "checks": {
+  "reviews new columns": {
    "status": 200,
-   "url": "https://www.theplatenextdoor.com/",
-   "size": 82853,
-   "chunks": 18
+   "note": "rows: 0"
+  },
+  "ratings with go-back share": {
+   "status": 200,
+   "note": "rows: 0"
+  },
+  "helpful counts": {
+   "status": 200,
+   "note": "rows: 0"
+  },
+  "reviewer totals": {
+   "status": 200,
+   "note": "rows: 0"
   }
- },
- "found": [
-  "https://wylpbzopmpqaahtbkvkn.supabase.co"
- ]
+ }
 }
