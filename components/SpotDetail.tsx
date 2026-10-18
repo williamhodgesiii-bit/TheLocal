@@ -285,6 +285,9 @@ export default function SpotDetail({
         </p>
       </div>
 
+      {/* reviews come first: the score, would-go-back, what people get, the two most useful reviews */}
+      <Reviews spot={spot} />
+
       {/* the passport stamp and the awards, right under the basics (phones move it up under the name) */}
       <div className="detail-been">
         <Honors id={spot.id} />
@@ -358,7 +361,6 @@ export default function SpotDetail({
         </button>
       </div>
 
-      <Reviews spot={spot} />
 
       <section className="nearby">
         <h2 className="small-head">Close by</h2>

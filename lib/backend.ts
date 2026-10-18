@@ -2,7 +2,8 @@
 
 import { createClient, type SupabaseClient, type User as AuthUser } from "@supabase/supabase-js";
 import { resizeImage } from "./image";
-import { cleanGenres, slugify, type DrinkKind, type GenreId, type Spot } from "./data";
+import { canonicalSpotId, cleanGenres, slugify, type DrinkKind, type GenreId, type Spot } from "./data";
+import { DAILY_MAX } from "./reviews";
 import { SUPABASE_KEY, SUPABASE_URL, hasSupabase } from "./supabase-env";
 
 export type User = {
@@ -28,9 +29,36 @@ export type Review = {
   spotId: string;
   userId: string;
   userName: string;
+  /** 1–5, every step labeled (lib/reviews.ts) */
   rating: number;
+  /** one paragraph, 100–600 characters (older reviews may be shorter) */
   body: string;
   createdAt: string;
+  updatedAt?: string;
+  /** "Would you go back?" (missing on reviews from before it was asked) */
+  goBack?: boolean;
+  /** visit month, "2026-09" */
+  visited?: string;
+  /** what they got, one to three things */
+  ordered?: string[];
+  goodFor?: string[];
+  sub?: { taste?: number; service?: number; vibe?: number };
+  /** "live", or "held" while we check a reported review (only its author sees it then) */
+  status?: "live" | "held" | "removed";
+  helpful?: number;
+  /** the signed-in member marked it helpful */
+  votedHelpful?: boolean;
+  /** how many reviews the writer has posted, all places */
+  reviewerCount?: number;
+};
+export type ReviewInput = {
+  rating: number;
+  body: string;
+  goBack: boolean;
+  visited: string;
+  ordered: string[];
+  goodFor: string[];
+  sub: { taste?: number; service?: number; vibe?: number };
 };
 export type PhotoKind = "food" | "building" | "vibe";
 export type Photo = {
@@ -43,7 +71,7 @@ export type Photo = {
   caption?: string;
   createdAt: string;
 };
-export type RatingSummary = Record<string, { avg: number; count: number }>;
+export type RatingSummary = Record<string, { avg: number; count: number; goBack?: number | null }>;
 export type SpotInput = {
   cityId: string;
   name: string;
@@ -103,9 +131,13 @@ export interface Backend {
   putStamp(spotId: string, stamp: Stamp | null): Promise<void>;
   pushLists(saved: string[], been: BeenMap): Promise<void>;
 
-  listReviews(spotId: string): Promise<Review[]>;
-  addReview(spotId: string, rating: number, body: string): Promise<Review>;
+  /** a place's reviews; pass every id it has gone by (see spotIdsOf) */
+  listReviews(spotIds: string | string[]): Promise<Review[]>;
+  /** one per member per place: posting again replaces their review */
+  addReview(spotId: string, input: ReviewInput): Promise<Review>;
   deleteReview(id: string): Promise<void>;
+  voteHelpful(reviewId: string, on: boolean): Promise<void>;
+  reportReview(reviewId: string, reason: string, note?: string): Promise<void>;
   listPhotos(spotId: string): Promise<Photo[]>;
   addPhoto(spotId: string, file: File, kind: PhotoKind, caption?: string): Promise<Photo>;
   ratings(): Promise<RatingSummary>;
@@ -143,6 +175,23 @@ export function nameFromEmail(email: string) {
   const first = (email.split("@")[0] || "").split(/[._\-+0-9]+/).find((p) => p.length >= 2) ?? "";
   return first ? first[0].toUpperCase() + first.slice(1).toLowerCase() : "";
 }
+/** Ratings stored under a place's old per-location ids count toward its one listing. */
+function foldAliases(rows: { id: string; avg: number; count: number; goBack: number | null }[]): RatingSummary {
+  const out: RatingSummary = {};
+  for (const r of rows) {
+    const id = canonicalSpotId(r.id);
+    const o = out[id];
+    if (!o) {
+      out[id] = { avg: r.avg, count: r.count, goBack: r.goBack };
+      continue;
+    }
+    const n = o.count + r.count;
+    const gb = o.goBack == null ? r.goBack : r.goBack == null ? o.goBack : (o.goBack * o.count + r.goBack * r.count) / n;
+    out[id] = { avg: (o.avg * o.count + r.avg * r.count) / n, count: n, goBack: gb == null ? null : Math.round(gb) };
+  }
+  return out;
+}
+
 /** "Will Hodges" → "Will H.", the way reviews are signed */
 export function shortName(full?: string) {
   const parts = (full ?? "").trim().split(/\s+/).filter(Boolean);
@@ -216,9 +265,22 @@ function supabaseBackend(sb: SupabaseClient): Backend {
     return id;
   }
 
-  const mapReview = (r: Record<string, any>): Review => ({
-    id: r.id, spotId: r.spot_id, userId: r.user_id, userName: r.display_name, rating: r.rating, body: r.body, createdAt: r.created_at,
-  });
+  const mapReview = (r: Record<string, any>): Review => {
+    const sub = Object.fromEntries((["taste", "service", "vibe"] as const).filter((k) => r[`sub_${k}`]).map((k) => [k, Number(r[`sub_${k}`])]));
+    return {
+      id: r.id, spotId: r.spot_id, userId: r.user_id, userName: r.display_name, rating: r.rating, body: r.body, createdAt: r.created_at,
+      updatedAt: r.updated_at ?? undefined,
+      goBack: typeof r.go_back === "boolean" ? r.go_back : undefined,
+      visited: r.visited_on ? String(r.visited_on).slice(0, 7) : undefined,
+      ordered: r.ordered ?? [],
+      goodFor: r.good_for ?? [],
+      sub: Object.keys(sub).length ? sub : undefined,
+      status: r.status ?? "live",
+    };
+  };
+  // the database before the reviews update was run on it: still take reviews, just the basics
+  const oldSchema = (e: { code?: string; message?: string } | null) =>
+    !!e && (e.code === "PGRST204" || e.code === "42703" || /column .* does not exist|Could not find the '.*' column/i.test(e.message ?? ""));
   const mapPhoto = (p: Record<string, any>): Photo => ({
     id: p.id, spotId: p.spot_id, userId: p.user_id, userName: p.display_name, url: p.url, kind: p.kind, caption: p.caption ?? undefined, createdAt: p.created_at,
   });
@@ -461,20 +523,56 @@ function supabaseBackend(sb: SupabaseClient): Backend {
         if (error) throw error;
       }
     },
-    async listReviews(spotId) {
-      const { data, error } = await sb.from("reviews").select("*").eq("spot_id", spotId).order("created_at", { ascending: false });
+    async listReviews(spotIds) {
+      const ids = Array.isArray(spotIds) ? spotIds : [spotIds];
+      const { data, error } = await sb.from("reviews").select("*").in("spot_id", ids).order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []).map(mapReview);
+      const list = (data ?? []).map(mapReview).filter((r) => r.status !== "removed");
+      if (!list.length) return list;
+      const rIds = list.map((r) => r.id);
+      const uIds = Array.from(new Set(list.map((r) => r.userId)));
+      const me = (await sb.auth.getSession()).data.session?.user.id;
+      // helpful counts, my votes and each writer's total: extras, so a missing view never hides reviews
+      const [h, mine, tot] = await Promise.all([
+        sb.from("review_helpful").select("review_id, helpful").in("review_id", rIds),
+        me ? sb.from("review_votes").select("review_id").eq("user_id", me).in("review_id", rIds) : Promise.resolve({ data: [] as any[] }),
+        sb.from("reviewer_totals").select("user_id, reviews").in("user_id", uIds),
+      ]);
+      const helpful = new Map<string, number>((h.data ?? []).map((x: any) => [x.review_id, Number(x.helpful)]));
+      const voted = new Set<string>((mine.data ?? []).map((x: any) => x.review_id));
+      const totals = new Map<string, number>((tot.data ?? []).map((x: any) => [x.user_id, Number(x.reviews)]));
+      return list.map((r) => ({ ...r, helpful: helpful.get(r.id) ?? 0, votedHelpful: voted.has(r.id), reviewerCount: totals.get(r.userId) }));
     },
-    async addReview(spotId, rating, body) {
+    async addReview(spotId, i) {
       const u = await requireUser();
-      const { data, error } = await sb
-        .from("reviews")
-        .upsert({ spot_id: spotId, user_id: u.id, display_name: u.name, rating, body }, { onConflict: "spot_id,user_id" })
-        .select()
-        .single();
-      if (error) throw error;
-      return mapReview(data);
+      const base = { spot_id: spotId, user_id: u.id, display_name: u.name, rating: i.rating, body: i.body };
+      const full = {
+        ...base,
+        go_back: i.goBack,
+        visited_on: `${i.visited}-01`,
+        ordered: i.ordered,
+        good_for: i.goodFor,
+        sub_taste: i.sub.taste ?? null,
+        sub_service: i.sub.service ?? null,
+        sub_vibe: i.sub.vibe ?? null,
+        affirmed_at: new Date().toISOString(),
+      };
+      let res = await sb.from("reviews").upsert(full, { onConflict: "spot_id,user_id" }).select().single();
+      if (oldSchema(res.error)) res = await sb.from("reviews").upsert(base, { onConflict: "spot_id,user_id" }).select().single();
+      if (res.error) throw new Error(res.error.message || "Couldn't post that review.");
+      return { ...mapReview(res.data), helpful: 0 };
+    },
+    async voteHelpful(reviewId, on) {
+      const uid = await sessionUserId();
+      const { error } = on
+        ? await sb.from("review_votes").upsert({ review_id: reviewId, user_id: uid }, { onConflict: "review_id,user_id", ignoreDuplicates: true })
+        : await sb.from("review_votes").delete().eq("review_id", reviewId).eq("user_id", uid);
+      if (error) throw new Error(error.message);
+    },
+    async reportReview(reviewId, reason, note) {
+      const uid = await sessionUserId();
+      const { error } = await sb.from("review_reports").insert({ review_id: reviewId, user_id: uid, reason, note: note || null });
+      if (error && !/duplicate/i.test(error.message)) throw new Error(error.message);
     },
     async deleteReview(id) {
       const { error } = await sb.from("reviews").delete().eq("id", id);
@@ -503,7 +601,9 @@ function supabaseBackend(sb: SupabaseClient): Backend {
     async ratings() {
       const { data, error } = await sb.from("spot_ratings").select("*");
       if (error) return {};
-      return Object.fromEntries((data ?? []).map((r: any) => [r.spot_id, { avg: Number(r.avg_rating), count: Number(r.review_count) }]));
+      return foldAliases(
+        (data ?? []).map((r: any) => ({ id: r.spot_id, avg: Number(r.avg_rating), count: Number(r.review_count), goBack: r.go_back_pct == null ? null : Number(r.go_back_pct) }))
+      );
     },
     async subscribe(email) {
       const { error } = await sb.from("subscribers").insert({ email });
@@ -522,7 +622,7 @@ function supabaseBackend(sb: SupabaseClient): Backend {
 
 const K = {
   users: "tl.users", session: "tl.session", reviews: "tl.reviews", photos: "tl.photos", subs: "tl.subs", leads: "tl.leads",
-  submissions: "tl.submissions", spots: "tl.spots", waitlist: "tl.waitlist",
+  submissions: "tl.submissions", spots: "tl.spots", waitlist: "tl.waitlist", votes: "tl.reviewVotes", reports: "tl.reviewReports",
 };
 const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
 
@@ -630,16 +730,46 @@ function localBackend(): Backend {
     async putSaved() {},
     async putStamp() {},
     async pushLists() {},
-    async listReviews(spotId) {
-      return read<Review[]>(K.reviews, []).filter((r) => r.spotId === spotId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    async listReviews(spotIds) {
+      const ids = new Set(Array.isArray(spotIds) ? spotIds : [spotIds]);
+      const all = read<Review[]>(K.reviews, []);
+      const votes = read<Record<string, string[]>>(K.votes, {});
+      const me = current()?.id;
+      return all
+        .filter((r) => ids.has(r.spotId))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .map((r) => ({ ...r, helpful: votes[r.id]?.length ?? 0, votedHelpful: !!me && !!votes[r.id]?.includes(me), reviewerCount: all.filter((x) => x.userId === r.userId).length }));
     },
-    async addReview(spotId, rating, body) {
+    async addReview(spotId, i) {
       const u = current();
       if (!u) throw new Error("Sign in first.");
-      const r: Review = { id: uid(), spotId, userId: u.id, userName: u.name, rating, body, createdAt: new Date().toISOString() };
+      const all = read<Review[]>(K.reviews, []);
+      const prev = all.find((x) => x.spotId === spotId && x.userId === u.id);
+      const today = all.filter((x) => x.userId === u.id && x.id !== prev?.id && Date.now() - +new Date(x.createdAt) < 86400e3).length;
+      if (!prev && today >= DAILY_MAX) throw new Error(`That's ${DAILY_MAX} reviews today. Come back tomorrow for more.`);
+      const now = new Date().toISOString();
+      const r: Review = {
+        id: prev?.id ?? uid(), spotId, userId: u.id, userName: u.name, rating: i.rating, body: i.body,
+        createdAt: prev?.createdAt ?? now, updatedAt: prev ? now : undefined,
+        goBack: i.goBack, visited: i.visited, ordered: i.ordered, goodFor: i.goodFor, sub: i.sub, status: "live",
+      };
       // one review per member per spot (mirrors the DB unique constraint)
-      write(K.reviews, [r, ...read<Review[]>(K.reviews, []).filter((x) => !(x.spotId === spotId && x.userId === u.id))]);
-      return r;
+      write(K.reviews, [r, ...all.filter((x) => x.id !== r.id)]);
+      return { ...r, helpful: read<Record<string, string[]>>(K.votes, {})[r.id]?.length ?? 0 };
+    },
+    async voteHelpful(reviewId, on) {
+      const u = current();
+      if (!u) throw new Error("Sign in first.");
+      const votes = read<Record<string, string[]>>(K.votes, {});
+      const cur = new Set(votes[reviewId] ?? []);
+      if (on) cur.add(u.id);
+      else cur.delete(u.id);
+      write(K.votes, { ...votes, [reviewId]: [...cur] });
+    },
+    async reportReview(reviewId, reason, note) {
+      const u = current();
+      if (!u) throw new Error("Sign in first.");
+      write(K.reports, [...read<unknown[]>(K.reports, []), { reviewId, userId: u.id, reason, note, at: new Date().toISOString() }]);
     },
     async deleteReview(id) {
       const u = current();
@@ -657,13 +787,19 @@ function localBackend(): Backend {
       return p;
     },
     async ratings() {
-      const out: RatingSummary = {};
-      for (const r of read<Review[]>(K.reviews, [])) {
-        const o = (out[r.spotId] ||= { avg: 0, count: 0 });
-        o.avg = (o.avg * o.count + r.rating) / (o.count + 1);
-        o.count++;
-      }
-      return out;
+      const by = new Map<string, Review[]>();
+      for (const r of read<Review[]>(K.reviews, [])) by.set(r.spotId, [...(by.get(r.spotId) ?? []), r]);
+      return foldAliases(
+        [...by.entries()].map(([id, list]) => {
+          const asked = list.filter((r) => typeof r.goBack === "boolean");
+          return {
+            id,
+            avg: list.reduce((a, r) => a + r.rating, 0) / list.length,
+            count: list.length,
+            goBack: asked.length ? Math.round((100 * asked.filter((r) => r.goBack).length) / asked.length) : null,
+          };
+        })
+      );
     },
     async subscribe(email) {
       write(K.subs, Array.from(new Set([...read<string[]>(K.subs, []), email])));

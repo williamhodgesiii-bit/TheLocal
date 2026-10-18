@@ -91,14 +91,32 @@ export default function About() {
         <li>We don&apos;t sell rankings, reviews, awards or a better chance in &quot;Surprise me.&quot; Owners can&apos;t buy, edit or remove reviews.</li>
       </ul>
 
-      <h2 className="menu-head">
+      <h2 className="menu-head" id="reviews">
         <span>Reviews</span>
       </h2>
       <ul className="about-list">
-        <li>Reviews come from members with accounts, and each shows the date it was written.</li>
-        <li>We don&apos;t pay for reviews or reward anyone for a good (or bad) one, and we don&apos;t hide bad ones. We take down reviews that are fake, abusive or about something else.</li>
-        <li>Owners and staff can&apos;t review their own place. They can reply.</li>
-        <li>Your Plate Passport (the places you&apos;ve stamped) stays on your device. We don&apos;t sell it or show it to anyone.</li>
+        <li>
+          <b>Members only, one per place.</b> Anyone with an account can review a place once, and edit it any time; an edited review says so. Five a day at most.
+        </li>
+        <li>
+          <b>What a review is.</b> A score from 1 to 5 where every number has words (3 is good, 5 is one of the best in town), whether you&apos;d go back, what
+          you got, the month you went, and one paragraph of 100 to 600 characters. Optional: what it&apos;s good for, and scores for the food, service and vibe.
+        </li>
+        <li>
+          <b>First-hand, no ties.</b> You have to have gone yourself. Owners, staff, their families and competitors can&apos;t review a place, and nobody (us,
+          owners, anyone) may offer anything for a review, good or bad. Every reviewer confirms this when they post.
+        </li>
+        <li>
+          <b>The same rules for good and bad.</b> We never hide a review for being negative. We take down reviews that are fake, not first-hand, written by
+          someone with a tie to the place, abusive, hateful, personal (names or private details), spam, or about something other than the visit. When three
+          members report a review it&apos;s held until a person checks it, and held reviews don&apos;t count.
+        </li>
+        <li>
+          <b>How the numbers work.</b> The score is the plain average of every review that&apos;s up, shown once a place has three. &quot;Would go back&quot; is
+          the share who said yes. &quot;Top rated&quot; pulls places with only a few reviews toward the site-wide average, so a single 5 can&apos;t top the list.
+          Sponsors and partners can&apos;t change, reorder, hide or answer for any of it.
+        </li>
+        <li>Your Plate Passport (the places you&apos;ve stamped) is yours. We don&apos;t sell it or show it to anyone.</li>
       </ul>
 
       {FOUNDER.name && (

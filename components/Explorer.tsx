@@ -28,6 +28,7 @@ import {
 import type { RatingSummary } from "@/lib/backend";
 import { BRAND, MANTRA, NEWSLETTER, SIGNOFF } from "@/lib/brand";
 import { COLLECTION_BY_ID, collectionsFor, greeting, plateOfTheWeek, weekStart } from "@/lib/collections";
+import { AVG_MIN, rankScore, siteAverage, wordFor } from "@/lib/reviews";
 import { TRAILS, trailProgress } from "@/lib/trails";
 import { CITY_BY_ID, DEFAULT_CITY, HERE_KEY, HOME_KEY, HOME_TOWN_KEY, apState, cityPath, stateName, type City } from "@/lib/regions";
 import BrowseBar from "./BrowseBar";
@@ -336,7 +337,9 @@ export default function Explorer({
 
   const list = useMemo(() => {
     const out = placed.filter((s) => matchesBase(s) && inScope(s));
-    const r = (s: Spot) => ratings[s.id]?.avg ?? 0;
+    // best-reviewed: a few reviews are pulled toward the site average, so one 5 can't top the list
+    const mean = siteAverage(ratings);
+    const r = (s: Spot) => rankScore(ratings[s.id], mean);
     // nobody can pay to move up this list: order is by the sort alone
     out.sort((a, b) => {
       if (sort === "near" && here) return distanceKm(here, a.coords) - distanceKm(here, b.coords);
@@ -1088,7 +1091,7 @@ const SpotRow = memo(function SpotRow({
 }: {
   spot: Spot;
   n: number;
-  rating?: { avg: number; count: number };
+  rating?: { avg: number; count: number; goBack?: number | null };
   hot: boolean;
   saved: boolean;
   onHover: (id: string | null) => void;
@@ -1112,7 +1115,11 @@ const SpotRow = memo(function SpotRow({
             <span className="item-meta">
               {miles !== undefined ? `${miles < 0.1 ? "0.1" : miles.toFixed(1)} mi · ` : ""}
               {spot.genres.map((g) => GENRE_BY_ID[g].short).join(", ")} · {areaLabelOf(spot)}
-              {rating ? ` · ${rating.avg.toFixed(1)} from ${rating.count} ${rating.count === 1 ? "member" : "members"}` : ""}
+              {rating
+                ? rating.count >= AVG_MIN
+                  ? ` · ${rating.avg.toFixed(1)} ${wordFor(rating.avg).toLowerCase()} (${rating.count})${rating.goBack != null ? ` · ${rating.goBack}% go back` : ""}`
+                  : ` · ${rating.count} ${rating.count === 1 ? "review" : "reviews"}`
+                : ""}
               {been ? " · been" : saved ? " · want to try" : ""}
               {spot.sponsored && <span className="paid">Sponsored</span>}
             </span>

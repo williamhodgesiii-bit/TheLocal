@@ -11,7 +11,7 @@
 - **Names on the pins**: zoom in to neighborhood level and each pin's name prints beside it, wherever there's room. The top of your list claims room first; a name tries the right, left, below and above, never covers another pin, name, the caption or the buttons, and is worked out again every frame as you zoom, so names make way and come back. Tap a name to open the place. (`placeNames` in `components/map-shared.tsx`.)
 - **Front page** (until you narrow things down): **This week's plate** (one place for everyone, new every Thursday, the day the email goes out; `lib/collections.ts`), your **Plate Passport** card, three **occasion rows** picked for the time of day (Date night, Patio weather, Cheap & good, Brunch, Coffee to work from, Bring the kids, Big groups, Award winners, Breweries; built only from place tags, never padded), and a **trail**. "See all" turns a row into a filter that also reframes the map.
 - **Plate Passport** (`lib/passport.ts`, the Passport tab): tap **I've been** on any place to stamp it, then say how it went (Loved it / It was good / Not for me). Shows how many of the listed places you've stamped, stamps by neighborhood, milestones (1, 5, 10, 25, 50, all), a forgiving weekly streak (a quiet week doesn't break it), trails (`lib/trails.ts`: a seasonal coffee trail, Over the mountain, Meat-and-threes) and a share card drawn in the browser (progress, not places). **Where have you eaten already?** lets people stamp the places they've been in one go, so nobody starts at zero. It's for members (signing in takes seconds, no password) and follows them to every device.
-- **Restaurant page**: name, the basics and what to order first, then awards (dated, each links to where it was announced; `lib/honors.ts`), Want to try / I've been, Directions & hours, photos, the write-up, reviews, nearby places, and who checked it and when, with **Report a change**.
+- **Restaurant page**: name, the basics and what to order first, then **reviews**, then awards (dated, each links to where it was announced; `lib/honors.ts`), Want to try / I've been, photos, the write-up, Directions & hours, nearby places, and who checked it and when, with **Report a change**.
 - **Sort**: Most loved, **Nearest to me** (asks for your location only when you pick it), Top rated, A to Z. Nobody can pay to move up.
 - **Surprise me**: a random pick, a little more likely for well-loved places, never for paid ones. If you've narrowed things down it starts inside your picks.
 - **Trust**: a one-line promise under the headline (every place checked by a person, nobody pays to rank), and `/about` (**How we pick**): what counts as locally owned, how places get on, keeping it current, how we make money, and the review rules. Put your name and email in `FOUNDER` in `lib/brand.ts`; named people are one of the strongest trust signals a new site has.
@@ -37,6 +37,24 @@ On a phone the site works like an app. A bottom tab bar has **Explore · Map · 
 - **Forms**: open as sheets from the bottom.
 - **Home screen**: it can be added as an app (manifest and app icon included).
 - **Passport** (`/me`): your Plate Passport (stamps, neighborhoods, trails, Been and Want to try lists, share card) for everyone; members also see their reviews, photos and the places they've added, and can edit their name and sign out.
+
+## Reviews
+
+The main part of the site, and the first thing under a place's name. Rules and arithmetic live in `lib/reviews.ts`; the database enforces the same rules (`supabase/schema.sql`, `review_rules`).
+
+**Writing one** (members only, one per place, editable; an edit says "Edited"):
+- **A 1–5 score where every step has words**: 5 One of the best, 4 Great, 3 Good, 2 Just okay, 1 Skip it. Labeled scales are the best-tested fix for everything piling up at 4.5 (Garg & Johari, *M&SOM* 2021). The form says "3 means good. Save 5 for the best in town."
+- **Would you go back?** (yes/no) and **what did you get?** (1–3 things, tap a suggestion or type). These become "67% would go back" and the "People got" chips, which tell readers more than a decimal.
+- **One paragraph, 100–600 characters**, with a counter; line breaks fold into one paragraph. Yelp's useful reviews average about 460 characters and almost none under 100 help; usefulness rises with detail and then flattens (Mudambi & Schuff, *MISQ* 2010).
+- **The month you went** (last two years), optional **Good for** tags (up to 3) and optional food/service/vibe scores (worded for the place: Drinks, Coffee, Food & drinks…).
+- **A promise**: "I went myself. I don't own, work at or compete with this place, and nobody gave me anything." That's the FTC's 2024 rule on fake, insider and paid reviews (16 CFR 465).
+- Five reviews a day per member. A review stamps your passport (unless you already chose how it went).
+
+**Reading them**: the score in words, the count and the share who'd go back; a five-bar chart you can tap to filter (people trust the shape more than the number, per Baymard); detail scores once three people gave them; "People got" and "Good for" with counts; then the two most useful reviews, always including a critical one when at least 1 in 10 are. **See all** sorts by Most helpful, Newest, Highest or Lowest. Under three reviews there's no average, just each review. A "last 12 months" line shows when it differs from all time by 0.3 or more.
+
+**Fairness**: one **Helpful** button (no Funny/Cool). **Report** asks why; three reports hold a review until staff look (held reviews don't count, and only their writer sees them). Negative reviews are never hidden for being negative. "Top rated" ranks by an average pulled toward the site's when a place has only a few reviews, so one 5 can't top the list. Sponsors and partners can't touch reviews, their order or moderation. The public rules are on `/about#reviews`.
+
+**After deploying**: run Actions → **Set up Supabase** again (or paste `supabase/schema.sql` into the SQL editor) to add the new review columns, Helpful votes and reports. Until then reviews still post, with the score and paragraph only.
 
 ## Real photos
 
@@ -84,6 +102,7 @@ Not built yet, in rough order:
 - [ ] **The rest of the owner's list (Oct 2026).** Still to confirm open in 2026 before adding: Café Dupont, Blueprint on 3rd, Bocca, Makarios, Falafel Café, Bay Leaf, EastWest, Shu Shop, Mr. Shawarma, June Coffee, General, Uncle G's (Hop City), The Standard (Pizitz), Porch, Hello Bakery, Whiskey Foxtrot (Homewood), Hamburger Heaven (Homewood), Mr. Chen's (Homewood), Oak Hill Bar & Grill, Mexico Lindo, Mr. P's Deli and Creekside BBQ. Still to check who owns or where they started: Otoro Hibachi, Waldo's Chicken & Beer, Baumhower's, Overtime Grill. Henrietta's Deli needs its new Trussville address.
 - [ ] **Re-check the list** every few months: closures, new owners, prices. Bump `CHECKED` in `lib/brand.ts` when done.
 - [ ] **Owner setup:** Supabase, Google sign-in and Google Analytics (see **Accounts, database & analytics**), a terms page, payments for Partner and Sponsored (Stripe payment links are the simplest start), and turning on Vercel Analytics.
+- [ ] **Reviews, next:** owner replies (claimed owners, one per review, free for everyone), a staff screen for reported and held reviews (today: Supabase table editor, `reviews.status`), and once a few hundred reviews are in, "top 10% of Birmingham coffee" style rankings.
 - [ ] **Have a lawyer read** the review rules and the Sponsored labeling on `/about` and `/partners`.
 - [ ] **Real photos of every place** (owner uploads or a local photographer) to replace the labeled stock dish photos.
 - [x] **Passport across devices**: kept in the account (`stamps`, `saved_spots`).

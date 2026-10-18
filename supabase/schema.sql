@@ -30,9 +30,128 @@ create policy "members edit their own reviews" on public.reviews for update usin
 drop policy if exists "members delete their own reviews" on public.reviews;
 create policy "members delete their own reviews" on public.reviews for delete using (auth.uid() = user_id);
 
+-- Reviews, the full version (Oct 2026). The rules are in lib/reviews.ts and README → Reviews:
+-- one paragraph (100–600 characters), a labeled 1–5 score, "would you go back", what you got
+-- (1–3 things), the month you went, and a promise that you went yourself and have no tie to the
+-- place. Optional: "good for" tags and food/service/vibe scores. Older reviews keep working.
+alter table public.reviews add column if not exists go_back boolean;
+alter table public.reviews add column if not exists visited_on date;
+alter table public.reviews add column if not exists ordered text[] not null default '{}';
+alter table public.reviews add column if not exists good_for text[] not null default '{}';
+alter table public.reviews add column if not exists sub_taste smallint check (sub_taste between 1 and 5);
+alter table public.reviews add column if not exists sub_service smallint check (sub_service between 1 and 5);
+alter table public.reviews add column if not exists sub_vibe smallint check (sub_vibe between 1 and 5);
+alter table public.reviews add column if not exists affirmed_at timestamptz;
+alter table public.reviews add column if not exists updated_at timestamptz;
+-- "held": reported and being checked, so it doesn't count and only its writer sees it
+alter table public.reviews add column if not exists status text not null default 'live' check (status in ('live', 'held', 'removed'));
+create index if not exists reviews_user_idx on public.reviews (user_id, created_at desc);
+
+-- The same rules for every review, good or bad, checked where nobody can skip them.
+create or replace function public.review_rules() returns trigger
+  language plpgsql security definer set search_path = public
+as $$
+declare
+  today int;
+begin
+  if tg_op = 'UPDATE' then
+    -- who wrote it, about where, and when it was first posted never change
+    new.user_id := old.user_id;
+    new.spot_id := old.spot_id;
+    new.created_at := old.created_at;
+    -- only staff, or our own report rule (a trigger inside a trigger), can hold or restore a review
+    if not public.is_admin() and pg_trigger_depth() < 2 then new.status := old.status; end if;
+    -- a rename re-signs old reviews; nothing else to check then
+    if new.body is not distinct from old.body and new.rating is not distinct from old.rating
+       and new.go_back is not distinct from old.go_back and new.ordered is not distinct from old.ordered
+       and new.visited_on is not distinct from old.visited_on and new.good_for is not distinct from old.good_for
+       and new.sub_taste is not distinct from old.sub_taste and new.sub_service is not distinct from old.sub_service
+       and new.sub_vibe is not distinct from old.sub_vibe then
+      return new;
+    end if;
+    new.updated_at := now();
+  else
+    new.status := 'live';
+    select count(*) into today from public.reviews where user_id = new.user_id and created_at > now() - interval '1 day';
+    if today >= 5 then raise exception 'That''s 5 reviews today. Come back tomorrow for more.'; end if;
+  end if;
+  new.body := btrim(regexp_replace(regexp_replace(new.body, '\s*\n+\s*', ' ', 'g'), ' {2,}', ' ', 'g'));
+  if char_length(new.body) not between 100 and 600 then
+    raise exception 'Reviews are one paragraph, 100 to 600 characters.';
+  end if;
+  if new.go_back is null then raise exception 'Would you go back? Pick yes or no.'; end if;
+  if cardinality(new.ordered) not between 1 and 3 then raise exception 'Add what you got: one to three things.'; end if;
+  if exists (select 1 from unnest(new.ordered) o where char_length(btrim(o)) not between 1 and 40) then
+    raise exception 'Keep each thing you got under 40 characters.';
+  end if;
+  if cardinality(new.good_for) > 3 then raise exception 'Pick up to three "good for" tags.'; end if;
+  if new.visited_on is null or new.visited_on > current_date or new.visited_on < current_date - interval '25 months' then
+    raise exception 'Pick the month you went (within the last two years).';
+  end if;
+  if new.affirmed_at is null then raise exception 'Confirm you went yourself and have no tie to the place.'; end if;
+  return new;
+end $$;
+drop trigger if exists reviews_rules on public.reviews;
+create trigger reviews_rules before insert or update on public.reviews
+  for each row execute function public.review_rules();
+
+
+-- "Helpful": one per member per review, never on your own. Who voted stays private; counts are public.
+create table if not exists public.review_votes (
+  review_id uuid not null references public.reviews (id) on delete cascade,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (review_id, user_id)
+);
+alter table public.review_votes enable row level security;
+drop policy if exists "members see their votes" on public.review_votes;
+create policy "members see their votes" on public.review_votes for select using (auth.uid() = user_id);
+drop policy if exists "members vote helpful" on public.review_votes;
+create policy "members vote helpful" on public.review_votes for insert with check (
+  auth.uid() = user_id and not exists (select 1 from public.reviews r where r.id = review_id and r.user_id = auth.uid())
+);
+drop policy if exists "members take back a vote" on public.review_votes;
+create policy "members take back a vote" on public.review_votes for delete using (auth.uid() = user_id);
+create or replace view public.review_helpful as
+  select review_id, count(*) as helpful from public.review_votes group by review_id;
+grant select on public.review_helpful to anon, authenticated;
+
+-- how many reviews each member has posted, shown beside their name
+create or replace view public.reviewer_totals as
+  select user_id, count(*) as reviews from public.reviews where status = 'live' group by user_id;
+grant select on public.reviewer_totals to anon, authenticated;
+
+-- Reports: members flag a review; three reports hold it for a person to check. Same for any rating.
+create table if not exists public.review_reports (
+  id uuid primary key default gen_random_uuid(),
+  review_id uuid not null references public.reviews (id) on delete cascade,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  reason text not null check (reason in ('not-firsthand', 'conflict', 'abusive', 'spam', 'other')),
+  note text check (char_length(note) <= 300),
+  created_at timestamptz not null default now(),
+  unique (review_id, user_id)
+);
+alter table public.review_reports enable row level security;
+drop policy if exists "members report reviews" on public.review_reports;
+create policy "members report reviews" on public.review_reports for insert with check (auth.uid() = user_id);
+create or replace function public.hold_reported_review() returns trigger
+  language plpgsql security definer set search_path = public
+as $$
+begin
+  if (select count(*) from public.review_reports where review_id = new.review_id) >= 3 then
+    update public.reviews set status = 'held' where id = new.review_id and status = 'live';
+  end if;
+  return new;
+end $$;
+drop trigger if exists review_reported on public.review_reports;
+create trigger review_reported after insert on public.review_reports
+  for each row execute function public.hold_reported_review();
+
+-- what the list shows: live reviews only
 create or replace view public.spot_ratings as
-  select spot_id, round(avg(rating)::numeric, 2) as avg_rating, count(*) as review_count
-  from public.reviews group by spot_id;
+  select spot_id, round(avg(rating)::numeric, 2) as avg_rating, count(*) as review_count,
+         round(100.0 * avg(case when go_back then 1 when not go_back then 0 end))::int as go_back_pct
+  from public.reviews where status = 'live' group by spot_id;
 grant select on public.spot_ratings to anon, authenticated;
 
 -- ---------- Photos ----------
@@ -342,5 +461,14 @@ begin
 end $$;
 revoke all on function public.delete_my_account() from public, anon;
 grant execute on function public.delete_my_account() to authenticated;
+
+-- Review rules that need the staff check above (kept here so a fresh database sets up in one run)
+-- everyone sees live reviews; a writer also sees their own while it's held
+drop policy if exists "reviews are public" on public.reviews;
+create policy "reviews are public" on public.reviews for select using (status = 'live' or auth.uid() = user_id or public.is_admin());
+drop policy if exists "staff moderate reviews" on public.reviews;
+create policy "staff moderate reviews" on public.reviews for update using (public.is_admin());
+drop policy if exists "staff read reports" on public.review_reports;
+create policy "staff read reports" on public.review_reports for select using (auth.uid() = user_id or public.is_admin());
 
 commit;
