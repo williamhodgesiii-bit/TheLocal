@@ -1,23 +1,29 @@
-// Temporary: find the live site's public Supabase project URL (it's in the client JavaScript).
+// Temporary, read-only: check the live database has the review update, using the site's
+// public (publishable) key from its own JavaScript. Only status codes are saved, never the key.
 import { mkdir, writeFile } from "node:fs/promises";
-const out = { pages: {}, found: [] };
-for (const base of ["https://www.theplatenextdoor.com", "https://theplatenextdoor.com", "https://the-local-ten.vercel.app"]) {
-  try {
-    const r = await fetch(base, { redirect: "follow" });
-    const html = await r.text();
-    out.pages[base] = { status: r.status, url: r.url, size: html.length };
-    const chunks = [...new Set([...html.matchAll(/\/_next\/static\/[^"']+\.js/g)].map((m) => m[0]))];
-    out.pages[base].chunks = chunks.length;
-    for (const c of chunks) {
-      const js = await (await fetch(new URL(c, r.url))).text();
-      for (const m of js.matchAll(/https:\/\/[a-z0-9]{10,30}\.supabase\.co/g)) out.found.push(m[0]);
-    }
-    if (out.found.length) break;
-  } catch (e) {
-    out.pages[base] = { error: String(e) };
-  }
+const SB = "https://wylpbzopmpqaahtbkvkn.supabase.co";
+const out = { key: false, checks: {} };
+const site = "https://www.theplatenextdoor.com";
+const html = await (await fetch(site)).text();
+let key = null;
+for (const c of [...new Set([...html.matchAll(/\/_next\/static\/[^"']+\.js/g)].map((m) => m[0]))]) {
+  const js = await (await fetch(new URL(c, site))).text();
+  if (!js.includes("wylpbzopmpqaahtbkvkn")) continue;
+  key = js.match(/sb_publishable_[A-Za-z0-9_-]{20,}/)?.[0] ?? js.match(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/)?.[0] ?? null;
+  if (key) break;
 }
-out.found = [...new Set(out.found)];
+out.key = !!key;
+const get = async (name, path) => {
+  const r = await fetch(`${SB}/rest/v1/${path}`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+  const t = await r.text();
+  out.checks[name] = { status: r.status, note: r.ok ? `rows: ${(() => { try { return JSON.parse(t).length; } catch { return "?"; } })()}` : t.slice(0, 160) };
+};
+if (key) {
+  await get("reviews new columns", "reviews?select=id,go_back,ordered,good_for,visited_on,status&limit=1");
+  await get("ratings with go-back share", "spot_ratings?select=spot_id,go_back_pct&limit=1");
+  await get("helpful counts", "review_helpful?select=review_id,helpful&limit=1");
+  await get("reviewer totals", "reviewer_totals?select=user_id,reviews&limit=1");
+}
 await mkdir("probe", { recursive: true });
 await writeFile("probe/commons.json", JSON.stringify(out, null, 1));
 console.log(JSON.stringify(out));
