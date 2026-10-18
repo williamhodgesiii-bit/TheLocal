@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Explorer from "@/components/Explorer";
 import JsonLd from "@/components/JsonLd";
-import { GENRE_BY_ID, SPOTS, SPOT_BY_ID, areaLabelOf, type Spot } from "@/lib/data";
+import { permanentRedirect } from "next/navigation";
+import { GENRE_BY_ID, SPOTS, SPOT_ALIASES, SPOT_BY_ID, areaLabelOf, type Spot } from "@/lib/data";
 import { CITY_BY_ID, cityPath } from "@/lib/regions";
 import { fetchCommunitySpot } from "@/lib/server-spots";
 import { breadcrumbLd, spotImage, spotLd } from "@/lib/seo";
@@ -40,6 +41,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 }
 
 export default async function SpotPage({ params }: { params: { id: string } }) {
+  // places once listed per location now have one page
+  if (SPOT_ALIASES[params.id]) permanentRedirect(`/spot/${SPOT_ALIASES[params.id]}`);
   const s = await resolve(params.id);
   // Unknown here can still be a demo-mode spot stored in the visitor's browser — let the client resolve it.
   if (!s) return <Explorer initialSpot={params.id} />;

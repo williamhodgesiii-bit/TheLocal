@@ -32,7 +32,8 @@ export interface Genre {
   tagline: string;
 }
 
-export type TownId = "birmingham" | "homewood" | "mountain-brook" | "vestavia-hills" | "hoover";
+/** "worth-the-drive" gathers the few places further out that people drive for */
+export type TownId = "birmingham" | "homewood" | "mountain-brook" | "vestavia-hills" | "hoover" | "worth-the-drive";
 
 export interface Town {
   id: TownId;
@@ -52,6 +53,8 @@ export interface Area {
   blurb: string;
   /** where the neighborhood name is printed on the map (kept clear of pins) */
   labelAt: [number, number];
+  /** the mailing city, when it isn't the town's name (map links and pin lookups) */
+  city?: string;
 }
 
 export interface Spot {
@@ -74,6 +77,10 @@ export interface Spot {
   sponsored?: boolean;
   /** neighborhood display name when `area` isn't a curated area */
   areaLabel?: string;
+  /** one place, more than one location: the others (one listing; the pin goes to the one in the part of town you pick) */
+  also?: Location[];
+  /** a word about the main location when there are others ("The original, downtown") */
+  locNote?: string;
   website?: string;
   phone?: string;
   /** member who added it (community spots) */
@@ -91,6 +98,14 @@ export interface Spot {
  * not every one it serves: a bar known for its burger is Bars + Burgers, a bistro with a
  * famous burger is French + Burgers. "Special occasion" and "Date night" are collections.
  */
+/** another location of the same place */
+export interface Location {
+  area: AreaId;
+  address: string;
+  coords: [number, number];
+  note?: string;
+}
+
 export const GENRES: Genre[] = [
   { id: "southern", label: "Southern & Soul", short: "Southern", color: "#C8692F", icon: "drumstick", tagline: "Meat-and-threes, soul food, fried chicken and the new Southern kitchens." },
   { id: "bbq", label: "Barbecue", short: "BBQ", color: "#9E3B22", icon: "flame", tagline: "Hickory smoke and white sauce. This is Alabama." },
@@ -132,8 +147,9 @@ export const TOWNS: Town[] = [
   { id: "birmingham", label: "Birmingham", center: [33.512, -86.795], zoom: 13.6, blurb: "Downtown, Southside, Lakeview and Avondale." },
   { id: "homewood", label: "Homewood", center: [33.4715, -86.806], zoom: 14.6, blurb: "Over the mountain. 18th Street, SoHo, Edgewood and West Homewood." },
   { id: "mountain-brook", label: "Mountain Brook", center: [33.4885, -86.7535], zoom: 14.4, blurb: "Three villages: Mountain Brook Village, English Village and Crestline." },
-  { id: "vestavia-hills", label: "Vestavia Hills", center: [33.452, -86.765], zoom: 13.6, blurb: "Cahaba Heights, Highway 31 and Rocky Ridge." },
+  { id: "vestavia-hills", label: "Vestavia Hills", center: [33.452, -86.765], zoom: 13.6, blurb: "Cahaba Heights, Highway 31, Rocky Ridge and Liberty Park." },
   { id: "hoover", label: "Hoover", center: [33.4034, -86.806], zoom: 14.6, blurb: "Down Highway 31 past the Vestavia line, starting at Patton Chapel Road." },
+  { id: "worth-the-drive", label: "Worth the drive", center: [33.37, -86.83], zoom: 10, blurb: "Further out: the barbecue, burgers and bars people drive for." },
 ];
 
 export const AREAS: Area[] = [
@@ -141,17 +157,20 @@ export const AREAS: Area[] = [
   { id: "southside", town: "birmingham", label: "Southside & Five Points", center: [33.5008, -86.7935], zoom: 15.25, blurb: "Five Points South, the fountain, and the restaurants along Highland Avenue.", labelAt: [33.4972, -86.8030] },
   { id: "lakeview", town: "birmingham", label: "Lakeview & Pepper Place", center: [33.515, -86.7925], zoom: 15.5, blurb: "Old warehouses turned into breweries and restaurants. The farmers market runs Saturdays.", labelAt: [33.5098, -86.7838] },
   { id: "avondale", town: "birmingham", label: "Avondale & Forest Park", center: [33.522, -86.774], zoom: 15.5, blurb: "41st Street South and the park, and Clairmont Avenue in Forest Park.", labelAt: [33.5292, -86.7738] },
-  { id: "northside", town: "birmingham", label: "Northside", center: [33.536, -86.832], zoom: 15.25, blurb: "North of downtown, where Eagle's has served soul food since 1951.", labelAt: [33.5405, -86.8320] },
-  { id: "homewood", town: "homewood", label: "Downtown Homewood", center: [33.4755, -86.8008], zoom: 16, blurb: "18th Street and SoHo Square.", labelAt: [33.4795, -86.8045] },
-  { id: "edgewood", town: "homewood", label: "Edgewood", center: [33.4665, -86.8085], zoom: 16.4, blurb: "A few blocks of Oxmoor Road with two ice cream shops on the same corner.", labelAt: [33.4635, -86.8085] },
-  { id: "west-homewood", town: "homewood", label: "West Homewood", center: [33.466, -86.818], zoom: 14.8, blurb: "Oxmoor Road west of downtown, out toward Patriot Park.", labelAt: [33.4595, -86.8205] },
-  { id: "mtnbrook", town: "mountain-brook", label: "Mountain Brook Village", center: [33.4842, -86.7532], zoom: 16.6, blurb: "Cahaba Road, Culver Road and Lane Parke.", labelAt: [33.4800, -86.7534] },
-  { id: "englishvillage", town: "mountain-brook", label: "English Village", center: [33.4936, -86.774], zoom: 17, blurb: "A few blocks of Cahaba Road with a bakery on the corner.", labelAt: [33.4978, -86.7742] },
-  { id: "crestline", town: "mountain-brook", label: "Crestline Village", center: [33.4936, -86.7322], zoom: 17, blurb: "Church Street: a coffee shop and bookstore, bagels, pizza and a Tex-Mex patio.", labelAt: [33.4978, -86.7322] },
-  { id: "cahaba", town: "vestavia-hills", label: "Cahaba Heights", center: [33.462, -86.7275], zoom: 15.75, blurb: "Barbecue, patios and the Heights Village shops.", labelAt: [33.4542, -86.7275] },
-  { id: "vestavia-31", town: "vestavia-hills", label: "Highway 31", center: [33.448, -86.79], zoom: 14.8, blurb: "Montgomery Highway, from the City Center down past the library.", labelAt: [33.4525, -86.7985] },
-  { id: "rocky-ridge", town: "vestavia-hills", label: "Rocky Ridge", center: [33.4225, -86.7975], zoom: 16, blurb: "A small strip of local spots on Rocky Ridge Road.", labelAt: [33.4192, -86.7975] },
-  { id: "patton-chapel", town: "hoover", label: "Patton Chapel", center: [33.4034, -86.806], zoom: 16, blurb: "Highway 31 at Patton Chapel Road, where the same family has run a barbecue pit since 1976.", labelAt: [33.4002, -86.806] },
+  { id: "homewood", town: "homewood", label: "Downtown Homewood", center: [33.4803, -86.7915], zoom: 16, blurb: "18th Street and SoHo Square.", labelAt: [33.4842, -86.7952] },
+  { id: "edgewood", town: "homewood", label: "Edgewood", center: [33.4695, -86.8100], zoom: 15.6, blurb: "A few blocks of Oxmoor Road with two ice cream shops on the same corner.", labelAt: [33.4712, -86.8138] },
+  { id: "west-homewood", town: "homewood", label: "West Homewood", center: [33.4630, -86.8305], zoom: 15.4, blurb: "Oxmoor Road west of downtown, out toward Patriot Park.", labelAt: [33.4580, -86.8300] },
+  { id: "mtnbrook", town: "mountain-brook", label: "Mountain Brook Village", center: [33.4850, -86.7730], zoom: 16.2, blurb: "Cahaba Road, Culver Road and Lane Parke.", labelAt: [33.4810, -86.7752] },
+  { id: "englishvillage", town: "mountain-brook", label: "English Village", center: [33.4952, -86.7815], zoom: 17, blurb: "A few blocks of Cahaba Road with a bakery on the corner.", labelAt: [33.4978, -86.7818] },
+  { id: "crestline", town: "mountain-brook", label: "Crestline Village", center: [33.5012, -86.7572], zoom: 16.4, blurb: "Church Street: a coffee shop and bookstore, bagels, pizza and a Tex-Mex patio.", labelAt: [33.5052, -86.7580] },
+  { id: "cahaba", town: "vestavia-hills", label: "Cahaba Heights", center: [33.4580, -86.7300], zoom: 15.75, blurb: "Barbecue, patios and the Heights Village shops.", labelAt: [33.4522, -86.7305] },
+  { id: "vestavia-31", town: "vestavia-hills", label: "Highway 31", center: [33.4362, -86.7925], zoom: 14.2, blurb: "Montgomery Highway, from the City Center down past the library.", labelAt: [33.4365, -86.8002] },
+  { id: "liberty-park", town: "vestavia-hills", label: "Liberty Park", center: [33.4739, -86.6960], zoom: 15.5, blurb: "The planned community on Liberty Parkway, on the east side of Vestavia Hills.", labelAt: [33.4706, -86.6960] },
+  { id: "rocky-ridge", town: "vestavia-hills", label: "Rocky Ridge", center: [33.4250, -86.7735], zoom: 16, blurb: "A small strip of local spots on Rocky Ridge Road.", labelAt: [33.4222, -86.7735] },
+  { id: "patton-chapel", town: "hoover", city: "Hoover", label: "Patton Chapel", center: [33.4034, -86.806], zoom: 16, blurb: "Highway 31 at Patton Chapel Road, where the same family has run a barbecue pit since 1976.", labelAt: [33.4002, -86.806] },
+  { id: "irondale", town: "worth-the-drive", city: "Irondale", label: "Irondale", center: [33.5345, -86.6935], zoom: 14, blurb: "East of Birmingham: Alabama's oldest barbecue on Crestwood Boulevard, and a sports bar at Grants Mill.", labelAt: [33.5345, -86.7012] },
+  { id: "dickey-springs", town: "worth-the-drive", city: "Bessemer", label: "Dickey Springs", center: [33.3302, -86.9815], zoom: 15, blurb: "Southwest, just past I-459, where an old gas station grills burgers.", labelAt: [33.3270, -86.9815] },
+  { id: "alabaster", town: "worth-the-drive", city: "Alabaster", label: "Alabaster", center: [33.2443, -86.8164], zoom: 14, blurb: "Down I-65 in Shelby County, about half an hour south.", labelAt: [33.2405, -86.8164] },
 ];
 export const TOWN_BY_ID = Object.fromEntries(TOWNS.map((t) => [t.id, t])) as Record<TownId, Town>;
 
@@ -211,10 +230,11 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
   },
   {
     id: "brick-and-tin", name: "Brick & Tin", genres: ["burgers", "brunch"], area: "downtown",
-    address: "214 20th St N", coords: onStN(214, 20), price: 2,
-    knownFor: "Seasonal sandwiches & salads",
-    blurb: "Lunch counter with a menu that changes with the season. Sandwiches, salads, and baked goods by the register.",
-    tags: ["lunch", "seasonal", "counter service"], pop: 70,
+    address: "214 20th St N", coords: onStN(214, 20), price: 2, locNote: "The original, downtown",
+    also: [{ area: "cahaba", address: "3151 Green Valley Rd", coords: [33.46013, -86.73212], note: "Market Square, with a bar and patio (2026)" }],
+    knownFor: "Seasonal sandwiches & the brisket panini",
+    blurb: "A lunch counter with a menu that changes with the season: sandwiches, salads and baked goods by the register. The original is downtown on 20th Street North; the Cahaba Heights one opened in Market Square in March 2026, with a bar, patio and bakery case.",
+    tags: ["lunch", "seasonal", "counter service", "patio", "bakery"], pop: 72,
   },
   {
     id: "nikis-west", name: "Niki's West", genres: ["southern"], area: "downtown",
@@ -239,10 +259,11 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
   },
   {
     id: "paramount", name: "Paramount", genres: ["drinks", "burgers"], drinks: ["bar"], area: "downtown",
-    address: "200 20th St N", coords: onStN(200, 20), price: 2,
+    address: "200 20th St N", coords: onStN(200, 20), price: 2, locNote: "The original, on 20th Street",
+    also: [{ area: "west-homewood", address: "195 Oxmoor Rd", coords: [33.46243, -86.82711], note: "West Row, with Skee-Ball" }],
     knownFor: "Burgers & vintage arcade",
-    blurb: "Old arcade cabinets, a good burger, and a crowd that ends up on the sidewalk on 20th Street.",
-    tags: ["arcade", "burgers", "groups"], pop: 76,
+    blurb: "Old arcade cabinets, a good burger, and a crowd that ends up on the sidewalk on 20th Street. The second Paramount, at West Row in West Homewood, adds Skee-Ball, claw machines and a long draft list, with a hallway through to El Barrio.",
+    tags: ["arcade", "burgers", "groups", "game day", "late night"], pop: 76,
   },
   {
     id: "pale-eddies", name: "Pale Eddie's Pour House", genres: ["drinks"], drinks: ["bar"], area: "downtown",
@@ -358,20 +379,6 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["classic", "lunch", "takeout"], pop: 85,
   },
   {
-    id: "green-acres", name: "Green Acres Cafe", genres: ["southern"], area: "downtown",
-    address: "1705 4th Ave N", coords: onAveN(1705, 4), price: 1,
-    knownFor: "Whole fried chicken wings",
-    blurb: "The Gratton family's fried chicken counter, on Fourth Avenue North since 1990 and in Birmingham since 1950. Order the wings.",
-    tags: ["classic", "takeout", "late night"], pop: 84,
-  },
-  {
-    id: "fifes", name: "Fife's Restaurant", genres: ["southern", "brunch"], area: "downtown",
-    address: "2321 4th Ave N", coords: onAveN(2321, 4), price: 1,
-    knownFor: "Southern breakfast & meat-and-three",
-    blurb: "Breakfast and meat-and-three in the Fourth Avenue district since 1956.",
-    tags: ["classic", "breakfast", "lunch"], pop: 78,
-  },
-  {
     id: "trattoria-zaza", name: "Trattoria ZaZa", genres: ["italian", "brunch"], area: "downtown",
     address: "207 20th St N", coords: onStN(207, 20), price: 2,
     knownFor: "Casual Italian & Sunday brunch",
@@ -387,9 +394,10 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
   },
   {
     id: "el-barrio", name: "El Barrio", genres: ["latin", "drinks", "brunch"], drinks: ["cocktails"], area: "downtown",
-    address: "2211 2nd Ave N", coords: onAveN(2211, 2), price: 2,
+    address: "2211 2nd Ave N", coords: onAveN(2211, 2), price: 2, locNote: "The original, downtown",
+    also: [{ area: "west-homewood", address: "195 Oxmoor Rd", coords: [33.46243, -86.82711], note: "West Row" }],
     knownFor: "Modern Mexican & weekend brunch",
-    blurb: "The downtown original on Second Avenue North; the second one is in West Homewood. Weekend brunch is the big draw.",
+    blurb: "Mexican and Southern cooking mixed together. The original is on Second Avenue North downtown, where weekend brunch is the big draw; the second is at West Row in West Homewood, next door to Paramount.",
     tags: ["brunch", "date night", "margaritas", "groups"], pop: 84,
   },
   {
@@ -421,11 +429,15 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["lunch", "cheap eats", "game day"], pop: 76,
   },
   {
-    id: "cala-coffee-downtown", name: "Cala Coffee (downtown)", genres: ["coffee"], area: "downtown",
-    address: "1826 3rd Ave N, Suite 101", coords: onAveN(1826, 3), price: 1,
-    knownFor: "Seasonal drinks",
-    blurb: "Downtown shop of the local roaster, with a menu that changes with the season. There's another in Mountain Brook Village.",
-    tags: ["work-friendly", "breakfast"], pop: 74,
+    id: "cala-coffee", name: "Cala Coffee", genres: ["coffee"], area: "cahaba",
+    address: "3950 Autumn Ln", coords: [33.46041, -86.73345], price: 1, locNote: "The first café (2023)",
+    also: [
+      { area: "downtown", address: "1826 3rd Ave N, Suite 101", coords: [33.51522, -86.80938], note: "Theatre District" },
+      { area: "mtnbrook", address: "2409 Montevallo Rd", coords: [33.48395, -86.77315], note: "Mountain Brook Village (2026)" },
+    ],
+    knownFor: "House-roasted lattes",
+    blurb: "Josh and Melanie Cosio roasted at home, then ran a farmers-market cart, then opened their first café in Cahaba Heights in 2023. Now there are three: Cahaba Heights, downtown in the Theatre District, and Mountain Brook Village, which opened in May 2026. Pastries from Bandit Pâtisserie.",
+    tags: ["roaster", "work-friendly", "pastries"], pop: 74,
   },
   /* ------------------------ SOUTHSIDE & FIVE POINTS ------------------------ */
   {
@@ -457,11 +469,11 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["Thai", "sushi", "patio"], pop: 73,
   },
   {
-    id: "taj-india", name: "Taj India", genres: ["asian"], area: "southside",
-    address: "2226 Highland Ave S", coords: [33.5003, -86.7922], price: 2,
-    knownFor: "Lunch buffet & tikka masala",
-    blurb: "Northern Indian on Highland Avenue. The lunch buffet is the move on a weekday.",
-    tags: ["Indian", "lunch buffet", "vegetarian-friendly"], pop: 71,
+    id: "taj-india", name: "Taj India", genres: ["asian"], area: "lakeview",
+    address: "3120 Clairmont Ave S", coords: [33.51198, -86.78273], price: 2,
+    knownFor: "Birmingham's original Indian restaurant",
+    blurb: "Aman and Navneet Judge's Indian restaurant, open since the 1990s. It moved from Highland Avenue to the old Bogue's diner on Clairmont Avenue in 2023.",
+    tags: ["Indian", "vegetarian-friendly", "classic"], pop: 71,
   },
   {
     id: "fish-market", name: "The Fish Market", genres: ["seafood", "mediterranean"], area: "southside",
@@ -472,7 +484,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
   },
   {
     id: "rojo", name: "Rojo", genres: ["latin", "brunch"], area: "southside",
-    address: "2921 Highland Ave S", coords: [33.5009, -86.7843], price: 2,
+    address: "2921 Highland Ave S", coords: [33.50617, -86.78094], price: 2,
     knownFor: "Patio tacos facing Rhodes Park",
     blurb: "Latin and American food in Highland Park, with a dog-friendly patio across from Rhodes Park.",
     tags: ["patio", "dog-friendly", "brunch"], pop: 77,
@@ -604,7 +616,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     id: "saws-soul-kitchen", name: "Saw's Soul Kitchen", genres: ["bbq", "southern"], area: "avondale",
     address: "215 41st St S", coords: onStS(215, 41), price: 1,
     knownFor: "Pork & greens over cheese grits",
-    blurb: "Small, always-busy Avondale spot. White sauce barbecue with soul food sides.",
+    blurb: "Small, always-busy Avondale spot. White sauce barbecue with soul food sides. Its sister, Saw's BBQ, is the original in Edgewood.",
     tags: ["white sauce", "counter service"], pop: 87,
   },
   {
@@ -616,9 +628,10 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
   },
   {
     id: "big-spoon", name: "Big Spoon Creamery", genres: ["sweets"], area: "avondale",
-    address: "4000 3rd Ave S", coords: onAveS(4000, 3), price: 1,
+    address: "4000 3rd Ave S", coords: onAveS(4000, 3), price: 1, locNote: "The original, in the MAKEbhm building",
+    also: [{ area: "edgewood", address: "927 Oxmoor Rd", coords: [33.47344, -86.8091], note: "Across from Edgewood Creamery" }],
     knownFor: "Small-batch ice cream sandwiches",
-    blurb: "Small-batch ice cream in the MAKEbhm building. The sandwiches are the thing to get.",
+    blurb: "Small-batch ice cream, and the sandwiches are the thing to get. The original is in the MAKEbhm building in Avondale; the Edgewood shop on Oxmoor Road is right across the street from Edgewood Creamery, so try both and pick a side.",
     tags: ["ice cream", "family"], pop: 83,
   },
   {
@@ -656,13 +669,6 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     knownFor: "Gin cocktails",
     blurb: "Restaurant and cocktail bar in Forest Park inspired by Victorian gin palaces, so gin runs the menu. Weekend brunch, and one of the best patios in town.",
     tags: ["patio", "brunch", "date night", "cocktails"], pop: 84,
-  },
-  {
-    id: "eagles", name: "Eagle's Restaurant", genres: ["southern"], area: "northside",
-    address: "2610 16th St N", coords: onStN(2610, 16), price: 1,
-    knownFor: "Friday catfish & meat-and-three",
-    blurb: "Black-owned soul food kitchen open since 1951. Eater sent visitors here in 2026, and Sunday lines go out the door.",
-    tags: ["classic", "lunch", "meat-and-three", "family"], pop: 86,
   },
   /* ------------------------------- HOMEWOOD ------------------------------- */
   {
@@ -705,7 +711,7 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     id: "saws-bbq", name: "Saw's BBQ", genres: ["bbq"], area: "edgewood",
     address: "1008 Oxmoor Rd", coords: [33.4655, -86.8098], price: 1,
     knownFor: "Smoked chicken with white sauce",
-    blurb: "The first Saw's, a small room on Oxmoor Road. Smoked chicken with white sauce.",
+    blurb: "The first Saw's, a small room on Oxmoor Road. Smoked chicken with white sauce. Saw's Soul Kitchen in Avondale is the soul-food sister.",
     tags: ["white sauce", "counter service", "original"], pop: 86,
   },
   {
@@ -804,13 +810,6 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["soda fountain", "classic", "lunch"], pop: 78,
   },
 
-  {
-    id: "dg", name: "DG", genres: ["southern"], area: "mtnbrook",
-    address: "2837 Culver Rd", coords: [33.4835, -86.7540], price: 4,
-    knownFor: "A menu that changes daily",
-    blurb: "Daniel Briggs's restaurant in Mountain Brook Village, open since 2000 as Daniel George and renamed DG for its 25th year. Lunch on weekdays, dinner Monday through Saturday.",
-    tags: ["date night", "special occasion", "lunch"], pop: 84,
-  },
   /* --------------------------- CRESTLINE VILLAGE --------------------------- */
   {
     id: "church-street-coffee", name: "Church Street Coffee & Books", genres: ["coffee"], area: "crestline",
@@ -893,20 +892,6 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["drive-through", "quiet"], pop: 58,
   },
   {
-    id: "big-spoon-edgewood", name: "Big Spoon Creamery (Edgewood)", genres: ["sweets"], area: "edgewood",
-    address: "927 Oxmoor Rd", coords: [33.4663, -86.8087], price: 1,
-    knownFor: "Ice cream sandwiches",
-    blurb: "The Edgewood shop from the Big Spoon folks, right across the street from Edgewood Creamery. Try both and pick a side.",
-    tags: ["ice cream", "family"], pop: 76,
-  },
-  {
-    id: "el-barrio-homewood", name: "El Barrio (West Homewood)", genres: ["latin", "drinks"], drinks: ["cocktails"], area: "west-homewood",
-    address: "195 Oxmoor Rd", coords: [33.4708, -86.8048], price: 2,
-    knownFor: "Mexican-Southern plates and margaritas",
-    blurb: "The downtown Birmingham favorite, now in Homewood's West Row development. Mexican and Southern cooking mixed together.",
-    tags: ["margaritas", "groups"], pop: 75,
-  },
-  {
     id: "daily-edition", name: "The Daily Edition", genres: ["coffee", "brunch"], area: "west-homewood",
     address: "186 Oxmoor Rd, Suite 116", coords: [33.4712, -86.8042], price: 1,
     knownFor: "Coffee and a breakfast sandwich",
@@ -921,38 +906,31 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     tags: ["pizza", "kid-friendly"], pop: 72,
   },
 
-  {
-    id: "paramount-west-homewood", name: "Paramount (West Homewood)", genres: ["drinks", "burgers"], drinks: ["bar"], area: "west-homewood",
-    address: "195 Oxmoor Rd", coords: [33.4709, -86.8046], price: 2,
-    knownFor: "Burgers, wings & Skee-Ball",
-    blurb: "The second Paramount, at West Row, with Skee-Ball, claw machines and a long draft list. A hallway connects it to El Barrio.",
-    tags: ["game day", "groups", "late night"], pop: 76,
-  },
   /* ---------------------- MOUNTAIN BROOK (added) ---------------------- */
   {
     id: "little-betty", name: "Little Betty Steak Bar", genres: ["steaks"], area: "mtnbrook",
-    address: "321 Rele St, Suite E8", coords: [33.4833, -86.7527], price: 4,
+    address: "321 Rele St, Suite E8", coords: [33.4871, -86.7719], price: 4,
     knownFor: "Steaks with Italian and Japanese touches",
     blurb: "Steakhouse and bar in Lane Parke. Dressed up but not stiff.",
     tags: ["steak", "date night", "Lane Parke"], pop: 84,
   },
   {
     id: "seabar", name: "SeaBar", genres: ["seafood", "drinks"], drinks: ["cocktails"], area: "mtnbrook",
-    address: "1011 Jemison Ln", coords: [33.4831, -86.7522], price: 3,
+    address: "1011 Jemison Ln", coords: [33.4862, -86.7735], price: 3,
     knownFor: "Raw bar and crudo",
     blurb: "Seafood bar next door to Little Betty, from the same group. Sit at the bar and order oysters.",
     tags: ["oysters", "Lane Parke"], pop: 72,
   },
   {
     id: "charbar-no-7", name: "CharBar No. 7", genres: ["steaks", "burgers"], area: "mtnbrook",
-    address: "900 Jemison Ln", coords: [33.4826, -86.7518], price: 3,
+    address: "900 Jemison Ln", coords: [33.4857, -86.7728], price: 3,
     knownFor: "Burgers and steaks",
     blurb: "Lane Parke grill that can go either way: a burger at the bar or a steak dinner.",
     tags: ["burgers", "patio", "Lane Parke"], pop: 74,
   },
   {
     id: "locanda-brasato", name: "Locanda Brasato", genres: ["italian"], area: "mtnbrook",
-    address: "270 Rele St", coords: [33.4838, -86.7533], price: 3,
+    address: "270 Rele St", coords: [33.4866, -86.7723], price: 3,
     knownFor: "Slow-braised Italian",
     blurb: "Opened in 2026 in the old Post Office Pies space in Lane Parke, from the owners of Lé Fresca downtown. Braises and long-cooked sauces.",
     tags: ["date night", "new", "pasta", "Lane Parke"], pop: 76,
@@ -973,17 +951,10 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
   },
   {
     id: "abhi", name: "Abhi Eatery & Bar", genres: ["asian"], area: "mtnbrook",
-    address: "2721 Cahaba Rd (upstairs)", coords: [33.4851, -86.7549], price: 3,
+    address: "2721 Cahaba Rd (upstairs)", coords: [33.4842, -86.7736], price: 3,
     knownFor: "Pan-Asian small plates",
     blurb: "Upstairs on Cahaba Road in Mountain Brook Village. Curries, dumplings and a good cocktail list.",
     tags: ["date night", "cocktails"], pop: 70,
-  },
-  {
-    id: "cala-coffee-mb", name: "Cala Coffee", genres: ["coffee"], area: "mtnbrook",
-    address: "2409 Montevallo Rd", coords: [33.4869, -86.7571], price: 1,
-    knownFor: "House-roasted lattes",
-    blurb: "A Birmingham roaster that started with a cart. This is their newest cafe, in Mountain Brook Village.",
-    tags: ["roaster", "new"], pop: 64,
   },
   {
     id: "golden-age-wine", name: "Golden Age Wine", genres: ["drinks"], drinks: ["wine"], area: "mtnbrook",
@@ -1017,17 +988,10 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
   /* ---------------------- VESTAVIA HILLS (added) ---------------------- */
   {
     id: "foodbar", name: "FoodBar", genres: ["southern"], area: "cahaba",
-    address: "3156 Heights Village", coords: [33.4627, -86.7301], price: 3,
+    address: "3156 Heights Village", coords: [33.4606, -86.7326], price: 3,
     knownFor: "Southern plates off Alabama farms",
     blurb: "Chef George McMillian's place in The Heights Village. The menu leans on Alabama farms.",
     tags: ["date night", "seasonal"], pop: 78,
-  },
-  {
-    id: "brick-and-tin-cahaba", name: "Brick & Tin (Cahaba Heights)", genres: ["burgers", "brunch"], area: "cahaba",
-    address: "3151 Green Valley Rd", coords: [33.4612, -86.7268], price: 2,
-    knownFor: "The brisket panini",
-    blurb: "Opened March 2026 in Market Square. Bar, patio and a bakery case, same seasonal menu as downtown.",
-    tags: ["new", "patio", "bakery"], pop: 72,
   },
   {
     id: "mudtown", name: "Mudtown Eat & Drink", genres: ["drinks", "burgers"], drinks: ["bar"], area: "cahaba",
@@ -1101,12 +1065,187 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     blurb: "Nick Manakides bought this Highway 31 barbecue joint in 1976, when it was the first Golden Rule franchise. He went independent in 2020 and named it for his father, Archie. The menu and most of the staff stayed, and his son Michael runs it now.",
     tags: ["family-owned", "classic", "lunch"], pop: 74,
   },
+
+  /* ------------------ from the owner's list (Oct 2026) ------------------ */
+  // Downtown
+  {
+    id: "armour-house", name: "Armour House", genres: ["steaks", "seafood"], area: "downtown",
+    address: "2309 1st Ave N", coords: [33.51644, -86.80126], price: 4,
+    knownFor: "Steaks off the fire & a raw bar",
+    blurb: "A brasserie in the old Armour & Co. meatpacking building, opened in late 2024 by Chris Reebals and Rollins Montgomery with chef Jeffrey Compton. Steaks off the open fire, a raw bar, and a speakeasy called Pogo downstairs.",
+    tags: ["date night", "live fire", "raw bar"], pop: 82,
+  },
+  {
+    id: "le-fresca", name: "Lé Fresca", genres: ["italian", "pizza"], area: "downtown",
+    address: "2218 2nd Ave N", coords: [33.5172, -86.80283], price: 2,
+    knownFor: "Wood-fired pizza & handmade pasta",
+    blurb: "Chef Marco Butturini, who cooked at Highlands, Chez Fonfon and Bottega, opened it with Duaine Clements in 2020. Wood-fired pizza made with Italian flour, pasta, risotto and tiramisu. Their newer place is Locanda Brasato in Lane Parke.",
+    tags: ["pizza", "pasta", "lunch"], pop: 76,
+  },
+  // Southside & Five Points
+  {
+    id: "t-bones", name: "T-Bone's Cheesesteaks", sign: "T-Bone's", genres: ["burgers"], area: "southside",
+    address: "1017 20th St S", coords: [33.50122, -86.7966], price: 1,
+    knownFor: "Philly cheesesteaks on Amoroso rolls",
+    blurb: "Anthony \"T-Bone\" Crawford, a Philadelphia native, has the Amoroso rolls shipped in from Philadelphia. He started in Center Point in 2002 and has been in Five Points South since 2014. Cheesesteaks, hoagies and cheesesteak egg rolls.",
+    tags: ["cheesesteaks", "hoagies", "Black-owned"], pop: 68,
+  },
+  {
+    id: "jim-n-nicks", name: "Jim 'N Nick's Bar-B-Q", sign: "Jim 'N Nick's", genres: ["bbq"], area: "southside",
+    address: "1908 11th Ave S", coords: [33.50053, -86.79625], price: 2,
+    also: [{ area: "west-homewood", address: "220 Oxmoor Rd", coords: [33.4627, -86.8258], note: "Homewood" }],
+    knownFor: "Pulled pork & cheese biscuits",
+    blurb: "Nick Pihakis and his father, Jim, started it in Birmingham in 1985. It's a chain of more than 60 across the South now, owned by an Atlanta investment firm since 2017, but it was born here. Two are on this list: Five Points South and Oxmoor Road in Homewood.",
+    tags: ["Birmingham-born", "pulled pork"], pop: 70,
+  },
+  {
+    id: "dreamland-southside", name: "Dreamland Bar-B-Que", sign: "Dreamland", genres: ["bbq"], area: "southside",
+    address: "1427 14th Ave S", coords: [33.49403, -86.80267], price: 1,
+    knownFor: "Ribs & banana pudding",
+    blurb: "John \"Big Daddy\" Bishop opened Dreamland in Tuscaloosa in 1958. This Southside location came in 1993, and the family-run company is based in Birmingham now. Ribs, sauce, white bread and banana pudding.",
+    tags: ["ribs", "Alabama classic"], pop: 80,
+  },
+  // Lakeview & Pepper Place
+  {
+    id: "son-of-a-butcher", name: "The Son of a Butcher", sign: "Son of a Butcher", genres: ["burgers"], area: "lakeview",
+    address: "2810 3rd Ave S, Suite 100", coords: [33.51539, -86.79147], price: 2,
+    knownFor: "Butcher-counter sandwiches",
+    blurb: "A butcher shop by Pepper Place from the family behind Evans Meats. Sandwiches are made with what's in the case, first come, first served, and you can take home a steak.",
+    tags: ["butcher shop", "lunch", "Pepper Place"], pop: 70,
+  },
+  {
+    id: "high-dive", name: "High Dive", genres: ["drinks", "asian"], drinks: ["cocktails"], area: "lakeview",
+    address: "524 32nd St S", coords: [33.51505, -86.78455], price: 2,
+    knownFor: "Records on the hi-fi, hand rolls & sake",
+    blurb: "A listening lounge that opened on New Year's Eve 2025, with a menu by chef Sean Brock: milk-bread sandwiches, skewers, sushi hand rolls, sake and cocktails. Coffee from 8 in the morning.",
+    tags: ["listening bar", "cocktails", "sake", "new"], pop: 74,
+  },
+  // Avondale & Forest Park
+  {
+    id: "carliles", name: "Carlile's Barbecue", sign: "Carlile's", genres: ["bbq"], area: "avondale",
+    address: "3511 6th Ave S", coords: [33.51719, -86.78002], price: 1,
+    knownFor: "Weekday barbecue lunch since 1945",
+    blurb: "Barbecue on Sixth Avenue South since 1945, owned by the Collat family since 2007. Weekday lunch only, 10:30 to 3.",
+    tags: ["lunch", "classic", "family-owned"], pop: 64,
+  },
+  {
+    id: "ampersandwich", name: "Ampersandwich", genres: ["burgers"], area: "avondale",
+    address: "4124 3rd Ave S", coords: [33.52394, -86.7735], price: 1,
+    knownFor: "Deli sandwiches on Breadworks bread",
+    blurb: "A neighborhood sandwich shop in Avondale from Joe Phelps, who also owns Pilcrow. Everything comes on Birmingham Breadworks bread.",
+    tags: ["lunch", "sandwiches"], pop: 66,
+  },
+  // Homewood
+  {
+    id: "full-circle-doughnuts", name: "Full Circle Doughnuts", sign: "Full Circle", genres: ["sweets", "brunch"], area: "homewood",
+    address: "1726 28th Ave S", coords: [33.48087, -86.79293], price: 1,
+    knownFor: "Brioche doughnuts",
+    blurb: "Wil Drake started Hero Doughnuts on this corner in 2016. After Hero closed, he reopened the shop under a new name in May 2026: brioche doughnuts, breakfast, Conecuh sausage kolaches, burgers and shakes. Mornings into early afternoon.",
+    tags: ["doughnuts", "breakfast", "new"], pop: 78,
+  },
+  {
+    id: "the-battery", name: "The Battery", genres: ["drinks", "burgers"], drinks: ["bar"], area: "homewood",
+    address: "2821 Central Ave, Suite 101", coords: [33.47951, -86.79536], price: 2,
+    knownFor: "Smoked, then fried wings",
+    blurb: "A sports bar in downtown Homewood, opened in 2022. The wings are smoked for hours, then flash-fried, with Alabama white, buffalo or Korean barbecue sauce. There's a smash burger too. Closed Tuesdays.",
+    tags: ["wings", "sports bar", "game day"], pop: 70,
+  },
+  {
+    id: "shiki", name: "Shiki", genres: ["asian"], area: "homewood",
+    address: "300 19th St S, Suite 109", coords: [33.47838, -86.78942], price: 2,
+    knownFor: "Sushi & Thai",
+    blurb: "Sushi rolls and Thai plates, from pad thai to spring rolls, in Homewood for more than a decade. Watch for happy hour.",
+    tags: ["sushi", "Thai", "happy hour"], pop: 62,
+  },
+  {
+    id: "red-pearl", name: "Red Pearl", genres: ["asian"], area: "west-homewood",
+    address: "243 W Valley Ave", coords: [33.46691, -86.83394], price: 2,
+    knownFor: "Sichuan dishes & clay pots",
+    blurb: "A Chinese restaurant attached to Super Oriental Market on West Valley Avenue. The menu runs from Sichuan cold dishes to sizzling clay pots, with the American-Chinese standards too. Open every day.",
+    tags: ["Chinese", "Sichuan", "grocery"], pop: 66,
+  },
+  // Mountain Brook
+  {
+    id: "curry-corner", name: "Curry Corner", genres: ["asian"], area: "englishvillage",
+    address: "2037 Cahaba Rd", coords: [33.49491, -86.78134], price: 2,
+    knownFor: "From the tandoor",
+    blurb: "Indian cooking, mostly from the tandoor and mostly not fried, opened in 2024 by Bhuwan Bashel and Bir Thapa. Tikka masala, biryani, naan, and momos too.",
+    tags: ["Indian", "tandoor", "momos"], pop: 64,
+  },
+  {
+    id: "taco-mama", name: "Taco Mama", genres: ["latin"], area: "crestline",
+    address: "63 Church St", coords: [33.50225, -86.75549], price: 1, locNote: "The first Taco Mama (2011)",
+    also: [{ area: "edgewood", address: "1014 Oxmoor Rd", coords: [33.47399, -86.80801], note: "Edgewood (2016)" }],
+    knownFor: "Tacos, where it started",
+    blurb: "Will Haver, who grew up in Birmingham, opened the first Taco Mama on Church Street in Crestline Village in 2011. It's a franchise across the South now. On this list: the Crestline original and the Edgewood one on Oxmoor Road.",
+    tags: ["tacos", "original", "Birmingham-born", "kid-friendly"], pop: 70,
+  },
+  // Vestavia Hills
+  {
+    id: "on-tap-liberty-park", name: "On Tap Sports Cafe", sign: "On Tap", genres: ["drinks", "burgers"], drinks: ["bar"], area: "liberty-park",
+    address: "11967 Liberty Pkwy", coords: [33.47386, -86.69603], price: 2,
+    knownFor: "Jumbo Buffalo wings",
+    blurb: "Birmingham's own sports bar since 1996, started by the Beegle family. Big Buffalo wings and every game on.",
+    tags: ["wings", "sports bar", "game day"], pop: 60,
+  },
+
+  /* ---------------------------- WORTH THE DRIVE ---------------------------- */
+  {
+    id: "golden-rule-irondale", name: "Golden Rule Bar-B-Q", sign: "Golden Rule", genres: ["bbq"], area: "irondale",
+    address: "2504 Crestwood Blvd", coords: [33.53894, -86.69273], price: 1,
+    knownFor: "Alabama's oldest barbecue",
+    blurb: "It calls itself Alabama's oldest barbecue restaurant, cooking in Irondale since 1891. There are Golden Rules around the state now; the Crestwood Boulevard flagship is the original.",
+    tags: ["classic", "original"], pop: 72,
+  },
+  {
+    id: "martys-gm", name: "Marty's GM", genres: ["drinks", "burgers"], drinks: ["bar"], area: "irondale",
+    address: "5415 Beacon Dr, Suite 145", coords: [33.53082, -86.69613], price: 2,
+    knownFor: "The Goat Popper burger",
+    blurb: "A neighborhood sports bar at Grants Mill Station, opened in 2018 by Phillip and Marsha Mims. The Goat Popper is two patties with pepper jelly, goat cheese and jalapeño.",
+    tags: ["burgers", "sports bar", "game day"], pop: 60,
+  },
+  {
+    id: "jj-grocery", name: "J&J Grocery & Deli", sign: "J&J Grocery", genres: ["burgers"], area: "dickey-springs",
+    address: "8169 Dickey Springs Rd", coords: [33.33023, -86.98149], price: 1,
+    knownFor: "Double bacon cheeseburger",
+    blurb: "An old gas station on Dickey Springs Road, just south of I-459. Juanita McClanahan started making hand-patted burgers on the flat-top in the late 1980s. Opens at 5:30 in the morning, done by 2.",
+    tags: ["burgers", "hole in the wall", "breakfast", "wings"], pop: 70,
+  },
+  {
+    id: "chubbfathers", name: "Chubbfathers", genres: ["burgers"], area: "alabaster",
+    address: "229 Kent Stone Blvd", coords: [33.2443, -86.8164], price: 1,
+    knownFor: "The Zydeco burger",
+    blurb: "Will Cholewinski's burger joint in Alabaster. The Zydeco has bacon, onion straws and a Cajun horseradish sauce; there are po'boys, wings and weekday plate lunches too.",
+    tags: ["burgers", "wings", "lunch"], pop: 72,
+  },
 ];
 
 // JSON types its pairs as number[]; every entry the pin scripts write is [lat, lng]
 const ov = overrides as unknown as Record<string, [number, number]>;
 /** Editorially curated Birmingham launch guide. Community spots come from the backend. */
-export const SPOTS: Spot[] = RAW_SPOTS.map((s) => ({ ...s, city: "birmingham-al", coords: ov[s.id] ?? s.coords }));
+export const SPOTS: Spot[] = RAW_SPOTS.map((s) => ({
+  ...s,
+  city: "birmingham-al",
+  coords: ov[s.id] ?? s.coords,
+  // other locations get exact pins too, saved as "id@2", "id@3"…
+  ...(s.also ? { also: s.also.map((l, i) => ({ ...l, coords: ov[`${s.id}@${i + 2}`] ?? l.coords })) } : {}),
+}));
+
+/** Old ids for places that used to be listed once per location; links to them land on the one listing. */
+export const SPOT_ALIASES: Record<string, string> = {
+  "big-spoon-edgewood": "big-spoon",
+  "brick-and-tin-cahaba": "brick-and-tin",
+  "el-barrio-homewood": "el-barrio",
+  "paramount-west-homewood": "paramount",
+  "cala-coffee-downtown": "cala-coffee",
+  "cala-coffee-mb": "cala-coffee",
+  "cala-coffee-cahaba": "cala-coffee",
+  "taco-mama-crestline": "taco-mama",
+  "taco-mama-edgewood": "taco-mama",
+};
+export const canonicalSpotId = (id: string) => SPOT_ALIASES[id] ?? id;
+/** ids a place has gone by, its own first (reviews and photos posted under an old id still count) */
+export const spotIdsOf = (id: string) => [id, ...Object.keys(SPOT_ALIASES).filter((k) => SPOT_ALIASES[k] === id)];
 
 /** true once most pins come from a lookup (OpenStreetMap or Google) instead of our estimates */
 export const PINS_EXACT = Object.keys(ov).length > SPOTS.length / 2;
@@ -1125,8 +1264,28 @@ export const slugify = (s: string) =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 48);
 
+const labelOfArea = (area: AreaId, fallback?: string) => AREA_BY_ID[area]?.label ?? fallback ?? area.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+
+/** where it is, in a few words: "Avondale", "Avondale & Edgewood", "Cahaba Heights + 2 more" */
 export function areaLabelOf(s: Spot) {
-  return AREA_BY_ID[s.area]?.label ?? s.areaLabel ?? s.area.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+  const here = labelOfArea(s.area, s.areaLabel);
+  if (!s.also?.length) return here;
+  return s.also.length === 1 ? `${here} & ${labelOfArea(s.also[0].area)}` : `${here} + ${s.also.length} more`;
+}
+
+/** every location, the main one first */
+export const locationsOf = (s: Spot): (Location & { label: string })[] => [
+  { area: s.area, address: s.address, coords: s.coords, note: s.locNote, label: labelOfArea(s.area, s.areaLabel) },
+  ...(s.also ?? []).map((l) => ({ ...l, label: labelOfArea(l.area) })),
+];
+
+/** the same place, seen from another of its locations (that one becomes the main one) */
+export function atLocation(s: Spot, i: number): Spot {
+  if (!i || !s.also?.[i - 1]) return s;
+  const all = locationsOf(s);
+  const l = all[i];
+  const rest = all.filter((_, j) => j !== i).map(({ label: _label, ...x }) => x);
+  return { ...s, area: l.area, address: l.address, coords: l.coords, locNote: l.note, also: rest };
 }
 
 /** Curated areas (Birmingham) plus any neighborhoods members have added. */
@@ -1178,6 +1337,7 @@ export function distanceKm(a: [number, number], b: [number, number]) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-export function mapsUrl(s: Spot) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name} ${s.address} Birmingham AL`)}`;
+export function mapsUrl(s: Spot, at: { area: AreaId; address: string } = s) {
+  const where = AREA_BY_ID[at.area]?.city ?? "Birmingham";
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name} ${at.address} ${where} AL`)}`;
 }

@@ -25,8 +25,8 @@ export default function About() {
       <p className="cap-kicker">How we pick</p>
       <h1>{MANTRA}</h1>
       <p className="about-lede">
-        {BRAND} is a guide to the {SPOTS.length} locally owned restaurants, coffee shops and bars we&apos;d send a friend to in Birmingham, Homewood, Mountain Brook and
-        Vestavia Hills. Here is exactly how a place gets on it, how we keep it current, and how we pay for it.
+        {BRAND} is a guide to the {SPOTS.length} locally owned restaurants, coffee shops and bars we&apos;d send a friend to in Birmingham, Homewood, Mountain Brook,
+        Vestavia Hills and Hoover, plus a few worth the drive. Here is exactly how a place gets on it, how we keep it current, and how we pay for it.
       </p>
 
       <section className="about-promises" aria-label="Our promises">
@@ -49,12 +49,12 @@ export default function About() {
       </h2>
       <ul className="about-list">
         <li>
-          <b>Locally owned and run.</b> The people who own it live here. A few local favorites have more than one location (Saw&apos;s, Big Spoon, Brick &amp; Tin);
-          they count as long as they started here and are still run from here. Once a name is sold as a franchise, it&apos;s a chain.
+          <b>Locally owned, or born here.</b> Most of these are one place, owned by people who live here. Some local favorites have grown to more than one location, a
+          few into franchises (Saw&apos;s, Taco Mama, Jim &apos;N Nick&apos;s). They count because they started in the Birmingham area.
         </li>
         <li>
-          <b>No chains, no fast food.</b> If it&apos;s franchised, run from a corporate office out of state, or drive-thru only, it isn&apos;t on here. Submissions that match a
-          known chain get flagged automatically.
+          <b>No outside chains, no fast food.</b> If it started somewhere else, it isn&apos;t on here, even when a neighbor owns the local franchise. Neither is anything
+          drive-thru only. Submissions that match a known chain get flagged automatically.
         </li>
         <li>
           <b>Somewhere we&apos;d send a friend.</b> Good food or drink, made with care, at any price. A $ lunch counter belongs next to a tasting menu.

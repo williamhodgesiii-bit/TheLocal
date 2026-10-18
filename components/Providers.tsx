@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { getBackend, shortName, type Backend, type BeenMap, type Stamp, type User, type Verdict } from "@/lib/backend";
 import { identify, track } from "@/lib/analytics";
 import { HOME_KEY } from "@/lib/regions";
+import { canonicalSpotId } from "@/lib/data";
 import AuthModal, { type AuthStep } from "./AuthModal";
 import SignInNudge from "./SignInNudge";
 
@@ -53,6 +54,17 @@ function persist(k: string, v: unknown) {
   } catch {
     /* private mode */
   }
+}
+/** saves and stamps made under a place's old per-location ids count for its one listing */
+const canonSaved = (list: string[]) => Array.from(new Set(list.map(canonicalSpotId)));
+function canonBeen(map: BeenMap): BeenMap {
+  const out: BeenMap = {};
+  for (const [k, v] of Object.entries(map)) {
+    const id = canonicalSpotId(k);
+    const cur = out[id];
+    out[id] = !cur ? v : { at: cur.at < v.at ? cur.at : v.at, ...(cur.verdict ?? v.verdict ? { verdict: cur.verdict ?? v.verdict } : {}) };
+  }
+  return out;
 }
 function readJson<T>(k: string, fallback: T): T {
   try {
@@ -136,9 +148,9 @@ export default function Providers({ children }: { children: ReactNode }) {
   }, [backend, applyUser]);
 
   useEffect(() => {
-    savedRef.current = readJson<string[]>(SAVED_KEY, []);
+    savedRef.current = canonSaved(readJson<string[]>(SAVED_KEY, []));
     setSaved(savedRef.current);
-    const b = readJson<BeenMap>(BEEN_KEY, {});
+    const b = canonBeen(readJson<BeenMap>(BEEN_KEY, {}));
     beenRef.current = b;
     setBeen(b);
     try {
@@ -226,12 +238,12 @@ export default function Providers({ children }: { children: ReactNode }) {
       } catch {
         /* ignore */
       }
-      let nextSaved = remote.saved;
-      let nextBeen = remote.been;
+      let nextSaved = canonSaved(remote.saved);
+      let nextBeen = canonBeen(remote.been);
       if (!owner) {
         const m = mergeGuest(remote, readJson<string[]>(SAVED_KEY, []), readJson<BeenMap>(BEEN_KEY, {}));
-        nextSaved = m.mergedSaved;
-        nextBeen = m.mergedBeen;
+        nextSaved = canonSaved(m.mergedSaved);
+        nextBeen = canonBeen(m.mergedBeen);
         if (m.upSaved.length || Object.keys(m.upBeen).length) {
           try {
             await backend.pushLists(m.upSaved, m.upBeen);

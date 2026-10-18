@@ -49,7 +49,8 @@ export default function WherePicker({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onDone]);
 
-  const towns = city.id === DEFAULT_CITY ? TOWNS : [];
+  // "Worth the drive" isn't where anyone eats most, so the first-visit question leaves it off
+  const towns = city.id === DEFAULT_CITY ? TOWNS.filter((t) => !firstRun || t.id !== "worth-the-drive") : [];
   const byId = Object.fromEntries(areas.map((a) => [a.id, a]));
   const activeTown = area.startsWith("t:") ? area.slice(2) : (byId[area]?.town ?? null);
   // community cities have neighborhoods but no towns

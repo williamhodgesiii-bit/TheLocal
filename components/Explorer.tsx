@@ -13,8 +13,11 @@ import {
   SPOTS,
   TOWN_BY_ID,
   areaLabelOf,
+  atLocation,
+  canonicalSpotId,
   deriveAreas,
   distanceKm,
+  locationsOf,
   priceLabel,
   type AreaId,
   type DrinkKind,
@@ -113,7 +116,7 @@ export default function Explorer({
   useEffect(() => setNow(new Date()), []);
   /** phones: the browse bar slides away while you scroll down the list, back when you scroll up */
   const [tucked, setTucked] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(initialSpot ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialSpot ? canonicalSpotId(initialSpot) : null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [surprise, setSurprise] = useState(false);
   const [ratings, setRatings] = useState<RatingSummary>({});
@@ -235,12 +238,15 @@ export default function Explorer({
   // stamps for places still on the list (a place that closed drops out of the count)
   const stampedCount = useMemo(() => allSpots.filter((s) => been[s.id]).length, [allSpots, been]);
   const areaById = useMemo(() => Object.fromEntries(areas.map((a) => [a.id, a])), [areas]);
-  const townOf = useCallback((s: Spot) => areaById[s.area]?.town ?? null, [areaById]);
-  /** area filter: "all", a town ("t:homewood") or one neighborhood */
+  /** is this location in the picked area: "all", a town ("t:homewood") or one neighborhood */
+  const inArea = useCallback(
+    (locArea: AreaId, a: string) => a === "all" || (a.startsWith("t:") ? areaById[locArea]?.town === a.slice(2) : locArea === a),
+    [areaById]
+  );
+  /** area filter; a place with more than one location counts wherever any of them is */
   const inScope = useCallback(
-    (s: Spot, a: string = area) => a === "all" || (a.startsWith("t:") ? townOf(s) === a.slice(2) : s.area === a),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [area, townOf]
+    (s: Spot, a: string = area) => a === "all" || (s.also?.length ? locationsOf(s).some((l) => inArea(l.area, a)) : inArea(s.area, a)),
+    [area, inArea]
   );
   const activeTown: TownId | null = area.startsWith("t:") ? (area.slice(2) as TownId) : (areaById[area]?.town ?? null);
 
@@ -254,7 +260,7 @@ export default function Explorer({
     if (g && GENRE_BY_ID[g]) setGenre(g);
     if (a) setArea(a);
     if (d && DRINK_KINDS.some((k) => k.id === d)) setDrink(d);
-    if (s) setSelectedId(s);
+    if (s) setSelectedId(canonicalSpotId(s));
     const c = p.get("c");
     const t = p.get("t");
     if (c && COLLECTION_BY_ID[c]) setTheme({ kind: "collection", id: c });
@@ -313,8 +319,23 @@ export default function Explorer({
     [genre, drink, matchesRest, themeIds]
   );
 
+  /** a place with more than one location shows the one in the part of town you picked, or the nearest one */
+  const placeOf = useCallback(
+    (s: Spot): Spot => {
+      if (!s.also?.length) return s;
+      const locs = locationsOf(s);
+      let i = 0;
+      if (area !== "all") i = Math.max(0, locs.findIndex((l) => inArea(l.area, area)));
+      else if (sort === "near" && here) i = locs.reduce((b, l, j) => (distanceKm(here, l.coords) < distanceKm(here, locs[b].coords) ? j : b), 0);
+      return atLocation(s, i);
+    },
+    [area, inArea, sort, here]
+  );
+  const placed = useMemo(() => allSpots.map(placeOf), [allSpots, placeOf]);
+  const placedById = useMemo(() => Object.fromEntries(placed.map((x) => [x.id, x])) as Record<string, Spot>, [placed]);
+
   const list = useMemo(() => {
-    const out = allSpots.filter((s) => matchesBase(s) && inScope(s));
+    const out = placed.filter((s) => matchesBase(s) && inScope(s));
     const r = (s: Spot) => ratings[s.id]?.avg ?? 0;
     // nobody can pay to move up this list: order is by the sort alone
     out.sort((a, b) => {
@@ -324,7 +345,7 @@ export default function Explorer({
       return b.pop - a.pop;
     });
     return out;
-  }, [allSpots, matchesBase, inScope, sort, ratings, here]);
+  }, [placed, matchesBase, inScope, sort, ratings, here]);
 
   const visible = useMemo(() => new Set(list.map((s) => s.id)), [list]);
 
@@ -344,12 +365,17 @@ export default function Explorer({
     for (const s of allSpots) {
       if (!matchesBase(s)) continue;
       c.all++;
-      c[s.area] = (c[s.area] ?? 0) + 1;
-      const t = townOf(s);
-      if (t) c[`t:${t}`] = (c[`t:${t}`] ?? 0) + 1;
+      // each neighborhood and town once, however many locations it has there
+      const keys = new Set<string>();
+      for (const l of locationsOf(s)) {
+        keys.add(l.area);
+        const t = areaById[l.area]?.town;
+        if (t) keys.add(`t:${t}`);
+      }
+      keys.forEach((k) => (c[k] = (c[k] ?? 0) + 1));
     }
     return c;
-  }, [allSpots, matchesBase, townOf]);
+  }, [allSpots, matchesBase, areaById]);
 
   /* ---------- actions ---------- */
   const select = useCallback(
@@ -451,7 +477,7 @@ export default function Explorer({
     return () => window.removeEventListener("keydown", onKey);
   }, [list, selectedId, hoveredId, surprise, select, requireAuth]);
 
-  const selected = selectedId ? spotById[selectedId] ?? null : null;
+  const selected = selectedId ? placedById[selectedId] ?? null : null;
   useEffect(() => {
     if (mapOn) return;
     const phone = window.matchMedia("(max-width: 900px)").matches;
@@ -861,7 +887,7 @@ export default function Explorer({
                 key={city.id}
                 city={city}
                 areas={areas}
-                spots={allSpots}
+                spots={placed}
                 numbers={numbers}
                 visible={visible}
                 selectedId={selectedId}

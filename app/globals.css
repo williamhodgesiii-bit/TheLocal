@@ -1063,6 +1063,38 @@ select {
 .g-rate {
   color: var(--muted);
 }
+/* a place with more than one location */
+.locs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.locs li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 10px;
+  line-height: 1.3;
+}
+.locs li b {
+  grid-column: 1;
+  font-weight: 600;
+}
+.locs li > span {
+  grid-column: 1;
+  color: var(--ink);
+}
+.locs li a {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.loc-note {
+  color: var(--muted);
+}
 .check-order .pen {
   font-size: 27px;
   line-height: 1;

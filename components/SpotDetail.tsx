@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { track } from "@/lib/analytics";
 import Link from "next/link";
 import { createPortal } from "react-dom";
-import { GENRE_BY_ID, areaLabelOf, distanceKm, mapsUrl, priceLabel, type Spot } from "@/lib/data";
+import { GENRE_BY_ID, areaLabelOf, distanceKm, locationsOf, mapsUrl, priceLabel, type Spot } from "@/lib/data";
 import { BRAND, CHECKED } from "@/lib/brand";
 import { hash } from "@/lib/images";
 import { HOUSE_PHOTOS, PLACE_PHOTOS, commonsPage, commonsSrc, commonsSrcSet, dishesFor, houseSrcSet, shortDish, type HousePhoto } from "@/lib/photos";
@@ -237,13 +237,34 @@ export default function SpotDetail({
             <span>{priceLabel(spot.price)}</span>
           </div>
         </div>
-        <div className="check-row">
-          <span className="cl">Address</span>
-          <span>
-            {spot.address}
-            {places?.rating ? <span className="g-rate"> · Google {places.rating.toFixed(1)}</span> : null}
-          </span>
-        </div>
+        {spot.also?.length ? (
+          // one place, more than one location: every one of them, the nearest or the one in the part of town you picked first
+          <div className="check-row check-locs">
+            <span className="cl">{spot.also.length + 1} locations</span>
+            <ul className="locs">
+              {locationsOf(spot).map((l) => (
+                <li key={l.address}>
+                  <b>{l.label}</b>
+                  <span>
+                    {l.address}
+                    {l.note ? <span className="loc-note"> · {l.note}</span> : null}
+                  </span>
+                  <a href={mapsUrl(spot, l)} target="_blank" rel="noreferrer" onClick={() => track("directions", { id: spot.id })}>
+                    Directions
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className="check-row">
+            <span className="cl">Address</span>
+            <span>
+              {spot.address}
+              {places?.rating ? <span className="g-rate"> · Google {places.rating.toFixed(1)}</span> : null}
+            </span>
+          </div>
+        )}
         <div className="check-row check-order">
           <span className="cl">Order</span>
           <span className="pen">{spot.knownFor}</span>

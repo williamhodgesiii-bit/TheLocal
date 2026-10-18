@@ -5,16 +5,17 @@ import L from "leaflet";
 import { LANDMARKS, RED_MOUNTAIN } from "@/lib/data";
 import { OSM_CREDIT, OSM_TILES } from "@/lib/map-style-load";
 import {
-  LANDMARK_SVG,
-  NAME_ZOOM,
-  Recenter,
   coverBoxes,
   declutter as declutterIn,
   dotBox,
   esc,
+  framePoints,
+  LANDMARK_SVG,
+  NAME_ZOOM,
   nameSize,
   pinHtml,
   placeNames,
+  Recenter,
   showNames,
   zoomKey,
   type MapProps,
@@ -292,7 +293,7 @@ export default function MapViewLeaflet(props: MapProps) {
       if (s) m.flyTo(s.coords, Math.max(m.getZoom(), 15), { duration: 0.6 });
       return;
     }
-    const pts = props.spots.filter((s) => props.visible.has(s.id)).map((s) => s.coords);
+    const pts = framePoints(props.spots.filter((s) => props.visible.has(s.id)).map((s) => s.coords));
     if (pts.length >= 2) {
       const pad = small ? 44 : 80;
       m.flyToBounds(L.latLngBounds(pts), {

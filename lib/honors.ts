@@ -9,7 +9,7 @@ export interface Honor {
   year: number;
   /** who for, when it's a person rather than the restaurant */
   who?: string;
-  /** press: a national best-of list (Esquire, The New York Times, Garden & Gun, Food Network) */
+  /** press: a national or Southern best-of list (Esquire, The New York Times, Garden & Gun, Food Network, Southern Living, Tasting Table) */
   kind: "michelin" | "beard" | "press";
   source: string;
 }
@@ -50,6 +50,9 @@ export const HONORS: Record<string, Honor[]> = {
   adios: [{ label: "James Beard semifinalist, Outstanding Professional in Beverage Service", year: 2025, kind: "beard", source: "https://bhamnow.com/2025/01/22/birmingham-bar-adios-named-james-beard-foundation-semifinalist/" }],
   "salud-taqueria": [{ label: "Garden & Gun 30 new restaurants to try", year: 2025, kind: "press", source: "https://bhamnow.com/2025/08/01/3-birmingham-establishments-make-garden-guns-30-new-restaurants-to-try-now/" }],
   tortugas: [{ label: "Food Network: Alabama's best pizza slice", year: 2025, kind: "press", source: "https://bhamnow.com/2025/08/19/tortugas-named-best-pizza-in-alabama-by-food-network/" }],
+  "armour-house": [{ label: "Southern Living best new restaurants in the South", year: 2025, kind: "press", source: "https://bhamnow.com/2025/05/30/2-birmingham-restaurants-named-best-in-south-by-southern-living-why-we-agree/" }],
+  "son-of-a-butcher": [{ label: "Tasting Table: Alabama's best butcher shop", year: 2026, kind: "press", source: "https://bhamnow.com/2026/07/30/birmingham-butcher-shop-best-in-alabama/" }],
+  "jj-grocery": [{ label: "Tasting Table: Alabama's best hole-in-the-wall burger", year: 2026, kind: "press", source: "https://bhamnow.com/2026/03/23/this-bessemer-hole-in-the-wall-burger-joint-named-in-alabama/" }],
 };
 
 export const honorsOf = (id: string) => HONORS[id] ?? [];

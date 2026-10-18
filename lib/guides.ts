@@ -9,7 +9,7 @@
  * (see publishable()). A city/cuisine swapped into boilerplate would get the
  * whole site demoted; a real, ranked, hand-checked list earns the opposite.
  */
-import { AREAS, AREA_BY_ID, GENRES, SPOTS, TOWNS, TOWN_BY_ID, type GenreId, type Spot } from "./data";
+import { AREAS, AREA_BY_ID, GENRES, SPOTS, TOWNS, TOWN_BY_ID, locationsOf, type GenreId, type Spot } from "./data";
 import { COLLECTIONS } from "./collections";
 import { honorsOf } from "./honors";
 
@@ -90,6 +90,7 @@ const OCCASION: Record<string, { slug: string; title: string; kw: string }> = {
   groups: { slug: "big-groups", title: "The best restaurants for big groups in Birmingham", kw: "restaurants for big groups" },
   honors: { slug: "award-winning", title: "Birmingham's Michelin & James Beard restaurants", kw: "award-winning restaurants" },
   pints: { slug: "breweries", title: "The best breweries & taprooms in Birmingham", kw: "breweries & taprooms" },
+  wings: { slug: "wings", title: "The best wings & sports bars in Birmingham", kw: "wings & sports bars" },
 };
 
 const OCCASION_GUIDES: Guide[] = COLLECTIONS.filter((c) => OCCASION[c.id]).map((c): Guide => {
@@ -114,7 +115,6 @@ const AREA_SLUG: Record<string, string> = {
   southside: "five-points-south",
   lakeview: "lakeview",
   avondale: "avondale",
-  northside: "northside",
   homewood: "downtown-homewood",
   edgewood: "edgewood",
   "west-homewood": "west-homewood",
@@ -124,6 +124,9 @@ const AREA_SLUG: Record<string, string> = {
   cahaba: "cahaba-heights",
   "vestavia-31": "highway-31",
   "rocky-ridge": "rocky-ridge",
+  "liberty-park": "liberty-park",
+  "patton-chapel": "patton-chapel",
+  irondale: "irondale",
 };
 
 const NEIGHBORHOOD_GUIDES: Guide[] = AREAS.filter((a) => AREA_SLUG[a.id]).map((a): Guide => {
@@ -137,11 +140,12 @@ const NEIGHBORHOOD_GUIDES: Guide[] = AREAS.filter((a) => AREA_SLUG[a.id]).map((a
     metaTitle: `Best restaurants in ${a.label}, ${townLabel} (${YEAR})`,
     metaDescription: `Where to eat and drink in ${a.label} (${townLabel}, Alabama). ${a.blurb} Locally owned, hand-picked, no chains.`,
     context: a.blurb,
-    spots: () => rank(SPOTS.filter((s) => s.area === a.id)),
+    spots: () => rank(SPOTS.filter((s) => locationsOf(s).some((l) => l.area === a.id))),
   };
 });
 
-const TOWN_GUIDES: Guide[] = TOWNS.filter((t) => t.id !== "birmingham").map((t): Guide => ({
+// "Worth the drive" is a handful of towns, not one, so it gets no "Where to eat in" page of its own
+const TOWN_GUIDES: Guide[] = TOWNS.filter((t) => t.id !== "birmingham" && t.id !== "worth-the-drive").map((t): Guide => ({
   slug: t.id,
   kind: "town",
   label: t.label,
@@ -150,7 +154,7 @@ const TOWN_GUIDES: Guide[] = TOWNS.filter((t) => t.id !== "birmingham").map((t):
   metaTitle: `Best restaurants in ${t.label}, Alabama (${YEAR})`,
   metaDescription: `The best locally owned restaurants, coffee shops and bars in ${t.label}, Alabama. ${t.blurb} Hand-picked, no chains.`,
   context: t.blurb,
-  spots: () => rank(SPOTS.filter((s) => AREA_BY_ID[s.area]?.town === t.id)),
+  spots: () => rank(SPOTS.filter((s) => locationsOf(s).some((l) => AREA_BY_ID[l.area]?.town === t.id))),
 }));
 
 /* -------------------------------------------------------------------- exports */

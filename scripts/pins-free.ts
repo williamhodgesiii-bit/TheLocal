@@ -8,14 +8,14 @@
 // This makes at most three requests per place, a second apart, about once a month.
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { AREA_BY_ID, SPOTS, TOWN_BY_ID, distanceKm } from "../lib/data";
+import { AREA_BY_ID, SPOTS, TOWN_BY_ID, distanceKm, locationsOf } from "../lib/data";
 
 const OUT = join(__dirname, "../lib/geo-overrides.json");
 const UA = "ThePlateNextDoor/1.0 (+https://github.com/williamhodgesiii-bit/thelocal)";
 // a pin only moves if OpenStreetMap's answer is this close to where we already had it
 const MAX_MOVE_KM = 3;
-// Birmingham metro, so a same-named street elsewhere in Alabama can't match
-const VIEWBOX = "-87.05,33.62,-86.60,33.35";
+// Birmingham metro, out to Alabaster and Bessemer, so a same-named street elsewhere in Alabama can't match
+const VIEWBOX = "-87.10,33.65,-86.55,33.15";
 
 const GAP_MS = Number(process.env.PINS_GAP_MS ?? 1100); // only lowered for local tests
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -36,9 +36,11 @@ async function main() {
   let moved = 0;
   let kept = 0;
 
-  for (const s of SPOTS) {
-    const town = AREA_BY_ID[s.area]?.town;
-    const city = town ? TOWN_BY_ID[town].label : "Birmingham";
+  // every location of every place: the main one under its id, the others as "id@2", "id@3"…
+  const all = SPOTS.flatMap((p) => locationsOf(p).map((l, i) => ({ id: i ? `${p.id}@${i + 1}` : p.id, name: p.name, area: l.area, address: l.address, coords: l.coords })));
+  for (const s of all) {
+    const area = AREA_BY_ID[s.area];
+    const city = area?.city ?? (area?.town ? TOWN_BY_ID[area.town].label : "Birmingham");
     const street = s.address.split(",")[0].trim();
     // 1) the business itself, if it's mapped  2) its street address  3) same address, mailing city Birmingham
     const tries: Record<string, string>[] = [

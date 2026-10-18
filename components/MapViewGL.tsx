@@ -7,17 +7,18 @@ import { LANDMARKS, RED_MOUNTAIN } from "@/lib/data";
 import { BLANK_STYLE, OFM_CREDIT, OSM_CREDIT, RASTER_STYLE, loadStyle, type Style } from "@/lib/map-style-load";
 import { MAP_STYLES } from "@/lib/map-styles";
 import {
-  LANDMARK_SVG,
-  NAME_ZOOM,
-  Recenter,
   coverBoxes,
   declutter,
   dotBox,
   esc,
+  framePoints,
+  LANDMARK_SVG,
+  NAME_ZOOM,
   nameSize,
   onTap,
   pinHtml,
   placeNames,
+  Recenter,
   showNames,
   zoomKey,
   type MapProps,
@@ -450,7 +451,7 @@ export default function MapViewGL(props: MapProps) {
       if (s) m.flyTo({ center: ll(s.coords), zoom: Math.max(m.getZoom(), Z(15)), duration: dur ? 600 : 0, padding: framed });
       return;
     }
-    const pts = props.spots.filter((s) => props.visible.has(s.id)).map((s) => s.coords);
+    const pts = framePoints(props.spots.filter((s) => props.visible.has(s.id)).map((s) => s.coords));
     if (pts.length >= 2) {
       const lats = pts.map((p) => p[0]);
       const lngs = pts.map((p) => p[1]);

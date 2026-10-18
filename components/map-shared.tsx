@@ -1,4 +1,4 @@
-import type { Area, AreaId, Spot } from "@/lib/data";
+import { distanceKm, type Area, type AreaId, type Spot } from "@/lib/data";
 import type { City } from "@/lib/regions";
 
 export type MapProps = {
@@ -30,6 +30,19 @@ export const LANDMARK_SVG: Record<string, string> = {
     '<svg viewBox="0 0 32 32" width="20" height="20"><path fill="currentColor" d="M5 30V14h4V4h3v10h3V8h3v6h3V2h3v12h3v16H5Zm4-8h3v5H9v-5Zm7 0h3v5h-3v-5Z"/></svg>',
   tree: '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 2 5 12h4l-4 6h6v4h2v-4h6l-4-6h4L12 2Z"/></svg>',
 };
+
+/**
+ * The pins to frame the map on. A few places far out of town (Alabaster, Dickey Springs) would
+ * otherwise zoom the whole city out to a speck, so with five or more pins, anything more than
+ * 15 km from the middle of them is left out of the frame (its pin is still on the map).
+ */
+export function framePoints(pts: [number, number][]): [number, number][] {
+  if (pts.length < 5) return pts;
+  const mid = (v: number[]) => [...v].sort((a, b) => a - b)[Math.floor(v.length / 2)];
+  const c: [number, number] = [mid(pts.map((p) => p[0])), mid(pts.map((p) => p[1]))];
+  const near = pts.filter((p) => distanceKm(p, c) <= 15);
+  return near.length >= 2 ? near : pts;
+}
 
 export const esc = (s: string) => s.replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`);
 

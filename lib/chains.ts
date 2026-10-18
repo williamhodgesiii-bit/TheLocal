@@ -1,4 +1,4 @@
-/** National chains & fast food. The Plate Next Door only lists independent spots. Submissions matching these are blocked. */
+/** National chains, fast food, and chains from outside the Birmingham area. Submissions matching these are blocked. */
 const CHAINS = [
   "mcdonald's", "burger king", "wendy's", "chick-fil-a", "chick fil a", "taco bell", "kfc", "popeyes", "sonic drive-in", "arby's",
   "subway", "jimmy john's", "jersey mike's", "firehouse subs", "zaxby's", "raising cane's", "whataburger", "hardee's", "krystal",
@@ -11,9 +11,12 @@ const CHAINS = [
   "mcalister's", "newk's", "zoe's kitchen", "cava", "sweetgreen", "smoothie king", "tropical smoothie", "dutch bros",
   "krispy kreme", "cinnabon", "baskin robbins", "cold stone", "carrabba's", "bonefish grill", "ruth's chris",
   "fleming's", "kona grill", "twin peaks", "chuy's", "on the border", "el chico", "taco cabana", "del taco", "captain d's",
+  // chains from outside the Birmingham area with stores here
+  "mellow mushroom", "insomnia cookies", "hattie b's", "martin's bar-b-que", "jack brown's", "new york butcher shoppe",
+  "original pancake house", "moe's original", "momma goldberg's", "wooden city", "epice", "lapeer steak",
 ];
 
-const flat = (s: string) => ` ${s.toLowerCase().replace(/[’'`.]/g, "").replace(/[^a-z0-9]+/g, " ").trim()} `;
+const flat = (s: string) => ` ${s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[’'`.]/g, "").replace(/[^a-z0-9]+/g, " ").trim()} `;
 const FLAT = CHAINS.map((c) => [c, flat(c)] as const);
 
 /** Whole-word match so e.g. "Cavalier's" doesn't trip "cava". */

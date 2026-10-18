@@ -34,8 +34,9 @@ export function spotImage(s: Spot, width = 1200): string | undefined {
 
 /** The town a spot sits in (Birmingham, Homewood, Mountain Brook, Vestavia Hills). */
 export function localityOf(s: Spot): string {
-  const town = AREA_BY_ID[s.area]?.town;
-  if (town && TOWN_BY_ID[town]) return TOWN_BY_ID[town].label;
+  const area = AREA_BY_ID[s.area];
+  if (area?.city) return area.city;
+  if (area?.town && TOWN_BY_ID[area.town]) return TOWN_BY_ID[area.town].label;
   return CITY_BY_ID[s.city]?.name ?? "Birmingham";
 }
 

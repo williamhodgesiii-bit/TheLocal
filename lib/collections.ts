@@ -82,6 +82,13 @@ export const COLLECTIONS: Collection[] = [
     leads: [{ from: 16, to: 19 }],
   },
   {
+    id: "wings",
+    title: "Wings & the game",
+    line: "Sports bars and burger joints with wings worth the drive.",
+    match: (s) => has(s, "wings", "sports bar"),
+    leads: [{ from: 11, to: 22, weekend: true }],
+  },
+  {
     id: "groups",
     title: "Big groups",
     line: "Room for everybody, and drinks while you wait.",
