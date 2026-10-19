@@ -1,175 +1,581 @@
 {
- "home": {
-  "status": 200,
-  "title": "The Plate Next Door · Birmingham&#x27;s locally owned restaurants, coffee &amp; bars",
-  "description": "Skip the chains. Eat next door. Locally owned restaurants, coffee shops and bars in Birmingham, Homewood, Mountain Brook and Vestavia Hills, by neighborhood. No",
-  "canonical": "https://www.theplatenextdoor.com",
-  "robots": "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
-  "ogImage": true,
-  "jsonLd": [
-   "Organization",
-   "Person",
-   "City",
-   "State",
-   "WebSite"
-  ],
-  "h1": "Skip the chains. Eat next door.",
-  "words": 999,
-  "gscMeta": "missing"
+ "osmCount": 0,
+ "places": {
+  "helen": {
+   "osm": null
+  },
+  "yo-mamas": {
+   "osm": null
+  },
+  "bamboo-on-2nd": {
+   "osm": null
+  },
+  "the-essential": {
+   "osm": null
+  },
+  "brick-and-tin": {
+   "osm": null
+  },
+  "nikis-west": {
+   "osm": null
+  },
+  "collins-bar": {
+   "osm": null
+  },
+  "paper-doll": {
+   "osm": null
+  },
+  "paramount": {
+   "osm": null
+  },
+  "pale-eddies": {
+   "osm": null
+  },
+  "carrigans": {
+   "osm": null
+  },
+  "good-people": {
+   "osm": null
+  },
+  "back-forty": {
+   "osm": null
+  },
+  "bayonet": {
+   "osm": null
+  },
+  "la-fete": {
+   "osm": null
+  },
+  "pizza-grace": {
+   "osm": null
+  },
+  "current-charcoal": {
+   "osm": null
+  },
+  "reve": {
+   "osm": null
+  },
+  "house-of-found-objects": {
+   "osm": null
+  },
+  "adios": {
+   "osm": null
+  },
+  "pilcrow": {
+   "osm": null
+  },
+  "moon-shine": {
+   "osm": null
+  },
+  "tucana-tiki": {
+   "osm": null
+  },
+  "the-fennec": {
+   "osm": null
+  },
+  "gus-hot-dogs": {
+   "osm": null
+  },
+  "trattoria-zaza": {
+   "osm": null
+  },
+  "salud-taqueria": {
+   "osm": null
+  },
+  "el-barrio": {
+   "osm": null
+  },
+  "bandit-patisserie": {
+   "osm": null
+  },
+  "eugenes-hot-chicken": {
+   "osm": null
+  },
+  "johinna": {
+   "osm": null
+  },
+  "tortugas": {
+   "osm": null
+  },
+  "cala-coffee": {
+   "osm": null
+  },
+  "galley-and-garden": {
+   "osm": null
+  },
+  "bottega": {
+   "osm": null
+  },
+  "chez-fonfon": {
+   "osm": null
+  },
+  "surin-west": {
+   "osm": null
+  },
+  "taj-india": {
+   "osm": null
+  },
+  "fish-market": {
+   "osm": null
+  },
+  "rojo": {
+   "osm": null
+  },
+  "daves-pub": {
+   "osm": null
+  },
+  "the-nick": {
+   "osm": null
+  },
+  "the-garage": {
+   "osm": null
+  },
+  "freddys-wine-bar": {
+   "osm": null
+  },
+  "teds": {
+   "osm": null
+  },
+  "otsuka-ramen": {
+   "osm": null
+  },
+  "university-tacos": {
+   "osm": null
+  },
+  "automatic-seafood": {
+   "osm": null
+  },
+  "ovenbird": {
+   "osm": null
+  },
+  "hot-and-hot": {
+   "osm": null
+  },
+  "red-cat": {
+   "osm": null
+  },
+  "trimtab": {
+   "osm": null
+  },
+  "mayawell": {
+   "osm": null
+  },
+  "lous-pub": {
+   "osm": null
+  },
+  "bettola": {
+   "osm": null
+  },
+  "slice-pizza": {
+   "osm": null
+  },
+  "burning-tree": {
+   "osm": null
+  },
+  "saws-soul-kitchen": {
+   "osm": null
+  },
+  "avondale-brewing": {
+   "osm": null
+  },
+  "big-spoon": {
+   "osm": null
+  },
+  "cahaba-brewing": {
+   "osm": null
+  },
+  "saturn": {
+   "osm": null
+  },
+  "black-market": {
+   "osm": null
+  },
+  "taco-morro-loco": {
+   "osm": null
+  },
+  "juniper": {
+   "osm": null
+  },
+  "johnnys": {
+   "osm": null
+  },
+  "little-donkey": {
+   "osm": null
+  },
+  "jinsei": {
+   "osm": null
+  },
+  "soho-social": {
+   "osm": null
+  },
+  "saws-bbq": {
+   "osm": null
+  },
+  "gianmarcos": {
+   "osm": null
+  },
+  "seeds-coffee": {
+   "osm": null
+  },
+  "edgewood-creamery": {
+   "osm": null
+  },
+  "savages-bakery": {
+   "osm": null
+  },
+  "ocarrs": {
+   "osm": null
+  },
+  "demetris": {
+   "osm": null
+  },
+  "daves-pizza": {
+   "osm": null
+  },
+  "chez-lulu": {
+   "osm": null
+  },
+  "vino": {
+   "osm": null
+  },
+  "key-circle-commons": {
+   "osm": null
+  },
+  "fridas": {
+   "osm": null
+  },
+  "davenports": {
+   "osm": null
+  },
+  "gilchrist": {
+   "osm": null
+  },
+  "church-street-coffee": {
+   "osm": null
+  },
+  "dyrons": {
+   "osm": null
+  },
+  "oteys": {
+   "osm": null
+  },
+  "la-paz": {
+   "osm": null
+  },
+  "slims-pizzeria": {
+   "osm": null
+  },
+  "miss-myras": {
+   "osm": null
+  },
+  "el-zunzun": {
+   "osm": null
+  },
+  "miss-astrids": {
+   "osm": null
+  },
+  "salice": {
+   "osm": null
+  },
+  "zozos-kitchen": {
+   "osm": null
+  },
+  "caveat-coffee": {
+   "osm": null
+  },
+  "daily-edition": {
+   "osm": null
+  },
+  "pizzeria-gm": {
+   "osm": null
+  },
+  "little-betty": {
+   "osm": null
+  },
+  "seabar": {
+   "osm": null
+  },
+  "charbar-no-7": {
+   "osm": null
+  },
+  "locanda-brasato": {
+   "osm": null
+  },
+  "rougaroux": {
+   "osm": null
+  },
+  "woodys": {
+   "osm": null
+  },
+  "abhi": {
+   "osm": null
+  },
+  "golden-age-wine": {
+   "osm": null
+  },
+  "olexas": {
+   "osm": null
+  },
+  "bongiorno": {
+   "osm": null
+  },
+  "crestline-bagel": {
+   "osm": null
+  },
+  "foodbar": {
+   "osm": null
+  },
+  "mudtown": {
+   "osm": null
+  },
+  "bistro-v": {
+   "osm": null
+  },
+  "diplomat-deli": {
+   "osm": null
+  },
+  "kool-korner": {
+   "osm": null
+  },
+  "the-well-co": {
+   "osm": null
+  },
+  "iz-cafe": {
+   "osm": null
+  },
+  "napoli": {
+   "osm": null
+  },
+  "the-ridge": {
+   "osm": null
+  },
+  "the-local-bourbon": {
+   "osm": null
+  },
+  "archies-bbq": {
+   "osm": null
+  },
+  "armour-house": {
+   "osm": null
+  },
+  "le-fresca": {
+   "osm": null
+  },
+  "t-bones": {
+   "osm": null
+  },
+  "jim-n-nicks": {
+   "osm": null
+  },
+  "dreamland-southside": {
+   "osm": null
+  },
+  "son-of-a-butcher": {
+   "osm": null
+  },
+  "high-dive": {
+   "osm": null
+  },
+  "carliles": {
+   "osm": null
+  },
+  "ampersandwich": {
+   "osm": null
+  },
+  "full-circle-doughnuts": {
+   "osm": null
+  },
+  "the-battery": {
+   "osm": null
+  },
+  "shiki": {
+   "osm": null
+  },
+  "red-pearl": {
+   "osm": null
+  },
+  "curry-corner": {
+   "osm": null
+  },
+  "taco-mama": {
+   "osm": null
+  },
+  "on-tap-liberty-park": {
+   "osm": null
+  },
+  "golden-rule-irondale": {
+   "osm": null
+  },
+  "martys-gm": {
+   "osm": null
+  },
+  "jj-grocery": {
+   "osm": null
+  },
+  "chubbfathers": {
+   "osm": null
+  }
  },
- "robots": "User-Agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin\nDisallow: /auth/\nDisallow: /me\n\nSitemap: https://www.theplatenextdoor.com/sitemap.xml\n",
- "sitemap": {
-  "status": 200,
-  "count": 188,
-  "spots": 138,
-  "guides": 43,
-  "removedOrMerged": [],
-  "nonWww": 0
- },
- "/spot/the-battery": {
-  "status": 200,
-  "title": "The Battery, bars &amp; drinks in Downtown Homewood, Birmingham · The Plate Next Door",
-  "description": "Smoked, then fried wings. A sports bar in downtown Homewood, opened in 2022. The wings are smoked for hours, then flash-fried, with Alabama white, buffalo or Ko",
-  "canonical": "https://www.theplatenextdoor.com/spot/the-battery",
-  "robots": "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
-  "ogImage": true,
-  "jsonLd": [
-   "Organization",
-   "Person",
-   "City",
-   "State",
-   "WebSite",
-   "Restaurant",
-   "PostalAddress",
-   "GeoCoordinates",
-   "BreadcrumbList",
-   "ListItem"
-  ],
-  "h1": "The Battery",
-  "words": 285
- },
- "/spot/salice": {
-  "status": 200,
-  "title": "Salice, italian in Downtown Homewood, Birmingham · The Plate Next Door",
-  "description": "Handmade pasta. Italian bistro in downtown Homewood, run by chef Rita Bernhardt. It used to be Luca Lagotto; same kitchen, new name and owners.",
-  "canonical": "https://www.theplatenextdoor.com/spot/salice",
-  "robots": "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
-  "ogImage": true,
-  "jsonLd": [
-   "Organization",
-   "Person",
-   "City",
-   "State",
-   "WebSite",
-   "Restaurant",
-   "PostalAddress",
-   "GeoCoordinates",
-   "BreadcrumbList",
-   "ListItem"
-  ],
-  "h1": "Salice",
-  "words": 256
- },
- "/best/bbq": {
-  "status": 404,
-  "robots": null,
-  "ogImage": false,
-  "jsonLd": [],
-  "h1": null,
-  "words": 0
- },
- "/best": {
-  "status": 200,
-  "title": "Birmingham restaurant guides · The Plate Next Door",
-  "description": "Every The Plate Next Door guide to Birmingham — the best by cuisine (barbecue, seafood, pizza, Italian, Southern) and by occasion (date night, brunch, cocktails",
-  "canonical": "https://www.theplatenextdoor.com/best",
-  "robots": "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
-  "ogImage": false,
-  "jsonLd": [
-   "Organization",
-   "Person",
-   "City",
-   "State",
-   "WebSite",
-   "BreadcrumbList",
-   "ListItem",
-   "CollectionPage",
-   "SiteNavigationElement"
-  ],
-  "h1": "Where to eat in Birmingham",
-  "words": 254
- },
- "/neighborhood/avondale": {
-  "status": 200,
-  "title": "Best restaurants in Avondale &amp; Forest Park, Birmingham (2026) · The Plate Next Door",
-  "description": "Where to eat and drink in Avondale &amp; Forest Park (Birmingham, Alabama). 41st Street South and the park, and Clairmont Avenue in Forest Park. Locally owned, ",
-  "canonical": "https://www.theplatenextdoor.com/neighborhood/avondale",
-  "robots": "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
-  "ogImage": true,
-  "jsonLd": [
-   "Organization",
-   "Person",
-   "City",
-   "State",
-   "WebSite",
-   "CollectionPage",
-   "ItemList",
-   "ListItem",
-   "BreadcrumbList",
-   "FAQPage",
-   "Question",
-   "Answer"
-  ],
-  "h1": "Where to eat in Avondale &amp; Forest Park",
-  "words": 623
- },
- "/neighborhood": {
-  "status": 200,
-  "title": "Birmingham neighborhoods — where to eat · The Plate Next Door",
-  "description": "Where to eat and drink in every Birmingham neighborhood — Avondale, Downtown, Five Points South, Lakeview, Homewood, Mountain Brook and Vestavia Hills. Locally ",
-  "canonical": "https://www.theplatenextdoor.com/neighborhood",
-  "robots": "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
-  "ogImage": false,
-  "jsonLd": [
-   "Organization",
-   "Person",
-   "City",
-   "State",
-   "WebSite",
-   "BreadcrumbList",
-   "ListItem",
-   "CollectionPage",
-   "SiteNavigationElement"
-  ],
-  "h1": "Where to eat, neighborhood by neighborhood",
-  "words": 131
- },
- "/spot/big-spoon-edgewood": {
-  "status": 308,
-  "location": "/spot/big-spoon",
-  "robots": null
- },
- "/spot/eagles": {
-  "status": 200,
-  "location": null,
-  "robots": "noindex"
- },
- "/llms.txt": {
-  "status": 200,
-  "location": null,
-  "robots": null
- },
- "/45c4878c9c60706ce2d60d079da711bc.txt": {
-  "status": 200,
-  "location": null,
-  "robots": null
- },
- "apex": {
-  "status": 308,
-  "to": "https://www.theplatenextdoor.com/spot/salice"
- },
- "analytics": {
-  "measurementId": null,
-  "gtagLoader": true
+ "verify": {
+  "https://squareup.com/gift/0CB4VEJKT2DQR/order": {
+   "status": 200,
+   "final": "https://squareup.com/gift/0CB4VEJKT2DQR/order",
+   "title": "Order Yo&#39; Mama&#39;s Restaurant eGift Cards",
+   "unavailable": false,
+   "snippet": " Order Yo&#39; Mama&#39;s Restaurant eGift Cards ",
+   "giftFlags": []
+  },
+  "https://squareup.com/gift/6C9MA0MG52AJN/order": {
+   "status": 200,
+   "final": "https://squareup.com/gift/6C9MA0MG52AJN/order",
+   "title": "Order Back Forty Beer Co. Birmingham eGift Cards",
+   "unavailable": false,
+   "snippet": " Order Back Forty Beer Co. Birmingham eGift Cards ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/brick-tin/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/brick-tin",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/paramount-birmingham-200-20th-st-n/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/paramount-birmingham-200-20th-st-n",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://charbar7.com/gift-cards": {
+   "status": 200,
+   "final": "https://charbar7.com/gift-cards",
+   "title": "Gift Cards | CharBar No. 7",
+   "unavailable": true,
+   "snippet": " Gift Cards | CharBar No. 7 Food & Drinks Locations Reservations Buy Gift Cards Menu Order Online Menus Daily Specials Locations Reservations Order Online Gift Cards Our Story Contact Us Connect With Us Gift Cards",
+   "giftFlags": []
+  },
+  "https://yomamasmeals.square.site/": {
+   "status": 200,
+   "final": "https://yomamasmeals.square.site/",
+   "title": "Birmingham's Best Chicken & Waffles | Yo' Mama's Online Ordering",
+   "unavailable": false,
+   "snippet": " Birmingham's Best Chicken & Waffles | Yo' Mama's Online Ordering ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/automatic-seafood-and-oysters/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/automatic-seafood-and-oysters",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/saw-s-soul-kitchen/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/saw-s-soul-kitchen",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.ovenbirdrestaurant.com/store": {
+   "status": 200,
+   "final": "https://www.ovenbirdrestaurant.com/store",
+   "title": "Store &mdash; Ovenbird",
+   "unavailable": false,
+   "snippet": "gs Consulting Co. Covid-19 Press Jobs Menus Reservations Private Events Contact Gift Cards Home Restaurant About Hastings Consulting Co. Covid-19 Press Jobs Menus Reservations Private Events Contact Gift Cards Merchandis",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/paper-doll/giftcards": {
+   "status": 200,
+   "final": "https://www.toasttab.com/paper-doll/giftcards",
+   "title": "Paper Doll POP - Gift Cards Unavailable",
+   "unavailable": true,
+   "snippet": " Paper Doll POP - Gift Cards Unavailable Paper Doll POP http://www.paperdollpop.com (205) 283-6391 E-Gift Cards are coming soon Powered by Toast © Toast, Inc. 202",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/pizza-grace/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/pizza-grace",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/the-essential-2215-1st-avenue-north/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/the-essential-2215-1st-avenue-north",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/b%26tdowntown/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/b&tdowntown",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/paramount-195-oxmoor-rd-ste-101/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/paramount-195-oxmoor-rd-ste-101",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/surf-hound-2721-cahaba-road/giftcards": {
+   "status": 200,
+   "final": "https://www.toasttab.com/surf-hound-2721-cahaba-road/giftcards",
+   "title": "Woody's Food + Bar - Gift Cards Unavailable",
+   "unavailable": true,
+   "snippet": " Woody's Food + Bar - Gift Cards Unavailable Woody's Food + Bar http://www.eatsurfhound.com (205) 747-0257 E-Gift Cards are coming soon Powered by Toast © Toast, Inc.",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/abhi-eatery-and-bar-2721-cahaba-rd/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/abhi-eatery-and-bar-2721-cahaba-rd",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/carriganspub/giftcards": {
+   "status": 200,
+   "final": "https://www.toasttab.com/carriganspub/giftcards",
+   "title": "Carrigan's Public House - Gift Cards Unavailable",
+   "unavailable": true,
+   "snippet": " Carrigan's Public House - Gift Cards Unavailable Carrigan's Public House https://www.carriganspub.com/ (205) 777-4925 E-Gift Cards are coming soon Powered by Toast © Toas",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/carrigansmtnbrook/giftcards": {
+   "status": 200,
+   "final": "https://www.toasttab.com/carrigansmtnbrook/giftcards",
+   "title": "Carrigan's Public House - Gift Cards Unavailable",
+   "unavailable": true,
+   "snippet": " Carrigan's Public House - Gift Cards Unavailable Carrigan's Public House (205) 582-2221 E-Gift Cards are coming soon Powered by Toast © Toast, Inc. 2026. All Rights Reser",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/current-charcoal-grill/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/current-charcoal-grill",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/helen/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/helen",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  }
  }
 }
