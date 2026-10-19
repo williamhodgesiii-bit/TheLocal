@@ -6,6 +6,7 @@ import { getBackend, shortName, type Backend, type BeenMap, type Stamp, type Use
 import { identify, track } from "@/lib/analytics";
 import { HOME_KEY } from "@/lib/regions";
 import { canonicalSpotId } from "@/lib/data";
+import type { Me } from "@/lib/social";
 import AuthModal, { type AuthStep } from "./AuthModal";
 import SignInNudge from "./SignInNudge";
 
@@ -34,7 +35,19 @@ type Ctx = {
   /** where the map opens every visit (lib/regions); null until someone picks one */
   home: string | null;
   setHome: (home: string) => void;
+  /** put a place on (or off) the want-to-try list without toggling; members only */
+  saveSpot: (id: string, on: boolean) => void;
+  /** my public side (@name, privacy); null when signed out or before it loads */
+  me: Me | null;
+  setMe: (m: Me) => void;
+  /** notifications not read yet, checked every minute while the page is open */
+  unread: number;
+  refreshUnread: () => void;
+  /** in-app moves the map page registers (a full page load when it hasn't) */
+  nav: Nav;
+  registerNav: (n: Partial<Nav> | null) => void;
 };
+export type Nav = { member: (handle: string) => void; spot: (id: string) => void; friends: (tab?: "following" | "everyone" | "activity") => void };
 
 const AppCtx = createContext<Ctx | null>(null);
 export const useApp = () => {
@@ -109,6 +122,9 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [home, setHomeState] = useState<string | null>(null);
   const tid = useRef(0);
   const synced = backend.mode === "supabase";
+  const [me, setMe] = useState<Me | null>(null);
+  const [unread, setUnread] = useState(0);
+  const navRef = useRef<Partial<Nav> | null>(null);
 
   const applyUser = useCallback((u: User | null) => {
     userRef.current = u;
@@ -373,9 +389,62 @@ export default function Providers({ children }: { children: ReactNode }) {
     [user, backend, toast]
   );
 
+  const saveSpot = useCallback(
+    (id: string, on: boolean) => {
+      if (!userRef.current) return openAuth("Sign in to save places to your want-to-try list. It takes a few seconds, no password.", () => setSavedOn(id, on));
+      setSavedOn(id, on);
+    },
+    [openAuth, setSavedOn]
+  );
+
+  // my @name and privacy, made the first time it's needed; a new name re-reads it
+  useEffect(() => {
+    if (!user) return setMe(null);
+    let live = true;
+    backend
+      .myMember()
+      .then((m) => live && setMe(m))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [user?.id, user?.name, backend]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const refreshUnread = useCallback(() => {
+    if (!userRef.current) return setUnread(0);
+    backend.unread().then(setUnread, () => {});
+  }, [backend]);
+  // once a minute while the page is in front, and right away when it comes back
+  useEffect(() => {
+    if (!user) return setUnread(0);
+    refreshUnread();
+    const tick = () => document.visibilityState === "visible" && refreshUnread();
+    const t = window.setInterval(tick, 60000);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      window.clearInterval(t);
+      document.removeEventListener("visibilitychange", tick);
+    };
+  }, [user?.id, refreshUnread]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const registerNav = useCallback((n: Partial<Nav> | null) => {
+    navRef.current = n;
+  }, []);
+  const nav = useMemo<Nav>(
+    () => ({
+      member: (h) => (navRef.current?.member ? navRef.current.member(h) : location.assign(`/u/${h}`)),
+      spot: (id) => (navRef.current?.spot ? navRef.current.spot(id) : location.assign(`/spot/${id}`)),
+      friends: (tab) => (navRef.current?.friends ? navRef.current.friends(tab) : location.assign(tab ? `/friends?tab=${tab}` : "/friends")),
+    }),
+    []
+  );
+
   const value = useMemo(
-    () => ({ backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome }),
-    [backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome]
+    () => ({
+      backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome, saveSpot, me, setMe, unread,
+      refreshUnread, nav, registerNav,
+    }),
+    [backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome, saveSpot, me, unread, refreshUnread, nav, registerNav]
   );
 
   return (

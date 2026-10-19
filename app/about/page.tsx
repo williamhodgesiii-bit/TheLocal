@@ -116,7 +116,15 @@ export default function About() {
           the share who said yes. &quot;Top rated&quot; pulls places with only a few reviews toward the site-wide average, so a single 5 can&apos;t top the list.
           Sponsors and partners can&apos;t change, reorder, hide or answer for any of it.
         </li>
-        <li>Your Plate Passport (the places you&apos;ve stamped) is yours. We don&apos;t sell it or show it to anyone.</li>
+        <li>
+          Your Plate Passport (the places you&apos;ve stamped) is yours. We don&apos;t sell it. It shows on your page and to people who follow you only while
+          &quot;Share my passport&quot; is on, and you can turn it off any time. Members who joined before October 19, 2026 start with it off.
+        </li>
+        <li>
+          <b>Reactions and comments.</b> Members can mark a review Helpful (the only one that sorts reviews), Want to go or Thanks, and comment in one level of
+          replies, 500 characters, editable for 15 minutes. Talk about the food, not the person. A review&apos;s writer can hide comments on it or turn them
+          off; three reports hold a comment until a person checks it.
+        </li>
       </ul>
 
       {FOUNDER.name && (

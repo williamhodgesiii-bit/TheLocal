@@ -46,8 +46,10 @@ import { Logo, PlateMark } from "./Brand";
 import { CollectionRow, PassportCard, PlaceCard, TrailCard, WeekPlate } from "./FrontPage";
 import Passport from "./Passport";
 import StampPicker from "./StampPicker";
+import Friends, { type FriendsTab, type Pins } from "./Friends";
+import MemberPage from "./MemberPage";
 
-type View = "list" | "map" | "me";
+type View = "list" | "map" | "me" | "friends" | "member";
 
 function useIsMobile() {
   const [m, setM] = useState(false);
@@ -86,13 +88,16 @@ export default function Explorer({
   initialSpot,
   initialSpotData,
   initialView = "list",
+  initialHandle,
 }: {
   cityId?: string;
   initialSpot?: string;
   initialSpotData?: Spot;
   initialView?: View;
+  /** /u/[handle]: whose page */
+  initialHandle?: string;
 }) {
-  const { backend, user, openAuth, requireAuth, saved, toggleSaved, toast, been, home } = useApp();
+  const { backend, user, openAuth, requireAuth, saved, toggleSaved, toast, been, home, unread, registerNav, me } = useApp();
   const router = useRouter();
   const [city, setCity] = useState<City>(CITY_BY_ID[cityId ?? initialSpotData?.city ?? DEFAULT_CITY] ?? CITY_BY_ID[DEFAULT_CITY]);
   const [community, setCommunity] = useState<Spot[]>(initialSpotData ? [initialSpotData] : []);
@@ -126,6 +131,10 @@ export default function Explorer({
   const [returnView, setReturnView] = useState<View>("list");
   const [focusId, setFocusId] = useState<string | null>(null);
   const [profileKey, setProfileKey] = useState(0);
+  /** Friends and member pages: whose page, which tab, and the places they light up on the map */
+  const [handle, setHandle] = useState<string | null>(initialHandle ?? null);
+  const [friendsTab, setFriendsTab] = useState<FriendsTab>("following");
+  const [pins, setPins] = useState<Pins>(null);
   const isMobile = useIsMobile();
   // The map engine is the heaviest thing on the page. Computers show the map right away; phones
   // start on the list, so there it loads when the Map tab or a place opens (and quietly in the
@@ -267,6 +276,11 @@ export default function Explorer({
     if (c && COLLECTION_BY_ID[c]) setTheme({ kind: "collection", id: c });
     else if (t && TRAILS.some((x) => x.id === t)) setTheme({ kind: "trail", id: t });
     if (location.pathname === "/me") setView("me");
+    if (location.pathname === "/friends") {
+      setView("friends");
+      const t = p.get("tab");
+      if (t === "everyone" || t === "activity") setFriendsTab(t);
+    }
     hydrated.current = true;
   }, []);
 
@@ -278,11 +292,26 @@ export default function Explorer({
     if (area !== "all") p.set("a", area);
     if (theme) p.set(theme.kind === "collection" ? "c" : "t", theme.id);
     const sel = selectedId ? spotById[selectedId] : null;
-    const path = sel ? `/spot/${sel.id}` : view === "me" ? "/me" : cityPath(city);
+    if (!sel && view === "friends" && friendsTab !== "following") p.set("tab", friendsTab);
+    const path = sel
+      ? `/spot/${sel.id}`
+      : view === "me"
+        ? "/me"
+        : view === "friends"
+          ? "/friends"
+          : view === "member" && handle
+            ? `/u/${handle}`
+            : cityPath(city);
     const qs = p.toString();
     history.replaceState(null, "", qs ? `${path}?${qs}` : path);
-    document.title = sel ? `${sel.name} · ${BRAND}` : `${BRAND} · ${city.name} restaurants, coffee & bars`;
-  }, [genre, drink, area, selectedId, spotById, city, view, theme]);
+    document.title = sel
+      ? `${sel.name} · ${BRAND}`
+      : view === "friends"
+        ? `Friends · ${BRAND}`
+        : view === "member" && handle
+          ? `@${handle} · ${BRAND}`
+          : `${BRAND} · ${city.name} restaurants, coffee & bars`;
+  }, [genre, drink, area, selectedId, spotById, city, view, theme, friendsTab, handle]);
 
   useEffect(() => {
     backend.ratings().then(setRatings).catch(() => {});
@@ -350,7 +379,9 @@ export default function Explorer({
     return out;
   }, [placed, matchesBase, inScope, sort, ratings, here]);
 
-  const visible = useMemo(() => new Set(list.map((s) => s.id)), [list]);
+  // on Friends and member pages the map shows their places instead of the list's
+  const pinsOn = !!pins && (view === "friends" || view === "member");
+  const visible = useMemo(() => new Set(pinsOn ? pins!.ids : list.map((s) => s.id)), [list, pins, pinsOn]);
 
   // what each plate would show right now (same place, price and search)
   const genreCounts = useMemo(() => {
@@ -405,6 +436,29 @@ export default function Explorer({
   const openPassport = useCallback(() => {
     if (requireAuth(PASSPORT_WHY, () => goView("me"))) goView("me");
   }, [goView, requireAuth]);
+  const openFriends = useCallback(
+    (tab?: FriendsTab) => {
+      if (tab) setFriendsTab(tab);
+      goView("friends");
+    },
+    [goView]
+  );
+  const openMember = useCallback(
+    (h: string) => {
+      // Back from their page returns to wherever you were
+      setReturnView(selectedId ? "list" : view === "member" ? returnView : view);
+      setHandle(h);
+      setSelectedId(null);
+      setFocusId(null);
+      setView("member");
+      scrollRef.current?.scrollTo({ top: 0 });
+    },
+    [selectedId, view, returnView]
+  );
+  useEffect(() => {
+    registerNav({ member: openMember, spot: (id) => select(id), friends: openFriends });
+    return () => registerNav(null);
+  }, [registerNav, openMember, select, openFriends]);
 
   const chooseGenre = (g: GenreId | "all") => {
     setGenre((cur) => (cur === g && g !== "all" ? "all" : g));
@@ -550,7 +604,10 @@ export default function Explorer({
     );
   };
 
-  const numbers = useMemo(() => Object.fromEntries(list.map((s, i) => [s.id, i + 1])) as Record<string, number>, [list]);
+  const numbers = useMemo(
+    () => Object.fromEntries((pinsOn ? pins!.ids : list.map((s) => s.id)).map((id, i) => [id, i + 1])) as Record<string, number>,
+    [list, pins, pinsOn]
+  );
   const [today, setToday] = useState("");
   useEffect(() => {
     setToday(new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }));
@@ -559,9 +616,11 @@ export default function Explorer({
   const placeName = activeArea ? activeArea.label : activeTown ? TOWN_BY_ID[activeTown].label : city.name;
   const whereLabel = activeArea ? activeArea.label : activeTown ? TOWN_BY_ID[activeTown].label : "Anywhere";
   const whereText = activeArea ? `in ${activeArea.label}` : activeTown ? `in ${TOWN_BY_ID[activeTown].label}` : `around ${city.name}`;
-  const mapTitle = selected ? selected.name : placeName;
+  const mapTitle = selected ? selected.name : pinsOn ? pins!.title : placeName;
   const mapSub = selected
     ? `${areaLabelOf(selected)}. ${selected.address}`
+    : pinsOn
+      ? pins!.sub
     : `${list.length} ${list.length === 1 ? "place" : "places"}${themeLabel ? `: ${themeLabel.toLowerCase()}` : ""}${activeGenre ? `, ${activeGenre.label.toLowerCase()}` : ""}${activeArea || activeTown || themeLabel ? "" : ", all over town"}`;
   /** back to everything in your town (a neighborhood steps out to its town) */
   const clearFilters = () => {
@@ -618,6 +677,17 @@ export default function Explorer({
             <button className="navlink" onClick={openAdd}>
               Add a place
             </button>
+            <button className={`navlink ${view === "friends" ? "on" : ""}`} onClick={() => openFriends()}>
+              Friends
+            </button>
+            {user && (
+              <button className="navlink bell" onClick={() => openFriends("activity")} aria-label={unread ? `${unread} new notifications` : "Notifications"}>
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
+                  <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15l1.5-2ZM10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                </svg>
+                {unread > 0 && <span className="bell-n">{unread > 9 ? "9+" : unread}</span>}
+              </button>
+            )}
             <Link className="navlink hide-md" href="/about">
               How we pick
             </Link>
@@ -635,8 +705,13 @@ export default function Explorer({
                       <span className="um-name">{user.name}</span>
                       <span className="um-mail">{user.email}</span>
                       <button className="menu-item" onClick={() => (goView("me"), setUserMenu(false))}>
-                        Your page
+                        Your passport
                       </button>
+                      {me && (
+                        <button className="menu-item" onClick={() => (openMember(me.handle), setUserMenu(false))}>
+                          Your page (@{me.handle})
+                        </button>
+                      )}
                       <button className="menu-item" onClick={() => (setMine(true), setUserMenu(false))}>
                         Places you&apos;ve added
                       </button>
@@ -694,6 +769,21 @@ export default function Explorer({
                   {/* the passport is members-only; signed out, Profile below shows the way in */}
                   {user && <Passport spots={allSpots} areas={areas} city={city.name} onOpen={(id) => select(id)} onStampMany={openStamps} />}
                   <Profile spotById={spotById} onOpen={(id) => select(id)} onAdd={openAdd} admin={admin} refreshKey={profileKey} />
+                </motion.div>
+              ) : view === "friends" ? (
+                <motion.div key="friends" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <Friends spotById={spotById} onOpen={(id) => select(id)} onPins={setPins} tab={friendsTab} onTab={setFriendsTab} />
+                </motion.div>
+              ) : view === "member" && handle ? (
+                <motion.div key={`member-${handle}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <MemberPage
+                    handle={handle}
+                    spotById={spotById}
+                    onOpen={(id) => select(id)}
+                    onPins={setPins}
+                    onBack={() => goView(returnView === "member" ? "list" : returnView)}
+                    onHandle={setHandle}
+                  />
                 </motion.div>
               ) : (
                 <motion.div key="browse" className="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
@@ -996,6 +1086,17 @@ export default function Explorer({
           <TabGlyph k="spark" />
           Surprise
         </button>
+        <button
+          className={(view === "friends" || view === "member") && !selected ? "on" : ""}
+          onClick={() => openFriends()}
+          aria-current={view === "friends" && !selected ? "page" : undefined}
+        >
+          <span className="tab-ico">
+            <TabGlyph k="friends" />
+            {unread > 0 && <span className="tab-dot" aria-label={`${unread} new`} />}
+          </span>
+          Friends
+        </button>
         <button className={view === "me" && !selected ? "on" : ""} onClick={openPassport} aria-current={view === "me" && !selected ? "page" : undefined}>
           <TabGlyph k="stamp" />
           Passport
@@ -1061,13 +1162,14 @@ export default function Explorer({
 }
 
 /** Small pen-drawn marks for the phone tab bar (no icon set). */
-function TabGlyph({ k }: { k: "menu" | "map" | "me" | "spark" | "stamp" }) {
+function TabGlyph({ k }: { k: "menu" | "map" | "me" | "spark" | "stamp" | "friends" }) {
   const d = {
     menu: "M4 6h16M4 12h11M4 18h14",
     spark: "M12 3.5c.6 3.9 1.9 5.9 5.6 6.6-3.7.8-5 2.8-5.6 6.7-.6-3.9-1.9-5.9-5.6-6.7 3.7-.7 5-2.7 5.6-6.6ZM18.5 15.5c.3 1.6.8 2.4 2.2 2.7-1.4.3-1.9 1.1-2.2 2.7-.3-1.6-.8-2.4-2.2-2.7 1.4-.3 1.9-1.1 2.2-2.7Z",
     map: "M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14",
     me: "M12 12a4 4 0 1 0-.1 0M4.5 20c1.5-4 4.4-5.5 7.5-5.5s6 1.5 7.5 5.5",
     stamp: "M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17ZM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10ZM9.8 12.1l1.5 1.5 3-3.2",
+    friends: "M9 11a3.5 3.5 0 1 0-.1 0M2.5 19.5c1-3.3 3.4-4.8 6.5-4.8s5.5 1.5 6.5 4.8M16 11.2a3 3 0 1 0-.6-5.9M17.2 14.8c2.2.4 3.6 1.9 4.3 4.4",
   }[k];
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>

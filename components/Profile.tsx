@@ -9,6 +9,7 @@ import { DEFAULT_CITY, homeLabel, homeParts, isOpenCity } from "@/lib/regions";
 import { track } from "@/lib/analytics";
 import { useApp } from "./Providers";
 import HomeSelect from "./HomeSelect";
+import ProfileSettings from "./ProfileSettings";
 import PhotoImg from "./Photo";
 import { Stars } from "./Stars";
 
@@ -28,7 +29,8 @@ export default function Profile({
   onAdd: () => void;
   admin: boolean;
 }) {
-  const { backend, user, authReady, openAuth, toast, home, setHome } = useApp();
+  const { backend, user, authReady, openAuth, toast, home, setHome, me, nav } = useApp();
+  const [settings, setSettings] = useState(false);
   const [tab, setTab] = useState<Tab>("reviews");
   const [reviews, setReviews] = useState<Review[] | null>(null);
   const [photos, setPhotos] = useState<Photo[] | null>(null);
@@ -149,6 +151,29 @@ export default function Profile({
               edit
             </button>
           </h1>
+        )}
+        {me && (
+          <p className="profile-social">
+            <a
+              href={`/u/${me.handle}`}
+              className="textbtn"
+              onClick={(e) => {
+                e.preventDefault();
+                nav.member(me.handle);
+              }}
+            >
+              @{me.handle}
+            </a>
+            <span aria-hidden> · </span>
+            <button className="textbtn" onClick={() => setSettings(true)}>
+              Edit your page &amp; privacy
+            </button>
+            <span aria-hidden> · </span>
+            <button className="textbtn" onClick={() => nav.friends()}>
+              Find friends
+            </button>
+            {me.private && <span className="profile-lock"> · You approve followers</span>}
+          </p>
         )}
         <p className="profile-sub">
           {user.email}
@@ -278,7 +303,7 @@ export default function Profile({
       <section className="acct" aria-label="Sign-in and privacy">
         <h2 className="acct-head">Sign-in &amp; privacy</h2>
         <p className="acct-row">
-          Signed in as <strong>{user.email}</strong>. No password: we email you a code each time.
+          Signed in as <strong>{user.email}</strong>. No password: we email you a code each time. Your email is never shown to other members.
         </p>
         {passkeys !== null && (
           <p className="acct-row">
@@ -298,7 +323,7 @@ export default function Profile({
         <p className="acct-row acct-danger">
           {confirmDelete ? (
             <>
-              <span>This deletes your account, reviews, photos, passport and saved places for good.</span>{" "}
+              <span>This deletes your account, reviews, photos, passport, saved places, follows and comments for good.</span>{" "}
               <button className="textbtn danger" disabled={deleting} onClick={deleteAccount}>
                 {deleting ? "Deleting…" : "Yes, delete everything"}
               </button>{" "}
@@ -313,6 +338,8 @@ export default function Profile({
           )}
         </p>
       </section>
+
+      <ProfileSettings open={settings} onClose={() => setSettings(false)} spotById={spotById} />
 
       <footer className="profile-foot">
         {admin && (

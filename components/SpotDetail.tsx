@@ -16,6 +16,8 @@ import Storefront from "./Storefront";
 import Reviews from "./Reviews";
 import Photo from "./Photo";
 import { BeenButtons, Honors } from "./FrontPage";
+import GiftSheet from "./GiftSheet";
+import { giftFor } from "@/lib/gifts";
 
 type GPhoto = { url: string; author: string; authorUri: string | null };
 type Places = { enabled: boolean; photos: GPhoto[]; rating?: number | null; ratingCount?: number | null; website?: string | null };
@@ -62,6 +64,7 @@ export default function SpotDetail({
   const [photos, setPhotos] = useState<MemberPhoto[]>([]);
   const [places, setPlaces] = useState<Places | null>(null);
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [gifting, setGifting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadKind, setUploadKind] = useState<PhotoKind>("food");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -356,10 +359,16 @@ export default function SpotDetail({
             Website
           </a>
         )}
+        {giftFor(spot) && (
+          <button className="btn btn-line act-gift" onClick={() => setGifting(true)}>
+            Gift card
+          </button>
+        )}
         <button className="btn btn-line act-photo" onClick={() => startUpload("vibe")}>
           Add a photo
         </button>
       </div>
+      <GiftSheet open={gifting} onClose={() => setGifting(false)} spots={[spot]} surface="place" />
 
 
       <section className="nearby">

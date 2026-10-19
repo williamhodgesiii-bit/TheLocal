@@ -33,8 +33,11 @@ import {
   type ReviewSort,
   type SubKey,
 } from "@/lib/reviews";
+import { REACTIONS, VERDICT_SCORE, whoList, type FriendAt, type Reaction } from "@/lib/social";
 import { useApp } from "./Providers";
 import { Stars } from "./Stars";
+import { Avatar, NameLink } from "./People";
+import ReviewThread from "./ReviewThread";
 
 const SUBS: SubKey[] = ["taste", "service", "vibe"];
 /** dish-like bits of our one-line "known for" ("Pulled pork & cheese biscuits"), to tap instead of type */
@@ -51,8 +54,9 @@ const blank = (): ReviewDraft => ({ rating: 0, goBack: null, body: "", ordered: 
  * way you want. Members write one review per place, one paragraph, and can edit it any time.
  */
 export default function Reviews({ spot }: { spot: Spot }) {
-  const { backend, user, requireAuth, toast, been, markBeen } = useApp();
+  const { backend, user, requireAuth, toast, been, markBeen, saveSpot, saved, nav } = useApp();
   const [reviews, setReviews] = useState<Review[] | null>(null);
+  const [friends, setFriends] = useState<FriendAt[]>([]);
   const [writing, setWriting] = useState(false);
   const [all, setAll] = useState(false);
   const [sort, setSort] = useState<ReviewSort>("helpful");
@@ -69,10 +73,16 @@ export default function Reviews({ spot }: { spot: Spot }) {
       .listReviews(spotIdsOf(spot.id))
       .then((r) => live && setReviews(r))
       .catch(() => live && setReviews([]));
+    setFriends([]);
+    if (user)
+      backend
+        .friendsAt(spotIdsOf(spot.id))
+        .then((f) => live && setFriends(f))
+        .catch(() => {});
     return () => {
       live = false;
     };
-  }, [spot.id, backend, user?.id]);
+  }, [spot.id, backend, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const list = useMemo(() => reviews ?? [], [reviews]);
   // what counts is what everyone can see; a held review shows only to the person who wrote it
@@ -81,10 +91,20 @@ export default function Reviews({ spot }: { spot: Spot }) {
   const mine = list.find((r) => r.userId === user?.id);
   const labels = subLabels(spot);
 
+  // the people you follow, first: their reviews lead, and the row up top says who's been
+  const friendIds = useMemo(() => new Set(friends.map((f) => f.member.id)), [friends]);
+  const friendsBeen = useMemo(() => friends.filter((f) => f.rating || f.verdict), [friends]);
+  const friendsWant = useMemo(() => friends.filter((f) => !f.rating && !f.verdict && f.saved), [friends]);
+  const friendScores = friendsBeen.map((f) => f.rating ?? VERDICT_SCORE[f.verdict!]);
   const shown = useMemo(() => {
-    if (!all) return featured(counted);
-    return sortReviews(stars ? counted.filter((r) => r.rating === stars) : counted, sort);
-  }, [all, counted, sort, stars]);
+    const theirs = counted.filter((r) => friendIds.has(r.userId));
+    if (!all) {
+      const top = featured(counted).filter((r) => !friendIds.has(r.userId));
+      return [...sortReviews(theirs, "newest").slice(0, 2), ...top].slice(0, Math.max(2, Math.min(3, theirs.length + 2)));
+    }
+    const list = sortReviews(stars ? counted.filter((r) => r.rating === stars) : counted, sort);
+    return sort === "helpful" ? [...list.filter((r) => friendIds.has(r.userId)), ...list.filter((r) => !friendIds.has(r.userId))] : list;
+  }, [all, counted, sort, stars, friendIds]);
 
   function open() {
     if (!requireAuth(`Sign in to review ${spot.name}. It takes a few seconds, no password.`, open)) return;
@@ -116,17 +136,26 @@ export default function Reviews({ spot }: { spot: Spot }) {
     }
   }
 
-  async function helpful(r: Review) {
-    if (!requireAuth("Sign in to mark reviews helpful.")) return;
-    const on = !r.votedHelpful;
-    setReviews((cur) => (cur ?? []).map((x) => (x.id === r.id ? { ...x, votedHelpful: on, helpful: Math.max(0, (x.helpful ?? 0) + (on ? 1 : -1)) } : x)));
+  /** Helpful, Want to go (which also saves the place) or Thanks; shows at once, undone if it doesn't save */
+  async function react(r: Review, kind: Reaction) {
+    if (!requireAuth("Sign in to react to reviews. It takes a few seconds, no password.")) return;
+    const on = !r.myReactions?.includes(kind);
+    const bump = (x: Review, d: number): Review => {
+      const reactions = { ...(x.reactions ?? {}), [kind]: Math.max(0, (x.reactions?.[kind] ?? 0) + d) };
+      const myReactions = d > 0 ? [...(x.myReactions ?? []), kind] : (x.myReactions ?? []).filter((k) => k !== kind);
+      return { ...x, reactions, myReactions, helpful: reactions.helpful ?? 0, votedHelpful: myReactions.includes("helpful") };
+    };
+    setReviews((cur) => (cur ?? []).map((x) => (x.id === r.id ? bump(x, on ? 1 : -1) : x)));
+    if (kind === "want" && on && !saved.includes(spot.id)) saveSpot(spot.id, true);
     try {
-      await backend.voteHelpful(r.id, on);
-    } catch {
+      await backend.react(r.id, kind, on);
+      track("react", { kind, on });
+    } catch (e) {
       setReviews((cur) => (cur ?? []).map((x) => (x.id === r.id ? r : x)));
-      toast("Couldn't save that. Try again?", "err");
+      toast(e instanceof Error ? e.message : "Couldn't save that. Try again?", "err");
     }
   }
+  const setCount = (id: string, n: number) => setReviews((cur) => (cur ?? []).map((x) => (x.id === id && x.comments !== n ? { ...x, comments: n } : x)));
 
   const n = sum.count;
   return (
@@ -139,6 +168,35 @@ export default function Reviews({ spot }: { spot: Spot }) {
           </button>
         )}
       </div>
+
+      {(friendsBeen.length > 0 || friendsWant.length > 0) && (
+        <div className="rv-friends">
+          <span className="av-stack">
+            {[...friendsBeen, ...friendsWant].slice(0, 4).map((f) => (
+              <button key={f.member.id} type="button" className="av-btn" onClick={() => nav.member(f.member.handle)} aria-label={`${f.member.name}'s page`}>
+                <Avatar m={f.member} size={26} />
+              </button>
+            ))}
+          </span>
+          <span className="rv-friends-t">
+            {friendsBeen.length > 0 ? (
+              <>
+                <b>{whoList(friendsBeen.map((f) => f.member))}</b> {friendsBeen.length === 1 ? "has" : "have"} been
+                {friendScores.length >= 2 && (
+                  <>
+                    {" · "}friends&apos; average <b>{(friendScores.reduce((a, b) => a + b, 0) / friendScores.length).toFixed(1)}</b>
+                  </>
+                )}
+                {friendsWant.length > 0 && <> · {friendsWant.length} more want to go</>}
+              </>
+            ) : (
+              <>
+                <b>{whoList(friendsWant.map((f) => f.member))}</b> {friendsWant.length === 1 ? "wants" : "want"} to go
+              </>
+            )}
+          </span>
+        </div>
+      )}
 
       {reviews === null ? (
         <div className="skeleton-list">
@@ -275,9 +333,11 @@ export default function Reviews({ spot }: { spot: Spot }) {
               r={r}
               labels={labels}
               mine={r.userId === user?.id}
+              friend={friendIds.has(r.userId)}
               onEdit={open}
               onDelete={() => remove(r.id)}
-              onHelpful={() => helpful(r)}
+              onReact={(k) => react(r, k)}
+              onCount={(n) => setCount(r.id, n)}
             />
           ))}
         </ul>
@@ -299,18 +359,23 @@ function ReviewCard({
   r,
   labels,
   mine,
+  friend,
   onEdit,
   onDelete,
-  onHelpful,
+  onReact,
+  onCount,
 }: {
   r: Review;
   labels: Record<SubKey, string>;
   mine: boolean;
+  friend?: boolean;
   onEdit: () => void;
   onDelete: () => void;
-  onHelpful: () => void;
+  onReact: (k: Reaction) => void;
+  onCount: (n: number) => void;
 }) {
   const { backend, requireAuth, toast } = useApp();
+  const [thread, setThread] = useState<null | "inline" | "sheet">(null);
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
   const [reported, setReported] = useState(false);
@@ -353,35 +418,45 @@ function ReviewCard({
         </p>
       )}
       <div className="rv-sig">
-        <span className="pen-sig">{r.userName}</span>
+        {r.handle ? (
+          <NameLink m={{ id: r.userId, handle: r.handle, name: r.userName }} className="pen-sig" />
+        ) : (
+          <span className="pen-sig">{r.userName}</span>
+        )}
+        {friend && <span className="rv-friend">You follow</span>}
         {r.reviewerCount && r.reviewerCount > 1 ? <span>{r.reviewerCount} reviews</span> : null}
         <span>{r.visited ? `Went ${monthLabel(r.visited)}` : new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>
         {r.updatedAt && <span>Edited</span>}
       </div>
-      <div className="rv-act">
-        {mine ? (
-          <>
-            <button type="button" className="textbtn" onClick={onEdit}>
-              Edit
-            </button>
-            <button type="button" className="textbtn" onClick={onDelete}>
-              Delete
-            </button>
-            {!!r.helpful && <span className="rv-helpful-n">{r.helpful} found it helpful</span>}
-          </>
-        ) : (
-          <>
-            <button type="button" className={`rv-helpful ${r.votedHelpful ? "on" : ""}`} aria-pressed={!!r.votedHelpful} onClick={onHelpful}>
-              Helpful{r.helpful ? ` · ${r.helpful}` : ""}
-            </button>
-            {!reported && (
+      <ReviewActions
+        r={r}
+        mine={mine}
+        thread={thread}
+        onReact={onReact}
+        onThread={() => setThread((t) => (t ? null : window.matchMedia("(max-width: 900px)").matches ? "sheet" : "inline"))}
+        extra={
+          mine ? (
+            <>
+              <button type="button" className="textbtn" onClick={onEdit}>
+                Edit
+              </button>
+              <button type="button" className="textbtn" onClick={onDelete}>
+                Delete
+              </button>
+            </>
+          ) : (
+            !reported && (
               <button type="button" className="textbtn rv-report" onClick={() => requireAuth("Sign in to report a review.") && setReporting((v) => !v)}>
                 Report
               </button>
-            )}
-          </>
-        )}
-      </div>
+            )
+          )
+        }
+      />
+      <AnimatePresence initial={false}>
+        {thread === "inline" && <ReviewThread key="t" review={r} onClose={() => setThread(null)} onCount={onCount} />}
+      </AnimatePresence>
+      {thread === "sheet" && <ReviewThread review={r} sheet onClose={() => setThread(null)} onCount={onCount} />}
       {reporting && (
         <form className="rv-report-form" onSubmit={report}>
           <select value={reason} onChange={(e) => setReason(e.target.value)} required aria-label="What's wrong with it">
@@ -636,5 +711,85 @@ function ReviewForm({
         </button>
       </div>
     </motion.form>
+  );
+}
+
+/** Helpful · Want to go · Thanks, and the comments: on every review card and in the feed */
+export function ReviewActions({
+  r,
+  mine,
+  thread,
+  onReact,
+  onThread,
+  extra,
+}: {
+  r: Review;
+  mine: boolean;
+  thread: null | "inline" | "sheet";
+  onReact: (k: Reaction) => void;
+  onThread: () => void;
+  extra?: React.ReactNode;
+}) {
+  const got = REACTIONS.filter((x) => r.reactions?.[x.id]);
+  return (
+    <div className="rv-act">
+      {mine ? (
+        got.length > 0 && (
+          <span className="rx-mine">
+            {got.map((x) => (
+              <span key={x.id}>
+                <RxIcon k={x.id} /> {r.reactions![x.id]} {x.id === "helpful" ? "found it helpful" : x.id === "want" ? "want to go" : "said thanks"}
+              </span>
+            ))}
+          </span>
+        )
+      ) : (
+        <span className="rx" role="group" aria-label="React to this review">
+          {REACTIONS.map((x) => {
+            const on = !!r.myReactions?.includes(x.id);
+            const n = r.reactions?.[x.id] ?? 0;
+            return (
+              <button
+                key={x.id}
+                type="button"
+                className={`rx-chip ${x.id === "helpful" ? "rv-helpful" : ""} ${on ? "on" : ""}`}
+                aria-pressed={on}
+                onClick={() => onReact(x.id)}
+                title={x.id === "want" ? "Also saves the place to your want-to-try list" : undefined}
+              >
+                <RxIcon k={x.id} />
+                <span>{on ? x.mine : x.label}</span>
+                {n > 0 && <span className="rx-n">{n}</span>}
+              </button>
+            );
+          })}
+        </span>
+      )}
+      <button
+        type="button"
+        className={`rx-chip rx-talk ${thread ? "on" : ""}`}
+        onClick={onThread}
+        aria-expanded={!!thread}
+        aria-label={r.comments ? `${r.comments} ${r.comments === 1 ? "comment" : "comments"}` : "Comment"}
+      >
+        <RxIcon k="talk" />
+        <span>{r.comments ? r.comments : "Comment"}</span>
+      </button>
+      {extra}
+    </div>
+  );
+}
+
+function RxIcon({ k }: { k: Reaction | "talk" }) {
+  const d = {
+    helpful: "M7 11v9H4v-9h3Zm0 0 4-7c1.4 0 2.3 1.1 2 2.5L12.5 10H18a2 2 0 0 1 2 2.3l-1.1 6A2 2 0 0 1 17 20H7",
+    want: "M6 3.5h12v17l-6-4-6 4v-17Z",
+    thanks: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z",
+    talk: "M4 5.5h16v10H9l-5 4v-14Z",
+  }[k];
+  return (
+    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden className="rx-i">
+      <path d={d} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
   );
 }
