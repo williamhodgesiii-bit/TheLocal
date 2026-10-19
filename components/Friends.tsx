@@ -28,6 +28,7 @@ import { useApp } from "./Providers";
 import { ReviewActions } from "./Reviews";
 import ReviewThread from "./ReviewThread";
 import { Stars } from "./Stars";
+import { askForPush, clearDelivered, feel, pushPermission, shareLink } from "@/lib/native";
 
 export type FriendsTab = "following" | "everyone" | "activity";
 type Chip = "all" | "reviews" | "visits" | "mutual";
@@ -62,19 +63,20 @@ export default function Friends({
   const [chip, setChip] = useState<Chip>("all");
   const [mutuals, setMutuals] = useState<Set<string>>(new Set());
   const [following, setFollowing] = useState<number | null>(null);
-  const scope = tab === "everyone" || !user ? "everyone" : "following";
-  const feed = useFeed(scope, tab !== "activity");
+  // nobody followed yet (or signed out): the latest reviews from everyone, under the invitation
+  const scope = tab === "everyone" || !user || following === 0 ? "everyone" : "following";
+  const feed = useFeed(scope, tab !== "activity" && (!user || following !== null || tab === "everyone"));
 
-  // who follows me back, for "Friends only"
+  // how many I follow (none: show everyone's reviews instead) and who follows me back, for "Friends only"
   useEffect(() => {
-    if (!user || !me) return;
+    if (!user) return setFollowing(null);
     Promise.all([backend.network(user.id, "followers"), backend.network(user.id, "following")])
       .then(([fol, ing]) => {
         const back = new Set(fol.map((p) => p.id));
         setMutuals(new Set(ing.filter((p) => back.has(p.id)).map((p) => p.id)));
         setFollowing(ing.length);
       })
-      .catch(() => {});
+      .catch(() => setFollowing(0));
   }, [user, me, backend]);
 
   const items = useMemo(() => {
@@ -97,17 +99,9 @@ export default function Friends({
 
   async function share() {
     if (!me) return;
-    const url = `${location.origin}${profilePath(me.handle)}`;
-    try {
-      if (navigator.share) await navigator.share({ title: `${me.name} on The Plate Next Door`, url });
-      else {
-        await navigator.clipboard.writeText(url);
-        toast("Link copied. Send it to a friend.", "ok");
-      }
-      track("share_profile");
-    } catch {
-      /* closed the share sheet */
-    }
+    const how = await shareLink({ title: `${me.name} on The Plate Next Door`, url: `${location.origin}${profilePath(me.handle)}` });
+    if (how === "copied") toast("Link copied. Send it to a friend.", "ok");
+    if (how !== "dismissed") track("share_profile");
   }
 
   return (
@@ -149,7 +143,15 @@ export default function Friends({
         ))}
       </nav>
 
-      {tab === "activity" ? (
+      {tab === "activity" && !user ? (
+        <section className="fr-pitch">
+          <h2>Your activity</h2>
+          <p>Who followed you, and what people said about your reviews. Sign in to see it.</p>
+          <button className="btn btn-green" onClick={() => openAuth("Sign in to see who followed you and what people said about your reviews.")}>
+            Sign in
+          </button>
+        </section>
+      ) : tab === "activity" ? (
         <ActivityTab onOpen={onOpen} spotById={spotById} onSeen={refreshUnread} />
       ) : (
         <>
@@ -168,6 +170,7 @@ export default function Friends({
               <h2>Your feed fills up when you follow people</h2>
               <p>Start with someone below, or send a friend your page so they can follow you back.</p>
               <FindPeople inline onShare={me ? share : undefined} />
+              <p className="fr-pitch-sub">Meanwhile, here&apos;s what members have been reviewing lately.</p>
             </section>
           )}
           {popular.length > 0 && chip === "all" && (
@@ -186,7 +189,7 @@ export default function Friends({
               </div>
             </section>
           )}
-          {scope === "following" && (
+          {scope === "following" && (feed.items?.length ?? 0) > 0 && (
             <div className="fr-chips" role="group" aria-label="Show">
               {CHIPS.map((c) => (
                 <button key={c.id} type="button" className={`b-chip b-chip-sm ${chip === c.id ? "on" : ""}`} aria-pressed={chip === c.id} onClick={() => setChip(c.id)}>
@@ -402,6 +405,7 @@ export function FeedReviewCard({
     const reactions = { ...(r.reactions ?? {}), [kind]: Math.max(0, (r.reactions?.[kind] ?? 0) + (on ? 1 : -1)) };
     const myReactions = on ? [...(r.myReactions ?? []), kind] : (r.myReactions ?? []).filter((k) => k !== kind);
     onReview({ ...r, reactions, myReactions });
+    if (on) feel();
     if (kind === "want" && on && !saved.includes(spot!.id)) saveSpot(spot!.id, true);
     try {
       await backend.react(r.id, kind, on);
@@ -541,6 +545,58 @@ function FindPeople({ inline, onShare }: { inline?: boolean; onShare?: () => voi
   );
 }
 
+const PUSH_LATER = "tl.pushLater";
+/**
+ * In the iPhone app: asks once, in context, to send replies and requests to the phone. Never at
+ * launch, and "Not now" keeps it away for two weeks.
+ */
+function PushAsk() {
+  const [state, setState] = useState("none");
+  useEffect(() => {
+    let later = 0;
+    try {
+      later = Number(localStorage.getItem(PUSH_LATER)) || 0;
+    } catch {
+      /* ignore */
+    }
+    if (Date.now() - later > 14 * 864e5) pushPermission().then(setState);
+  }, []);
+  if (state !== "prompt") return null;
+  return (
+    <div className="fr-pitch push-ask">
+      <h2>Know when someone answers</h2>
+      <p>Get a notification for replies, comments, @mentions, follow requests and gift notes. Nothing else, and never ads.</p>
+      <div className="push-ask-act">
+        <button
+          type="button"
+          className="btn btn-green btn-sm"
+          onClick={async () => {
+            const r = await askForPush().catch(() => "denied");
+            track("push_permission", { answer: r });
+            setState(r);
+          }}
+        >
+          Turn on notifications
+        </button>
+        <button
+          type="button"
+          className="textbtn"
+          onClick={() => {
+            try {
+              localStorage.setItem(PUSH_LATER, String(Date.now()));
+            } catch {
+              /* ignore */
+            }
+            setState("later");
+          }}
+        >
+          Not now
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /** what happened to me: requests first, then follows, comments, reactions and gift notes, folded by day */
 function ActivityTab({ spotById, onOpen, onSeen }: { spotById: Record<string, Spot>; onOpen: (id: string) => void; onSeen: () => void }) {
   const { backend, user, nav, toast } = useApp();
@@ -555,6 +611,7 @@ function ActivityTab({ spotById, onOpen, onSeen }: { spotById: Record<string, Sp
         if (!live) return;
         setNotes(groupNotes(n.filter((x) => x.kind !== "request")));
         setRequests(r);
+        clearDelivered();
         if (n.some((x) => !x.read)) {
           await backend.markRead();
           onSeen();
@@ -584,6 +641,7 @@ function ActivityTab({ spotById, onOpen, onSeen }: { spotById: Record<string, Sp
 
   return (
     <section className="activity">
+      <PushAsk />
       {requests.length > 0 && (
         <>
           <h2 className="fr-sub">

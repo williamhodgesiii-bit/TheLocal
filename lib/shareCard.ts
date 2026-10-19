@@ -1,4 +1,5 @@
 import { BRAND, MANTRA } from "./brand";
+import { shareImage } from "./native";
 
 /**
  * The passport share card: a picture of your progress, not a list of where you've been
@@ -111,15 +112,8 @@ export async function passportCard({ count, total, city, stamped }: { count: num
 
 /** Share the card where the phone allows it; otherwise save it. */
 export async function sharePassport(blob: Blob, text: string) {
-  const file = new File([blob], "plate-passport.png", { type: "image/png" });
-  try {
-    if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file], text });
-      return "shared";
-    }
-  } catch {
-    return "dismissed";
-  }
+  const how = await shareImage(blob, "plate-passport.png", text);
+  if (how) return how;
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "plate-passport.png";

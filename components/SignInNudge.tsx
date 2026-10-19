@@ -28,8 +28,11 @@ const COOLDOWN_DAYS = [3, 14]; // the wait after the 1st and 2nd "maybe later"
 const MAX_SHOWS = 3; // then stop asking for good
 const DAY = 86_400_000;
 
-/** Pages that aren't the map/passport experience: reading the privacy page is no time to be nudged. */
-const SKIP = ["/admin", "/privacy", "/about", "/partners", "/credits", "/auth"];
+/**
+ * Pages that aren't the map/passport experience (reading the privacy page is no time to be nudged),
+ * and Friends and member pages, which already ask in their own words.
+ */
+const SKIP = ["/admin", "/privacy", "/terms", "/about", "/partners", "/credits", "/auth", "/friends", "/u"];
 
 /** Opening the full sign-in dialog even once this visit means they don't need a reminder too. */
 let engagedThisVisit = false;

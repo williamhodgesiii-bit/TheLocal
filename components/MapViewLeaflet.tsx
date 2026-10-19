@@ -96,6 +96,9 @@ export default function MapViewLeaflet(props: MapProps) {
   // init once
   useEffect(() => {
     if (!el.current || map.current) return;
+    // the marker maps live as long as the component; cleanup empties these same ones
+    const markerMap = markers.current;
+    const hoodMap = hoods.current;
     const m = L.map(el.current, {
       center: cb.current.city.center,
       zoom: cb.current.city.zoom,
@@ -164,8 +167,8 @@ export default function MapViewLeaflet(props: MapProps) {
       ro.disconnect();
       m.remove();
       map.current = null;
-      markers.current.clear();
-      hoods.current.clear();
+      markerMap.clear();
+      hoodMap.clear();
     };
   }, []);
 

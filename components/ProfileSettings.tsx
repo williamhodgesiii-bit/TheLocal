@@ -33,7 +33,7 @@ export default function ProfileSettings({ open, onClose, spotById }: { open: boo
     setName(user.name);
     setHandle(me.handle);
     setBio(me.bio ?? "");
-    setTop(me.top.filter((id) => spotById[id]));
+    setTop(me.top);
     setPriv(me.private);
     setInSearch(me.inSearch);
     setVisits(me.shareVisits);
@@ -74,7 +74,8 @@ export default function ProfileSettings({ open, onClose, spotById }: { open: boo
       const next = await backend.saveMember({
         ...(handle !== me.handle ? { handle } : {}),
         bio,
-        top,
+        // only when changed, so picks from a city that isn't loaded right now aren't lost
+        ...(top.join() !== me.top.join() ? { top } : {}),
         private: priv,
         inSearch,
         shareVisits: visits,
@@ -168,8 +169,8 @@ export default function ProfileSettings({ open, onClose, spotById }: { open: boo
                   <ol className="set-top-list">
                     {top.map((id) => (
                       <li key={id}>
-                        {spotById[id]?.name}
-                        <button type="button" className="textbtn" onClick={() => setTop((t) => t.filter((x) => x !== id))} aria-label={`Take ${spotById[id]?.name} off`}>
+                        {spotById[id]?.name ?? "A place in another city"}
+                        <button type="button" className="textbtn" onClick={() => setTop((t) => t.filter((x) => x !== id))} aria-label={`Take ${spotById[id]?.name ?? "it"} off`}>
                           ×
                         </button>
                       </li>

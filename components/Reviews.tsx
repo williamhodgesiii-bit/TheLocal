@@ -34,6 +34,7 @@ import {
   type SubKey,
 } from "@/lib/reviews";
 import { REACTIONS, VERDICT_SCORE, whoList, type FriendAt, type Reaction } from "@/lib/social";
+import { feel } from "@/lib/native";
 import { useApp } from "./Providers";
 import { Stars } from "./Stars";
 import { Avatar, NameLink } from "./People";
@@ -146,6 +147,7 @@ export default function Reviews({ spot }: { spot: Spot }) {
       return { ...x, reactions, myReactions, helpful: reactions.helpful ?? 0, votedHelpful: myReactions.includes("helpful") };
     };
     setReviews((cur) => (cur ?? []).map((x) => (x.id === r.id ? bump(x, on ? 1 : -1) : x)));
+    if (on) feel();
     if (kind === "want" && on && !saved.includes(spot.id)) saveSpot(spot.id, true);
     try {
       await backend.react(r.id, kind, on);

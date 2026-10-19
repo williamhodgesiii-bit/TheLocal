@@ -61,8 +61,6 @@ export const DEFAULT_CITY = "birmingham-al";
 /** Cities people can pick today. Flip a city's status off "later" to open it. */
 export const OPEN_CITIES = CITIES.filter((x) => x.status !== "later");
 export const CITY_BY_ID: Record<string, City> = Object.fromEntries(OPEN_CITIES.map((x) => [x.id, x]));
-export const citiesIn = (state: string) => OPEN_CITIES.filter((x) => x.state === state);
-export const plannedIn = (state: string) => CITIES.filter((x) => x.state === state && x.status === "later");
 export const stateName = (code: string) => STATES.find((s) => s.code === code)?.name ?? code;
 export const cityPath = (city: City) => (city.id === DEFAULT_CITY ? "/" : `/${city.state.toLowerCase()}/${city.slug}`);
 export const findCity = (state: string, slug: string) => OPEN_CITIES.find((x) => x.state.toLowerCase() === state.toLowerCase() && x.slug === slug);

@@ -153,6 +153,10 @@ export default function MapViewGL(props: MapProps) {
   // init once
   useEffect(() => {
     if (!el.current || map.current) return;
+    // the marker maps live as long as the component; cleanup empties these same ones
+    const pinMap = pins.current;
+    const pinElMap = pinEls.current;
+    const hoodMap = hoods.current;
     const m = new maplibregl.Map({
       container: el.current,
       style: BLANK_STYLE, // paper right away; the real style swaps in when it arrives
@@ -293,11 +297,13 @@ export default function MapViewGL(props: MapProps) {
       ro.disconnect();
       m.remove();
       map.current = null;
-      pins.current.clear();
-      pinEls.current.clear();
+      pinMap.clear();
+      pinElMap.clear();
       named.current.clear();
-      hoods.current.clear();
+      hoodMap.clear();
     };
+    // set up once; later changes go through the effects below
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // keep pins in sync with the spot list (community spots arrive async / after approval)
@@ -369,6 +375,8 @@ export default function MapViewGL(props: MapProps) {
       mk.getElement().classList.toggle("quiet", props.selectedId !== null);
     });
     tidy();
+    // tidy reads the latest pins itself
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.visible, props.numbers, props.selectedId, props.area, props.spots, props.areas]);
 
   // hovering a list row or a pin lifts that one pin; no relayout of the map's labels

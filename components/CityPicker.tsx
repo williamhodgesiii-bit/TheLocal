@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ANY_CITY, CITIES, OPEN_CITIES, STATES, apState, cityLabel, homeLabel, isOpenCity, nearestCity, stateName, type City } from "@/lib/regions";
 import { useApp } from "./Providers";
+import { canLocate, currentPosition } from "@/lib/native";
 
 /** how close counts as "in" a city when we look you up */
 const NEAR_KM = 80;
@@ -89,11 +90,10 @@ export default function CityPicker({ open, city, onPick, onClose }: { open: bool
   }, [q, home, city.id]);
 
   function locate() {
-    if (!("geolocation" in navigator)) return setLocated({ kind: "error", text: "This browser can't share your location. Pick a city from the list." });
+    if (!canLocate()) return setLocated({ kind: "error", text: "This browser can't share your location. Pick a city from the list." });
     setLocated({ kind: "busy" });
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const p: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+    currentPosition().then(
+      (p) => {
         const onMap = nearestCity(p, OPEN_CITIES);
         if (onMap && onMap.km <= NEAR_KM) {
           setLocated(null);
@@ -111,8 +111,7 @@ export default function CityPicker({ open, city, onPick, onClose }: { open: bool
           });
         }
       },
-      () => setLocated({ kind: "error", text: "Couldn't get your location. Pick a city from the list." }),
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
+      () => setLocated({ kind: "error", text: "Couldn't get your location. Pick a city from the list." })
     );
   }
 

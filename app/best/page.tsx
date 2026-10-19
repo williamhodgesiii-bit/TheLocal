@@ -54,7 +54,7 @@ export default function BestHub() {
       <p className="cap-kicker">Birmingham guides</p>
       <h1 className="guide-h1">Where to eat in Birmingham</h1>
       <p className="guide-lede">
-        Hand-picked guides to the best locally owned restaurants, coffee shops and bars around Birmingham — by what you're craving and by the kind of night it is. No chains, nobody pays to rank.
+        Hand-picked guides to the best locally owned restaurants, coffee shops and bars around Birmingham — by what you&apos;re craving and by the kind of night it is. No chains, nobody pays to rank.
       </p>
 
       <h2 className="menu-head"><span>By cuisine</span></h2>

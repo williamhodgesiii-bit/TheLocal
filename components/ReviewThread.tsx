@@ -359,7 +359,11 @@ function ThreadSheet({ title, onClose, foot, children }: { title: string; onClos
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     history.pushState({ ...(history.state ?? {}), tlSheet: 1 }, "");
-    const pop = () => onClose();
+    let popped = false;
+    const pop = () => {
+      popped = true;
+      onClose();
+    };
     window.addEventListener("popstate", pop);
     const vv = window.visualViewport;
     const fit = () => {
@@ -367,16 +371,20 @@ function ThreadSheet({ title, onClose, foot, children }: { title: string; onClos
       ref.current.style.setProperty("--vvh", `${vv.height}px`);
       ref.current.style.setProperty("--vvb", `${Math.max(0, window.innerHeight - vv.height - vv.offsetTop)}px`);
     };
-    fit();
+    // the sheet mounts a frame later (it's portaled), so fit once it's there
+    const raf = requestAnimationFrame(fit);
     vv?.addEventListener("resize", fit);
     vv?.addEventListener("scroll", fit);
     const key = (e: KeyboardEvent) => e.key === "Escape" && close();
     window.addEventListener("keydown", key);
     return () => {
+      cancelAnimationFrame(raf);
       window.removeEventListener("popstate", pop);
       vv?.removeEventListener("resize", fit);
       vv?.removeEventListener("scroll", fit);
       window.removeEventListener("keydown", key);
+      // closed some other way (a name tapped, say): mark the entry so the next move reuses it
+      if (!popped && history.state?.tlSheet) history.replaceState({ ...history.state, tlSheet: 0, tlDead: 1 }, "");
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   function close() {

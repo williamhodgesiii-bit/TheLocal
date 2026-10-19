@@ -209,11 +209,13 @@ export function Pop({ open, onClose, anchor, title, children }: { open: boolean;
   // keyboard: land on the first choice when it opens, back on the button when it closes
   useEffect(() => {
     if (!open) return;
-    const t = setTimeout(() => panel.current?.querySelector<HTMLElement>(".pop-head ~ * button")?.focus({ preventScroll: true }), 30);
+    const box = panel.current;
+    const t = setTimeout(() => box?.querySelector<HTMLElement>(".pop-head ~ * button")?.focus({ preventScroll: true }), 30);
     const back = anchor.current;
     return () => {
       clearTimeout(t);
-      if (back && panel.current?.contains(document.activeElement)) back.focus({ preventScroll: true });
+      // focus goes back to the button that opened it, if it was still in here
+      if (back && box?.contains(document.activeElement)) back.focus({ preventScroll: true });
     };
   }, [open, anchor]);
   useLayoutEffect(() => {

@@ -4,6 +4,8 @@ import { createClient, type SupabaseClient, type User as AuthUser } from "@supab
 import { resizeImage } from "./image";
 import { canonicalSpotId, cleanGenres, slugify, type DrinkKind, type GenreId, type Spot } from "./data";
 import { DAILY_MAX } from "./reviews";
+import { BANNED_MESSAGE, hasBannedWord } from "./moderation";
+import { currentPushToken, isNativeApp, nativeAuthStorage } from "./native";
 import {
   VERDICT_SCORE,
   handleFrom,
@@ -220,6 +222,8 @@ export interface Backend {
   markRead(): Promise<void>;
   /** "I sent you a gift card": a note to a friend */
   sendGiftNote(toId: string, spotId: string, note: string): Promise<void>;
+  /** the iPhone app's push address for this phone, kept with the signed-in account */
+  savePushToken(token: string): Promise<void>;
 
   /* moderation */
   isAdmin(): Promise<boolean>;
@@ -465,8 +469,11 @@ function supabaseBackend(sb: SupabaseClient): Backend {
       if (p.shareSaved !== undefined) row.share_saved = p.shareSaved;
       if (p.comments !== undefined) row.comments = p.comments;
       if (p.top !== undefined) row.top_spots = p.top;
-      const { data, error } = await sb.from("members").update(row).eq("id", uid).select().single();
+      // other members can't read these settings, so the saved row comes back through ensure_member
+      const { error } = await sb.from("members").update(row).eq("id", uid);
       if (error) throw /members_handle_key|duplicate/i.test(error.message) ? new Error("That @name is taken. Try another.") : fail(error);
+      const { data, error: e2 } = await sb.rpc("ensure_member");
+      if (e2 || !data) throw fail(e2 ?? { message: "Saved. Reload to see it." });
       return mapMe(data);
     },
     async handleFree(h) {
@@ -665,6 +672,12 @@ function supabaseBackend(sb: SupabaseClient): Backend {
       const { error } = await sb.rpc("send_gift_note", { to_member: toId, spot: spotId, note });
       if (error) throw fail(error);
     },
+    async savePushToken(token) {
+      const { data: s } = await sb.auth.getSession();
+      if (!s.session) return;
+      // one phone, one account: signing in as someone else on it moves the address to them
+      await sb.rpc("save_push_token", { t: token });
+    },
     async myReviews() {
       const { data: auth } = await sb.auth.getUser();
       if (!auth.user) return [];
@@ -813,6 +826,9 @@ function supabaseBackend(sb: SupabaseClient): Backend {
       return error ? 0 : data?.length ?? 0;
     },
     async signOut() {
+      // no more notifications on this phone for an account that isn't signed in on it
+      const push = currentPushToken();
+      if (push) await sb.from("push_tokens").delete().eq("token", push).then(() => {}, () => {});
       // this device only; signing out on your phone shouldn't sign you out on your laptop
       await sb.auth.signOut({ scope: "local" });
     },
@@ -997,10 +1013,6 @@ function write(k: string, v: unknown) {
 }
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
 
-async function sha(s: string) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
 function blobToDataUrl(b: Blob) {
   return new Promise<string>((res, rej) => {
     const r = new FileReader();
@@ -1062,7 +1074,8 @@ function localBackend(): Backend {
   };
   const ensureMe = (): LMember | null => {
     const u = current();
-    if (!u) return null;
+    // no name picked yet: an @name made now would come from the email address
+    if (!u || u.needsName) return null;
     const have = memberOf(u.id);
     if (have) return have.name === u.name ? have : (write(K.members, members().map((m) => (m.id === u.id ? { ...m, name: u.name } : m))), { ...have, name: u.name });
     const base = handleFrom(u.name || "Local");
@@ -1157,6 +1170,7 @@ function localBackend(): Backend {
         next.handleChangedAt = new Date().toISOString();
       }
       if (p.bio !== undefined) next.bio = p.bio.replace(/\s+/g, " ").trim().slice(0, 160);
+      if (hasBannedWord(`${next.bio ?? ""} ${next.handle.replace(/_/g, " ")}`)) throw new Error(BANNED_MESSAGE);
       if (p.private !== undefined) {
         next.private = p.private;
         // going public lets everyone who asked in
@@ -1192,7 +1206,7 @@ function localBackend(): Backend {
         stats: {
           following: fs.filter((f) => f.a === m!.id && f.status === "accepted").length,
           followers: fs.filter((f) => f.b === m!.id && f.status === "accepted").length,
-          reviews: read<Review[]>(K.reviews, []).filter((r) => r.userId === m!.id).length,
+          reviews: read<Review[]>(K.reviews, []).filter((r) => r.userId === m!.id && r.status !== "held").length,
           been: ok && (meId === m.id || m.shareVisits) ? placesOf(m.id).filter((p) => p.at).length : null,
         },
         rel: !meId || meId === m.id ? null : {
@@ -1222,7 +1236,7 @@ function localBackend(): Backend {
       return [...out.values()].filter((p) => p.been || p.rating || p.saved);
     },
     async memberReviews(id) {
-      return decorateLocal(read<Review[]>(K.reviews, []).filter((r) => r.userId === id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+      return decorateLocal(read<Review[]>(K.reviews, []).filter((r) => r.userId === id && r.status !== "held").sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
     },
     async network(id, which) {
       const meId = current()?.id ?? null;
@@ -1376,14 +1390,14 @@ function localBackend(): Backend {
       for (const f of follows().filter((x) => x.a === meId && x.status === "accepted")) {
         const m = memberOf(f.b);
         if (!m || blockedWith(meId, m.id)) continue;
-        const places = placesOf(m.id).filter((p) => ids.has(p.spotId) && ((p.at && m.shareVisits) || (p.saved && m.shareSaved)));
-        const r = read<Review[]>(K.reviews, []).find((x) => x.userId === m.id && ids.has(x.spotId));
-        if (!places.length && !r) continue;
-        const been = places.find((p) => p.at);
-        out.push({
-          member: liteOf(m), spotId: r?.spotId ?? places[0].spotId, rating: r?.rating, verdict: been?.verdict, reviewId: r?.id,
-          saved: places.some((p) => p.saved) && m.shareSaved,
-        });
+        for (const spotId of ids) {
+          const p = placesOf(m.id).find((x) => x.spotId === spotId);
+          const r = read<Review[]>(K.reviews, []).find((x) => x.userId === m.id && x.spotId === spotId && x.status !== "held");
+          const been = p?.at && m.shareVisits ? p : undefined;
+          const saved = !!p?.saved && m.shareSaved;
+          if (!been && !r && !saved) continue;
+          out.push({ member: liteOf(m), spotId, rating: r?.rating, verdict: been?.verdict, reviewId: r?.id, saved });
+        }
       }
       return out;
     },
@@ -1417,6 +1431,7 @@ function localBackend(): Backend {
       ensureMe();
       const text = body.replace(/\s+/g, " ").trim();
       if (text.length < 1 || text.length > 500) throw new Error("Comments are 1 to 500 characters.");
+      if (hasBannedWord(text)) throw new Error(BANNED_MESSAGE);
       const r = read<Review[]>(K.reviews, []).find((x) => x.id === reviewId);
       if (!r || r.status === "held") throw new Error("That review isn't taking comments.");
       const writer = memberOf(r.userId);
@@ -1453,6 +1468,7 @@ function localBackend(): Backend {
       if (Date.now() - +new Date(c.createdAt) > 15 * 60e3) throw new Error("Comments can be edited for 15 minutes after posting.");
       const text = body.replace(/\s+/g, " ").trim();
       if (text.length < 1 || text.length > 500) throw new Error("Comments are 1 to 500 characters.");
+      if (hasBannedWord(text)) throw new Error(BANNED_MESSAGE);
       const next = { ...c, body: text, editedAt: new Date().toISOString() };
       write(K.comments, all.map((x) => (x.id === id ? next : x)));
       return commentOf(next);
@@ -1512,6 +1528,9 @@ function localBackend(): Backend {
       if (!(fs.some((f) => f.a === u.id && f.b === toId && f.status === "accepted") && fs.some((f) => f.a === toId && f.b === u.id && f.status === "accepted")))
         throw new Error("Gift notes go to friends: people you follow who follow you back.");
       notifyLocal(toId, u.id, "gift", { spotId, detail: note.replace(/\s+/g, " ").trim().slice(0, 200) || undefined });
+    },
+    async savePushToken() {
+      /* the demo has no server to send notifications from */
     },
     async getUser() {
       return current();
@@ -1594,6 +1613,7 @@ function localBackend(): Backend {
       const prev = all.find((x) => x.spotId === spotId && x.userId === u.id);
       const today = all.filter((x) => x.userId === u.id && x.id !== prev?.id && Date.now() - +new Date(x.createdAt) < 86400e3).length;
       if (!prev && today >= DAILY_MAX) throw new Error(`That's ${DAILY_MAX} reviews today. Come back tomorrow for more.`);
+      if (hasBannedWord(`${i.body} ${i.ordered.join(" ")}`)) throw new Error(BANNED_MESSAGE);
       const now = new Date().toISOString();
       const r: Review = {
         id: prev?.id ?? uid(), spotId, userId: u.id, userName: u.name, rating: i.rating, body: i.body,
@@ -1622,6 +1642,7 @@ function localBackend(): Backend {
     async addPhoto(spotId, file, kind, caption) {
       const u = current();
       if (!u) throw new Error("Sign in first.");
+      if (caption && hasBannedWord(caption)) throw new Error(BANNED_MESSAGE);
       const blob = await resizeImage(file, 1000, 0.72);
       const p: Photo = { id: uid(), spotId, userId: u.id, userName: u.name, url: await blobToDataUrl(blob), kind, caption, createdAt: new Date().toISOString() };
       write(K.photos, [p, ...read<Photo[]>(K.photos, [])]);
@@ -1744,7 +1765,14 @@ export function getBackend(): Backend {
     ? supabaseBackend(
         createClient(SUPABASE_URL, SUPABASE_KEY, {
           // implicit flow: an emailed sign-in link works even when it opens in a different browser than the one that asked
-          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit" },
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            flowType: "implicit",
+            // in the iPhone app the session lives in the app's own storage, which iOS doesn't clear
+            ...(isNativeApp() ? { storage: nativeAuthStorage } : {}),
+          },
         })
       )
     : localBackend();

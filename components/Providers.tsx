@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { AnimatePresence, motion } from "framer-motion";
 import { getBackend, shortName, type Backend, type BeenMap, type Stamp, type User, type Verdict } from "@/lib/backend";
 import { identify, track } from "@/lib/analytics";
+import { feel, isNativeApp, startNative } from "@/lib/native";
 import { HOME_KEY } from "@/lib/regions";
 import { canonicalSpotId } from "@/lib/data";
 import type { Me } from "@/lib/social";
@@ -335,6 +336,7 @@ export default function Providers({ children }: { children: ReactNode }) {
         persist(SAVED_KEY, next);
         track(on ? "add_to_wishlist" : "remove_from_wishlist", { item_id: id });
         if (synced && userRef.current) backend.putSaved(id, on).catch(() => toast("Couldn't save that to your account. Check your connection?", "err"));
+        if (on) feel();
       }
       toast(on ? "On your want-to-try list" : "Off your want-to-try list");
     },
@@ -363,6 +365,7 @@ export default function Providers({ children }: { children: ReactNode }) {
       setBeen(next);
       persist(BEEN_KEY, next);
       track(stamp ? "stamp" : "unstamp", { id, ...(stamp?.verdict ? { verdict: stamp.verdict } : {}) });
+      if (stamp && !cur[id]) feel("done");
       if (synced && userRef.current) backend.putStamp(id, stamp).catch(() => toast("Couldn't save that stamp to your account. Check your connection?", "err"));
       done?.(Object.keys(next).length);
     },
@@ -397,9 +400,10 @@ export default function Providers({ children }: { children: ReactNode }) {
     [openAuth, setSavedOn]
   );
 
-  // my @name and privacy, made the first time it's needed; a new name re-reads it
+  // my @name and privacy, made the first time it's needed; a new name re-reads it. Not before
+  // they've picked a name, or the @name would come from their email address.
   useEffect(() => {
-    if (!user) return setMe(null);
+    if (!user || user.needsName) return setMe(null);
     let live = true;
     backend
       .myMember()
@@ -408,7 +412,7 @@ export default function Providers({ children }: { children: ReactNode }) {
     return () => {
       live = false;
     };
-  }, [user?.id, user?.name, backend]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.name, user?.needsName, backend]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const refreshUnread = useCallback(() => {
     if (!userRef.current) return setUnread(0);
@@ -426,6 +430,19 @@ export default function Providers({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", tick);
     };
   }, [user?.id, refreshUnread]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // the iPhone app: links that open it, and this phone's push address kept with whoever is signed in
+  const pushFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    startNative((token) => {
+      pushFor.current = token;
+      if (userRef.current) backend.savePushToken(token).catch(() => {});
+    });
+  }, [backend]);
+  useEffect(() => {
+    if (user && pushFor.current) backend.savePushToken(pushFor.current).catch(() => {});
+  }, [user?.id, backend]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const registerNav = useCallback((n: Partial<Nav> | null) => {
     navRef.current = n;

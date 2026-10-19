@@ -54,7 +54,7 @@ export default function NeighborhoodHub() {
       <p className="cap-kicker">Birmingham neighborhoods</p>
       <h1 className="guide-h1">Where to eat, neighborhood by neighborhood</h1>
       <p className="guide-lede">
-        Birmingham is a city of neighborhoods, and every one eats a little differently. Here's where locals go in each — over the mountain in Homewood, Mountain Brook and Vestavia Hills, and across the city from Avondale to Five Points South.
+        Birmingham is a city of neighborhoods, and every one eats a little differently. Here&apos;s where locals go in each — over the mountain in Homewood, Mountain Brook and Vestavia Hills, and across the city from Avondale to Five Points South.
       </p>
 
       {towns.length > 0 && (

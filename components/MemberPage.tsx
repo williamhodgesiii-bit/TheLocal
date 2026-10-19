@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { track } from "@/lib/analytics";
 import type { Review } from "@/lib/backend";
 import { AREA_BY_ID, GENRES, GENRE_BY_ID, TOWNS, areaLabelOf, locationsOf, priceLabel, type GenreId, type Spot, type TownId } from "@/lib/data";
 import { giftFor } from "@/lib/gifts";

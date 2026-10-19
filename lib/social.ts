@@ -111,6 +111,9 @@ export function handleProblem(h: string): string | null {
 }
 /** the @name we'd pick from a name (the database does the same, plus a number when it's taken) */
 export function handleFrom(name: string) {
+  // "Will Hodges" and "Will H." both make "willh": a surname never goes into an @name
+  const parts = name.trim().split(/\s+/);
+  if (parts.length > 1) name = parts[0] + parts[parts.length - 1][0];
   let base = name.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 14);
   if (!/^[a-z]/.test(base)) base = "eats" + base;
   if (base.length < 3) base += "eats";

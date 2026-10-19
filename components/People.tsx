@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
+import { feel } from "@/lib/native";
 import { initials, profilePath, toneFor, type FollowState, type MemberLite, type Person } from "@/lib/social";
 import { useApp } from "./Providers";
 
@@ -60,6 +61,7 @@ export function FollowButton({
     setBusy(true);
     try {
       const next = await backend.follow(person.id, on);
+      if (on) feel();
       setState(next);
       onChange?.(next);
       track(on ? "follow" : "unfollow");

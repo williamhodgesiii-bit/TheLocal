@@ -47,6 +47,25 @@ alter table public.reviews add column if not exists updated_at timestamptz;
 alter table public.reviews add column if not exists status text not null default 'live' check (status in ('live', 'held', 'removed'));
 create index if not exists reviews_user_idx on public.reviews (user_id, created_at desc);
 
+-- Words that never post: slurs and threats, as whole words, through the usual letter swaps
+-- (lib/moderation.ts keeps the same list). Add more with: insert into public.banned_terms values ('…');
+create table if not exists public.banned_terms (term text primary key check (term = lower(term)));
+alter table public.banned_terms enable row level security; -- read only through has_banned_word()
+insert into public.banned_terms (term) values
+  ('nigger'), ('niggers'), ('nigga'), ('niggas'), ('faggot'), ('faggots'), ('fag'), ('fags'), ('dyke'), ('dykes'), ('tranny'), ('trannies'),
+  ('retard'), ('retards'), ('retarded'), ('chink'), ('chinks'), ('spic'), ('spics'), ('kike'), ('kikes'), ('wetback'), ('wetbacks'), ('gook'),
+  ('gooks'), ('coon'), ('coons'), ('beaner'), ('beaners'), ('raghead'), ('ragheads'), ('towelhead'), ('towelheads'), ('cunt'), ('cunts'),
+  ('kys'), ('kill yourself'), ('kill urself')
+on conflict do nothing;
+create or replace function public.has_banned_word(t text) returns boolean
+  language sql stable security definer set search_path = public
+as $$
+  with x as (
+    select regexp_replace(translate(lower(coalesce(t, '')), '0@41!3$', 'oaaiies'), '[^a-z\s]', '', 'g') as v
+  )
+  select exists (select 1 from public.banned_terms b, x where x.v ~ ('\m' || replace(b.term, ' ', '\s+') || '\M'))
+$$;
+
 -- The same rules for every review, good or bad, checked where nobody can skip them.
 create or replace function public.review_rules() returns trigger
   language plpgsql security definer set search_path = public
@@ -78,6 +97,9 @@ begin
   new.body := btrim(regexp_replace(regexp_replace(new.body, '\s*\n+\s*', ' ', 'g'), ' {2,}', ' ', 'g'));
   if char_length(new.body) not between 100 and 600 then
     raise exception 'Reviews are one paragraph, 100 to 600 characters.';
+  end if;
+  if public.has_banned_word(new.body || ' ' || array_to_string(new.ordered, ' ')) then
+    raise exception 'That has a word we don''t allow here. Talk about the food, not the person.';
   end if;
   if new.go_back is null then raise exception 'Would you go back? Pick yes or no.'; end if;
   if cardinality(new.ordered) not between 1 and 3 then raise exception 'Add what you got: one to three things.'; end if;
@@ -167,6 +189,16 @@ create table if not exists public.photos (
   created_at timestamptz not null default now()
 );
 create index if not exists photos_spot_idx on public.photos (spot_id, created_at desc);
+create or replace function public.photo_rules() returns trigger
+  language plpgsql security definer set search_path = public
+as $$
+begin
+  if public.has_banned_word(new.caption) then raise exception 'That has a word we don''t allow here.'; end if;
+  return new;
+end $$;
+drop trigger if exists photos_rules on public.photos;
+create trigger photos_rules before insert or update of caption on public.photos
+  for each row execute function public.photo_rules();
 
 alter table public.photos enable row level security;
 drop policy if exists "approved photos are public" on public.photos;
@@ -525,7 +557,7 @@ as $$
      and not exists (select 1 from public.handle_history x where x.handle = h and x.user_id is distinct from me and x.released_at > now() - interval '90 days')
 $$;
 
--- "Will H." → "willh", or "willh27" when that's taken
+-- "Will H." (or "Will Hodges") → "willh", or "willh27" when that's taken
 create or replace function public.new_handle(name text) returns text
   language plpgsql volatile security definer set search_path = public
 as $$
@@ -534,6 +566,11 @@ declare
   h text;
   i int := 0;
 begin
+  -- "Will Hodges" and "Will H." both make "willh": a surname never goes into an @name
+  name := btrim(coalesce(name, ''));
+  if name ~ '\s' then
+    name := split_part(name, ' ', 1) || left(regexp_replace(name, '^.*\s', ''), 1);
+  end if;
   base := left(regexp_replace(lower(translate(coalesce(name, ''), 'ÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝáàâäãåçéèêëíìîïñóòôöõúùûüýÿ', 'AAAAAACEEEEIIIINOOOOOUUUUYaaaaaaceeeeiiiinooooouuuuyy')), '[^a-z0-9]+', '', 'g'), 14);
   if base !~ '^[a-z]' then base := 'eats' || base; end if;
   if char_length(base) < 3 then base := base || 'eats'; end if;
@@ -558,6 +595,7 @@ begin
   if tg_op = 'UPDATE' then
     new.id := old.id;
     new.created_at := old.created_at;
+    if not public.is_admin() then new.handle_changed_at := old.handle_changed_at; end if;
     -- staff set roles; names come from the account (sync_member), pictures aren't uploadable yet
     if not public.is_admin() then
       new.role := old.role;
@@ -573,7 +611,8 @@ begin
       insert into public.handle_history (handle, user_id) values (old.handle, old.id)
         on conflict (handle) do update set user_id = excluded.user_id, released_at = now();
       delete from public.handle_history where handle = new.handle and user_id = new.id;
-      new.handle_changed_at := now();
+      -- a change they made starts the month; our swap of a placeholder (below) doesn't
+      if pg_trigger_depth() < 2 then new.handle_changed_at := now(); end if;
     end if;
   else
     if not public.is_admin() then
@@ -585,6 +624,9 @@ begin
   end if;
   new.display_name := left(coalesce(nullif(btrim(new.display_name), ''), 'Local'), 40);
   new.bio := nullif(left(btrim(regexp_replace(coalesce(new.bio, ''), '\s+', ' ', 'g')), 160), '');
+  if public.has_banned_word(coalesce(new.bio, '') || ' ' || replace(new.handle, '_', ' ')) and not public.is_admin() then
+    raise exception 'That has a word we don''t allow here.';
+  end if;
   -- the Top 4: places in the order picked, no repeats
   new.top_spots := coalesce((
     select array_agg(s order by o) from (
@@ -665,10 +707,25 @@ $$;
 
 drop policy if exists "members are public" on public.members;
 create policy "members are public" on public.members for select using (not public.blocked_with(id));
+-- and only these columns: Top 4, privacy and search settings are read through member_page / ensure_member
+revoke select on public.members from anon, authenticated;
+grant select (id, handle, display_name, avatar_url, role, is_private, bio, comments, created_at) on public.members to anon, authenticated;
 drop policy if exists "members edit themselves" on public.members;
 create policy "members edit themselves" on public.members for update using ((select auth.uid()) = id) with check ((select auth.uid()) = id);
 drop policy if exists "members create themselves" on public.members;
 create policy "members create themselves" on public.members for insert with check ((select auth.uid()) = id);
+
+-- Accounts from before Friends: their passport and want-to-go list were private when they made
+-- them, so they start with sharing off. (Friends launched October 20, 2026; nobody can stamp or
+-- save before signing in, so a newer account with stamps already is one from before too.)
+create or replace function public.joined_before_friends(uid uuid) returns boolean
+  language sql stable security definer set search_path = public
+as $$
+  select coalesce((select u.created_at < timestamptz '2026-10-20 05:00:00+00' from auth.users u where u.id = uid), false)
+      or exists (select 1 from public.stamps where user_id = uid)
+      or exists (select 1 from public.saved_spots where user_id = uid)
+$$;
+revoke all on function public.joined_before_friends(uuid) from public, anon, authenticated;
 
 -- a member row for everyone with a name: made with the first name, renamed with the name
 create or replace function public.sync_member() returns trigger
@@ -678,8 +735,12 @@ begin
   if new.display_name is null then return new; end if;
   if exists (select 1 from public.members where id = new.id) then
     update public.members set display_name = new.display_name where id = new.id and display_name is distinct from new.display_name;
+    -- made before they had a name (@local…): now it can be a real one
+    update public.members set handle = public.new_handle(new.display_name)
+      where id = new.id and handle ~ '^local[0-9]*$' and handle_changed_at is null;
   else
-    insert into public.members (id, handle, display_name) values (new.id, public.new_handle(new.display_name), new.display_name);
+    insert into public.members (id, handle, display_name, share_visits, share_saved)
+    values (new.id, public.new_handle(new.display_name), new.display_name, not public.joined_before_friends(new.id), not public.joined_before_friends(new.id));
   end if;
   return new;
 exception when others then
@@ -715,7 +776,8 @@ begin
   select * into m from public.members where id = auth.uid();
   if found then return m; end if;
   select display_name into nm from public.profiles where id = auth.uid();
-  insert into public.members (id, handle, display_name) values (auth.uid(), public.new_handle(coalesce(nm, 'Local')), coalesce(nm, 'Local'))
+  insert into public.members (id, handle, display_name, share_visits, share_saved)
+  values (auth.uid(), public.new_handle(coalesce(nm, 'Local')), coalesce(nm, 'Local'), not public.joined_before_friends(auth.uid()), not public.joined_before_friends(auth.uid()))
     returning * into m;
   return m;
 end $$;
@@ -776,8 +838,7 @@ alter table public.follows enable row level security;
 drop policy if exists "follows are visible" on public.follows;
 create policy "follows are visible" on public.follows for select using (
   (select auth.uid()) in (follower_id, followee_id)
-  or (status = 'accepted' and not public.blocked_with(follower_id) and not public.blocked_with(followee_id)
-      and (public.can_view(follower_id) or public.can_view(followee_id)))
+  or (status = 'accepted' and public.can_view(follower_id) and public.can_view(followee_id))
 );
 drop policy if exists "members follow" on public.follows;
 create policy "members follow" on public.follows for insert with check ((select auth.uid()) = follower_id);
@@ -859,6 +920,8 @@ create table if not exists public.review_comments (
   created_at timestamptz not null default now(),
   edited_at timestamptz
 );
+-- who a reply answered (the thread it joins may have been started by someone else)
+alter table public.review_comments add column if not exists reply_to uuid references auth.users (id) on delete set null;
 create index if not exists review_comments_review_idx on public.review_comments (review_id, created_at);
 create index if not exists review_comments_user_idx on public.review_comments (user_id, created_at desc);
 create index if not exists review_comments_parent_idx on public.review_comments (parent_id) where parent_id is not null;
@@ -876,6 +939,7 @@ begin
     new.review_id := old.review_id;
     new.user_id := old.user_id;
     new.parent_id := old.parent_id;
+    new.reply_to := old.reply_to;
     new.created_at := old.created_at;
     -- staff, and our own rules (a trigger inside a trigger), can change anything else
     if pg_trigger_depth() >= 2 or public.is_admin() then return new; end if;
@@ -895,12 +959,14 @@ begin
     if old.created_at < now() - interval '15 minutes' then raise exception 'Comments can be edited for 15 minutes after posting.'; end if;
     new.body := btrim(regexp_replace(coalesce(new.body, ''), '\s+', ' ', 'g'));
     if char_length(new.body) not between 1 and 500 then raise exception 'Comments are 1 to 500 characters.'; end if;
+    if public.has_banned_word(new.body) then raise exception 'That has a word we don''t allow here. Talk about the food, not the person.'; end if;
     new.edited_at := now();
     return new;
   end if;
 
   new.body := btrim(regexp_replace(coalesce(new.body, ''), '\s+', ' ', 'g'));
   if char_length(new.body) not between 1 and 500 then raise exception 'Comments are 1 to 500 characters.'; end if;
+  if public.has_banned_word(new.body) then raise exception 'That has a word we don''t allow here. Talk about the food, not the person.'; end if;
   select r.user_id, r.status, coalesce(m.comments, 'anyone') as comments, coalesce(m.display_name, r.display_name) as name
     into rv from public.reviews r left join public.members m on m.id = r.user_id where r.id = new.review_id;
   if not found or rv.status <> 'live' then raise exception 'That review isn''t taking comments.'; end if;
@@ -914,9 +980,11 @@ begin
     end if;
   end if;
   -- one level of replies: answering a reply joins the thread it's in
+  new.reply_to := null;
   if new.parent_id is not null then
-    select c.review_id, c.parent_id into par from public.review_comments c where c.id = new.parent_id;
+    select c.review_id, c.parent_id, c.user_id into par from public.review_comments c where c.id = new.parent_id;
     if not found or par.review_id <> new.review_id then raise exception 'That comment isn''t there anymore.'; end if;
+    new.reply_to := par.user_id;
     if par.parent_id is not null then new.parent_id := par.parent_id; end if;
   end if;
   -- pace: 30 seconds apart, 20 an hour, 100 a day; brand-new accounts 10 a day
@@ -1140,7 +1208,9 @@ as $$
 begin
   if tg_op = 'DELETE' then
     delete from public.activities where actor_id = old.follower_id and kind = 'follow' and target_id = old.followee_id;
-    delete from public.notifications where user_id = old.followee_id and actor_id = old.follower_id and kind in ('follow', 'request');
+    -- the note stays (read, for a cancelled request), so following again doesn't send another
+    update public.notifications set read_at = coalesce(read_at, now())
+      where user_id = old.followee_id and actor_id = old.follower_id and kind = 'request';
     return old;
   end if;
   if new.status = 'accepted' and (tg_op = 'INSERT' or old.status = 'pending') then
@@ -1148,7 +1218,10 @@ begin
     on conflict (actor_id, kind, (coalesce(spot_id, '')), (coalesce(target_id, '00000000-0000-0000-0000-000000000000'::uuid))) do nothing;
   end if;
   if tg_op = 'INSERT' then
-    perform public.notify(new.followee_id, new.follower_id, case when new.status = 'pending' then 'request' else 'follow' end, null, null, null, null);
+    if not exists (select 1 from public.notifications where user_id = new.followee_id and actor_id = new.follower_id
+                   and kind in ('follow', 'request') and created_at > now() - interval '30 days') then
+      perform public.notify(new.followee_id, new.follower_id, case when new.status = 'pending' then 'request' else 'follow' end, null, null, null, null);
+    end if;
   elsif old.status = 'pending' and new.status = 'accepted' then
     delete from public.notifications where user_id = new.followee_id and actor_id = new.follower_id and kind = 'request';
     perform public.notify(new.follower_id, new.followee_id, 'accepted', null, null, null, null);
@@ -1167,7 +1240,7 @@ insert into public.activities (actor_id, kind, spot_id, verdict, created_at)
 insert into public.activities (actor_id, kind, spot_id, created_at)
   select user_id, 'save', spot_id, least(created_at, now()) from public.saved_spots on conflict do nothing;
 
--- a reaction tells the writer once (taking it back takes back the note while it's unread)
+-- a reaction tells the writer once, ever (so taking it back and again can't spam them)
 create or replace function public.reaction_after() returns trigger
   language plpgsql security definer set search_path = public
 as $$
@@ -1175,10 +1248,6 @@ declare
   author uuid;
   sp text;
 begin
-  if tg_op = 'DELETE' then
-    delete from public.notifications where actor_id = old.user_id and kind = 'reaction' and review_id = old.review_id and detail = old.kind and read_at is null;
-    return old;
-  end if;
   select user_id, spot_id into author, sp from public.reviews where id = new.review_id;
   if not exists (select 1 from public.notifications where user_id = author and actor_id = new.user_id and kind = 'reaction' and review_id = new.review_id and detail = new.kind) then
     perform public.notify(author, new.user_id, 'reaction', new.review_id, null, sp, new.kind);
@@ -1186,7 +1255,7 @@ begin
   return new;
 end $$;
 drop trigger if exists review_votes_after on public.review_votes;
-create trigger review_votes_after after insert or delete on public.review_votes
+create trigger review_votes_after after insert on public.review_votes
   for each row execute function public.reaction_after();
 
 -- a comment tells the review's writer, the person replied to, and up to two people @named
@@ -1203,7 +1272,7 @@ declare
 begin
   select user_id, spot_id into author, sp from public.reviews where id = new.review_id;
   if new.parent_id is not null then
-    select user_id into pauthor from public.review_comments where id = new.parent_id;
+    pauthor := coalesce(new.reply_to, (select user_id from public.review_comments where id = new.parent_id));
     if pauthor is not null and not pauthor = any (told) then
       perform public.notify(pauthor, new.user_id, 'reply', new.review_id, new.id, sp, left(new.body, 140));
       told := told || pauthor;
@@ -1348,7 +1417,7 @@ as $$
   from public.follows f
   join public.members m on m.id = case when which = 'followers' then f.follower_id else f.followee_id end
   where (case when which = 'followers' then f.followee_id else f.follower_id end) = target
-    and f.status = 'accepted' and public.can_view(target) and not public.blocked_with(m.id)
+    and f.status = 'accepted' and public.can_view(target) and public.can_view(m.id)
   order by f.created_at desc
   limit 500
 $$;
@@ -1511,6 +1580,43 @@ create table if not exists public.gift_clicks (
 alter table public.gift_clicks enable row level security;
 drop policy if exists "anyone logs a gift click" on public.gift_clicks;
 create policy "anyone logs a gift click" on public.gift_clicks for insert with check (true);
+
+-- ---------- The iPhone app's push notifications ----------
+-- One row per phone: the address Apple gave the app, and whose account is signed in on it.
+-- app/api/push sends to these when a note lands (Database → Webhooks, see README → iPhone app).
+create table if not exists public.push_tokens (
+  token text primary key check (token ~ '^[0-9a-f]{32,}$' and char_length(token) <= 400),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  platform text not null default 'ios' check (platform in ('ios')),
+  env text not null default 'production' check (env in ('production', 'sandbox')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists push_tokens_user_idx on public.push_tokens (user_id);
+alter table public.push_tokens enable row level security;
+drop policy if exists "members see their phones" on public.push_tokens;
+create policy "members see their phones" on public.push_tokens for select using ((select auth.uid()) = user_id);
+drop policy if exists "members drop their phones" on public.push_tokens;
+create policy "members drop their phones" on public.push_tokens for delete using ((select auth.uid()) = user_id);
+
+-- the app saves its address here; a phone someone else signed out of moves to whoever is signed in now
+create or replace function public.save_push_token(t text) returns void
+  language plpgsql security definer set search_path = public
+as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception 'Sign in first.'; end if;
+  insert into public.push_tokens (token, user_id) values (lower(t), uid)
+  on conflict (token) do update set user_id = uid, updated_at = now();
+  -- a phone keeps a handful of old addresses at most
+  delete from public.push_tokens where user_id = uid and token not in
+    (select token from public.push_tokens where user_id = uid order by updated_at desc limit 5);
+end $$;
+revoke all on function public.save_push_token(text) from public, anon;
+grant execute on function public.save_push_token(text) to authenticated;
+
+-- each note is pushed at most once (app/api/push claims it by setting this)
+alter table public.notifications add column if not exists pushed_at timestamptz;
 
 -- internal helpers stay internal
 revoke all on function public.new_handle(text) from public, anon, authenticated;

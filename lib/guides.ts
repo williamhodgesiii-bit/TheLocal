@@ -163,7 +163,6 @@ const TOWN_GUIDES: Guide[] = TOWNS.filter((t) => t.id !== "birmingham" && t.id !
 export const BEST_GUIDES: Guide[] = [...CUISINE_GUIDES, ...OCCASION_GUIDES];
 /** Guides served at /neighborhood/[slug] */
 export const PLACE_GUIDES: Guide[] = [...TOWN_GUIDES, ...NEIGHBORHOOD_GUIDES];
-export const ALL_GUIDES: Guide[] = [...BEST_GUIDES, ...PLACE_GUIDES];
 
 export const BEST_BY_SLUG: Record<string, Guide> = Object.fromEntries(BEST_GUIDES.map((g) => [g.slug, g]));
 export const PLACE_BY_SLUG: Record<string, Guide> = Object.fromEntries(PLACE_GUIDES.map((g) => [g.slug, g]));
@@ -173,7 +172,6 @@ export const publishable = (g: Guide) => g.spots().length >= MIN_GUIDE;
 
 export const bestParams = () => BEST_GUIDES.filter(publishable).map((g) => ({ slug: g.slug }));
 export const placeParams = () => PLACE_GUIDES.filter(publishable).map((g) => ({ slug: g.slug }));
-export const publishableGuides = () => ALL_GUIDES.filter(publishable);
 
 export const hrefOf = (g: Guide) => (g.kind === "cuisine" || g.kind === "occasion" ? `/best/${g.slug}` : `/neighborhood/${g.slug}`);
 

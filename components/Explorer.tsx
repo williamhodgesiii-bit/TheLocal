@@ -48,8 +48,11 @@ import Passport from "./Passport";
 import StampPicker from "./StampPicker";
 import Friends, { type FriendsTab, type Pins } from "./Friends";
 import MemberPage from "./MemberPage";
+import { canLocate, currentPosition, shareLink } from "@/lib/native";
 
 type View = "list" | "map" | "me" | "friends" | "member";
+/** what a history entry remembers about the screen */
+type Screen = { view: View; selectedId: string | null; handle: string | null; friendsTab: FriendsTab; returnView: View; depth: number };
 
 function useIsMobile() {
   const [m, setM] = useState(false);
@@ -149,6 +152,11 @@ export default function Explorer({
   const hydrated = useRef(false);
   /** on the way to another city's page: don't write this page's address over the move */
   const leaving = useRef(false);
+  /**
+   * In-app history: opening a place, a tab, Friends or someone's page is a new entry (so Back and
+   * the iPhone's swipe-back return to where you were); filters just update the one you're on.
+   */
+  const push = useRef(false);
 
   /* ---------- city ---------- */
   // Home is where the map opens each visit; "Where are you?" (this tab only) can point somewhere else.
@@ -303,7 +311,16 @@ export default function Explorer({
             ? `/u/${handle}`
             : cityPath(city);
     const qs = p.toString();
-    history.replaceState(null, "", qs ? `${path}?${qs}` : path);
+    const url = qs ? `${path}?${qs}` : path;
+    const cur: Screen | undefined = history.state?.tl;
+    const screen: Screen = { view, selectedId, handle, friendsTab, returnView, depth: cur?.depth ?? 0 };
+    // a comment sheet that closed by itself left an entry behind: the move takes that entry over
+    const dead = !!history.state?.tlDead;
+    if (push.current && dead) history.replaceState({ tl: { ...screen, depth: screen.depth + 1 } }, "", url);
+    else if (push.current && url !== location.pathname + location.search) history.pushState({ tl: { ...screen, depth: screen.depth + 1 } }, "", url);
+    // an open comment sheet keeps its mark, so closing it still steps back
+    else history.replaceState({ tl: screen, ...(history.state?.tlSheet ? { tlSheet: 1 } : {}) }, "", url);
+    push.current = false;
     document.title = sel
       ? `${sel.name} · ${BRAND}`
       : view === "friends"
@@ -311,7 +328,33 @@ export default function Explorer({
         : view === "member" && handle
           ? `@${handle} · ${BRAND}`
           : `${BRAND} · ${city.name} restaurants, coffee & bars`;
-  }, [genre, drink, area, selectedId, spotById, city, view, theme, friendsTab, handle]);
+  }, [genre, drink, area, selectedId, spotById, city, view, theme, friendsTab, handle, returnView]);
+
+  // Back and Forward: put the screen back the way it was
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      if (leaving.current) return;
+      const tl: Screen | undefined = e.state?.tl;
+      const path = location.pathname;
+      const m = path.match(/^\/(spot|u)\/([^/]+)/);
+      const next: Omit<Screen, "depth"> = tl ?? {
+        view: path === "/me" ? "me" : path === "/friends" ? "friends" : m?.[1] === "u" ? "member" : "list",
+        selectedId: m?.[1] === "spot" ? canonicalSpotId(decodeURIComponent(m[2])) : null,
+        handle: m?.[1] === "u" ? decodeURIComponent(m[2]) : null,
+        friendsTab: "following",
+        returnView: "list",
+      };
+      setView(next.view);
+      setSelectedId(next.selectedId);
+      setHandle(next.handle);
+      setFriendsTab(next.friendsTab);
+      setReturnView(next.returnView);
+      setHoveredId(null);
+      setFocusId(null);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   useEffect(() => {
     backend.ratings().then(setRatings).catch(() => {});
@@ -413,7 +456,8 @@ export default function Explorer({
 
   /* ---------- actions ---------- */
   const select = useCallback(
-    (id: string | null) => {
+    (id: string | null, opts?: { replace?: boolean }) => {
+      if (!opts?.replace && id !== selectedId) push.current = true;
       if (id) {
         // remember where they came from so Back returns there
         if (!selectedId) setReturnView(view);
@@ -427,6 +471,7 @@ export default function Explorer({
     [selectedId, view, returnView]
   );
   const goView = useCallback((v: View) => {
+    push.current = true;
     if (v === "me") setProfileKey((k) => k + 1);
     setSelectedId(null);
     setFocusId(null);
@@ -446,6 +491,7 @@ export default function Explorer({
   const openMember = useCallback(
     (h: string) => {
       // Back from their page returns to wherever you were
+      push.current = true;
       setReturnView(selectedId ? "list" : view === "member" ? returnView : view);
       setHandle(h);
       setSelectedId(null);
@@ -454,6 +500,17 @@ export default function Explorer({
       scrollRef.current?.scrollTo({ top: 0 });
     },
     [selectedId, view, returnView]
+  );
+  /** Back: one step through the app's own history when there is one, else out to the list */
+  const goBack = useCallback(
+    (fallback: () => void) => {
+      if ((history.state?.tl?.depth ?? 0) > 0) history.back();
+      else {
+        fallback();
+        push.current = false;
+      }
+    },
+    []
   );
   useEffect(() => {
     registerNav({ member: openMember, spot: (id) => select(id), friends: openFriends });
@@ -522,17 +579,17 @@ export default function Explorer({
       } else if (e.key.toLowerCase() === "s" && !e.metaKey && !e.ctrlKey) {
         if (requireAuth(SURPRISE_WHY, () => setSurprise(true))) setSurprise(true);
       } else if (e.key === "Escape" && selectedId) {
-        select(null);
+        goBack(() => select(null));
       } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && list.length) {
         e.preventDefault();
         const i = list.findIndex((s) => s.id === (selectedId ?? hoveredId));
         const n = e.key === "ArrowDown" ? Math.min(list.length - 1, i + 1) : Math.max(0, i - 1);
-        select(list[n].id);
+        select(list[n].id, { replace: !!selectedId });
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [list, selectedId, hoveredId, surprise, select, requireAuth]);
+  }, [list, selectedId, hoveredId, surprise, select, requireAuth, goBack]);
 
   const selected = selectedId ? placedById[selectedId] ?? null : null;
   useEffect(() => {
@@ -590,17 +647,16 @@ export default function Explorer({
     if (requireAuth(STAMP_WHY, () => setStampPicker(true))) setStampPicker(true);
   }, [requireAuth]);
   const askNear = () => {
-    if (!navigator.geolocation) return toast("This browser can't share your location.", "err");
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setHere([pos.coords.latitude, pos.coords.longitude]);
+    if (!canLocate()) return toast("This browser can't share your location.", "err");
+    currentPosition(8000).then(
+      (p) => {
+        setHere(p);
         setSort("near");
       },
       () => {
         toast("No location, so sorted by most loved instead.");
         setSort("popular");
-      },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
+      }
     );
   };
 
@@ -756,12 +812,12 @@ export default function Explorer({
           <div className="sidebar-scroll" ref={scrollRef}>
             <AnimatePresence mode="wait" initial={false}>
               {selected ? (
-                <SpotDetail key={selected.id} spot={selected} number={numbers[selected.id]} pool={allSpots} onBack={() => select(null)} onSelect={select} />
+                <SpotDetail key={selected.id} spot={selected} number={numbers[selected.id]} pool={allSpots} onBack={() => goBack(() => select(null))} onSelect={select} />
               ) : view === "me" ? (
                 <motion.div key="me" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   {!isMobile && (
                     <div className="detail-bar">
-                      <button className="textbtn" onClick={() => goView("list")}>
+                      <button className="textbtn" onClick={() => goBack(() => goView("list"))}>
                         ← Back to the list
                       </button>
                     </div>
@@ -781,7 +837,7 @@ export default function Explorer({
                     spotById={spotById}
                     onOpen={(id) => select(id)}
                     onPins={setPins}
-                    onBack={() => goView(returnView === "member" ? "list" : returnView)}
+                    onBack={() => goBack(() => goView(returnView === "member" ? "list" : returnView))}
                     onHandle={setHandle}
                   />
                 </motion.div>
@@ -961,7 +1017,8 @@ export default function Explorer({
                     <p>Locally owned places only. If it has a drive-thru or a corporate office out of state, it isn&apos;t on here.</p>
                     <p>
                       {google || PINS_EXACT ? "" : "Map pins are close, not exact. "}Something closed or wrong? <Link href="/partners#contact">Let us know</Link>.{" "}
-                      <Link href="/about">How we pick</Link>. <Link href="/partners">For restaurants</Link>. <Link href="/credits">Photo credits</Link>.
+                      <Link href="/about">How we pick</Link>. <Link href="/partners">For restaurants</Link>. <Link href="/credits">Photo credits</Link>.{" "}
+                      <Link href="/terms">Terms</Link>. <Link href="/privacy">Privacy</Link>. <a href="mailto:emails@theplatenextdoor.com">Contact us</a>.
                     </p>
                     <p>
                       © {new Date().getFullYear()} {BRAND}, {city.name}, {apState(city.state)}
@@ -1018,7 +1075,7 @@ export default function Explorer({
             )}
             {isMobile && selected && (
               <div className="m-float">
-                <button className="m-round" onClick={() => select(null)} aria-label="Back to the list">
+                <button className="m-round" onClick={() => goBack(() => select(null))} aria-label="Back">
                   <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
                     <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -1038,16 +1095,8 @@ export default function Explorer({
                     className="m-round"
                     aria-label="Share"
                     onClick={async () => {
-                      const url = `${location.origin}/spot/${selected.id}`;
-                      try {
-                        if (navigator.share) await navigator.share({ title: selected.name, text: `${selected.name}: ${selected.knownFor}. Found on ${BRAND}.`, url });
-                        else {
-                          await navigator.clipboard.writeText(url);
-                          toast("Link copied");
-                        }
-                      } catch {
-                        /* dismissed */
-                      }
+                      const how = await shareLink({ title: selected.name, text: `${selected.name}: ${selected.knownFor}. Found on ${BRAND}.`, url: `${location.origin}/spot/${selected.id}` });
+                      if (how === "copied") toast("Link copied");
                     }}
                   >
                     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>

@@ -127,10 +127,11 @@ Not built yet, in rough order:
 - [ ] **Michelin American South 2026** comes out Oct 21, 2026. Update `lib/honors.ts` (new badges, changed or dropped ones) and the Award winners row follows. Add any newly recognized local places to `lib/data.ts`.
 - [ ] **The rest of the owner's list (Oct 2026).** Still to confirm open in 2026 before adding: Café Dupont, Blueprint on 3rd, Bocca, Makarios, Falafel Café, Bay Leaf, EastWest, Shu Shop, Mr. Shawarma, June Coffee, General, Uncle G's (Hop City), The Standard (Pizitz), Porch, Hello Bakery, Whiskey Foxtrot (Homewood), Hamburger Heaven (Homewood), Mr. Chen's (Homewood), Oak Hill Bar & Grill, Mexico Lindo, Mr. P's Deli and Creekside BBQ. Still to check who owns or where they started: Otoro Hibachi, Waldo's Chicken & Beer, Baumhower's, Overtime Grill. Henrietta's Deli needs its new Trussville address.
 - [ ] **Re-check the list** every few months: closures, new owners, prices. Bump `CHECKED` in `lib/brand.ts` when done.
-- [ ] **Owner setup:** Supabase, Google sign-in and Google Analytics (see **Accounts, database & analytics**), a terms page, payments for Partner and Sponsored (Stripe payment links are the simplest start), and turning on Vercel Analytics.
+- [ ] **The iPhone app.** Built and ready to sign; the steps that need your Apple account and a Mac are in **iPhone app** below.
+- [ ] **Owner setup:** Supabase, Google sign-in and Google Analytics (see **Accounts, database & analytics**), payments for Partner and Sponsored (Stripe payment links are the simplest start), and turning on Vercel Analytics.
 - [ ] **Reviews, next:** owner replies (claimed owners, one per review, free for everyone), a staff screen for reported and held reviews (today: Supabase table editor, `reviews.status`), and once a few hundred reviews are in, "top 10% of Birmingham coffee" style rankings.
 - [ ] **Gift cards for the rest of the list.** About 90 places weren't checked (search limits and Toast's bot wall). Open each place's site and its Toast/Square page by hand, then add to `lib/gifts.ts`. Toast pages that say "Gift Cards Unavailable" (Paper Doll, Woody's, Carrigan's in Oct 2026) don't count. Re-check the list every few months.
-- [ ] **Listing fixes the gift card audit turned up** (confirm, then fix in `lib/data.ts`): Yo' Mama's moved to 2024 4th Ave N (Jan 2025, per Bham Now); Ovenbird's site says 2810 3rd Ave S, Suite 200; The Essential's Toast page says 2215 1st Ave N; Saw's Soul Kitchen's Toast page now reads "Saw's BBQ Avondale"; check whether Salice is now Luca Lagotto, TrimTab is still open, and Pizzeria GM's "closed" banner is old.
+- [ ] **Listing fixes the gift card audit turned up** (confirm, then fix in `lib/data.ts`): Yo' Mama's moved to 2024 4th Ave N (Jan 2025, per Bham Now); Ovenbird's site says 2810 3rd Ave S, Suite 200; The Essential's Toast page says 2215 1st Ave N; Saw's Soul Kitchen's Toast page now reads "Saw's BBQ Avondale"; check whether TrimTab is still open and Pizzeria GM's "closed" banner is old. (Salice is confirmed correct.)
 - [ ] **Friends, next:** profile pictures (uploads, with moderation), local editor accounts (`update members set role = 'editor' where handle = '…'` in Supabase) so new members have people to follow, invite links that make both people follow each other, a weekly email digest with one-click unsubscribe, a per-review comment switch, owner responses, and a staff screen for reported comments and members (today: Supabase table editor, `review_comments.status`, `member_reports`).
 - [ ] **Have a lawyer read** the review rules and the Sponsored labeling on `/about` and `/partners`.
 - [ ] **Real photos of every place** (owner uploads or a local photographer) to replace the labeled stock dish photos.
@@ -231,6 +232,45 @@ Events sent (to GA4 and Vercel Analytics): `sign_up` / `login` (with method), `a
 | `NEXT_PUBLIC_GA_ID` | Google Analytics web stream |
 | `NEXT_PUBLIC_PASSKEYS` | `on` once passkeys are enabled in Supabase |
 | `NEXT_PUBLIC_AUTH_CODE_LENGTH` | only if you change the code length from 6 |
+| `APPLE_TEAM_ID`, `APNS_KEY`, `APNS_KEY_ID`, `IOS_BUNDLE_ID`, `PUSH_WEBHOOK_SECRET` | the iPhone app (see **iPhone app**) |
+
+## iPhone app
+
+`native/` is the iPhone app: a native shell ([Capacitor 8](https://capacitorjs.com/docs), Swift Package Manager, iOS 15 and up, iPhone only) that opens www.theplatenextdoor.com. Every fix and new place on the site is in the app the moment Vercel deploys, with no App Store update. Without a connection it shows a "No connection" screen instead of a blank page.
+
+**What the app does that the website can't** (`lib/native.ts`, and the reason it passes Apple's "not just a website" rule, 4.2):
+- **Nearest** uses the phone's location through the app's own permission prompt. It stays on the phone.
+- **Share** opens the iOS share sheet for places, member pages and the passport card.
+- **A light tap** in the hand on save, stamp, follow and react.
+- **Notifications** for replies, comments, @mentions, follow requests, accepted requests and gift notes. Asked once from the Activity tab, never at launch; reactions and plain follows stay in the app. `app/api/push` sends them through Apple (APNs).
+- **Links open the app.** A theplatenextdoor.com link tapped in Messages or Mail opens that page in the app (`/.well-known/apple-app-site-association`).
+- **Stays signed in.** The session lives in the app's own storage, which iOS doesn't clear the way it can clear website storage.
+
+**What changes on the site inside the app:** no Google sign-in button (Google blocks its sign-in inside apps, and offering it would also mean adding Sign in with Apple, rule 4.8), so members sign in with the emailed code. Google Analytics doesn't load, so there's no tracking prompt.
+
+**Already in place for App Review:** `/terms` with zero tolerance for abuse, Report on every review, comment and member, Block, a filter for slurs and threats (`lib/moderation.ts`, `banned_terms`), a contact email (rule 1.2); deleting your account in the app (5.1.1(v)); the privacy policy with an iPhone app section; specific permission wording for location, camera and photos; the privacy manifest (`native/ios/App/App/PrivacyInfo.xcprivacy`); 13+ in the terms.
+
+**What you need to do, in order:**
+1. **Apple Developer Program**, $99 a year ([enroll](https://developer.apple.com/programs/enroll/)). Individual is fine; your name shows as the seller.
+2. **A Mac with Xcode 26 or newer** (yours, a friend's, or a cloud Mac). On it:
+   ```bash
+   cd native && npm install && npx cap sync ios && npx cap open ios
+   ```
+   In Xcode: the **App** target → **Signing & Capabilities** → pick your team. If `com.theplatenextdoor.app` is taken, change the bundle ID there and set `IOS_BUNDLE_ID` in Vercel to match. Push Notifications and Associated Domains should already be listed (from `App/App.entitlements`).
+3. **Push key.** [Apple Developer → Keys](https://developer.apple.com/account/resources/authkeys/list) → **+** → check **Apple Push Notifications service (APNs)** → download the `.p8` file (you only get it once). In Vercel → Environment Variables add `APNS_KEY` (open the file in a text editor and paste all of it), `APNS_KEY_ID` (shown next to the key), `APPLE_TEAM_ID` (Apple Developer → Membership details) and `PUSH_WEBHOOK_SECRET` (any long random string). Redeploy. `https://www.theplatenextdoor.com/.well-known/apple-app-site-association` should now show your team and bundle ID.
+4. **Supabase.** Run `supabase/schema.sql` again (SQL Editor, or the **Set up Supabase** action) for the `push_tokens` table. Then **Database → Webhooks → Create a new hook**: name `push`, table `notifications`, event **Insert**, type **HTTP Request**, method POST, URL `https://www.theplatenextdoor.com/api/push`, add an HTTP header `x-push-secret` with the same secret.
+5. **Sign-in email.** In the app, people type the code. The "Sign me in" button in the email opens Safari and signs in there instead, so the app doesn't mention it. (Removing the button from the template in step 1.7 above makes the email code-only everywhere.)
+6. **A reviewer account.** Apple has to be able to sign in, and the code goes to an inbox. Make a Gmail just for this, sign in to the site with it once, and put the Gmail address and password in the review notes. Don't let it expire or delete it.
+7. **Test on your phone.** Plug it in, pick it in Xcode, press Run. Check: Nearest asks for location once; Share opens the share sheet; Activity → Turn on notifications, then have a friend comment on your review; a theplatenextdoor.com link in Messages opens the app; airplane mode shows "No connection".
+8. **App Store Connect** → Apps → **+ New App**: iOS, name `The Plate Next Door`, English (U.S.), your bundle ID, SKU `platenextdoor-ios`. Then:
+   - Category **Food & Drink**. Price **Free**.
+   - Screenshots from the iPhone simulator at **6.9"** (1320×2868) and **6.3"** (1206×2622), 3 to 10 each. The icon comes from the build.
+   - **App Privacy**: Contact info → Email address; Identifiers → User ID; User content → Photos and Other user content (reviews, comments); Name. All linked to the person, not used for tracking, for App Functionality. Usage data → Product interaction, not linked, for Analytics (Vercel Analytics). Location: not collected, since it never leaves the phone.
+   - **Age rating**: answer as it is. Social Media and user-generated content are yes; alcohol references are yes (bars). Expect 13+.
+   - **Review notes**: the reviewer Gmail and password; that it's a guide to locally owned places with friends, reviews and comments; the native features listed above; that content is moderated by the word filter, Report, Block and a person reading reports within 24 hours; that gift cards link out to each restaurant's own page and nothing is sold in the app.
+9. **Ship it.** Xcode → **Product → Archive → Distribute App → App Store Connect**. Try it through **TestFlight** first, then **Submit for Review**.
+
+**After launch:** read reports every day (the terms promise 24 hours): `member_reports`, `comment_reports` and held reviews in the Supabase table editor. The app's code only changes when the native shell does (a new plugin, a new permission); bump the version in Xcode and archive again then. Texas (and soon Utah and Louisiana) added age-check rules for app stores in 2026; whether a free app with no purchases has to do anything is a question for a lawyer.
 
 ## Local dev
 

@@ -113,6 +113,23 @@ export default function Privacy() {
       </p>
 
       <h2 className="menu-head">
+        <span>In the iPhone app</span>
+      </h2>
+      <ul className="privacy-list">
+        <li>
+          <b>Location</b> is used only when you tap Nearest or &quot;Use my location&quot;, to sort places on your phone. It isn&apos;t sent to us or saved.
+        </li>
+        <li>
+          <b>Notifications</b>: if you turn them on, we keep your phone&apos;s notification address with your account to send replies, comments, @mentions,
+          follow requests and gift notes. Signing out on the phone removes it, and you can turn them off any time in iOS Settings.
+        </li>
+        <li>
+          <b>Photos and camera</b>: only the photos you pick are uploaded.
+        </li>
+        <li>The app doesn&apos;t load Google Analytics, and nothing in it tracks you across other companies&apos; apps or websites.</li>
+      </ul>
+
+      <h2 className="menu-head">
         <span>Email</span>
       </h2>
       <p>
@@ -134,7 +151,7 @@ export default function Privacy() {
         <span>Who holds it</span>
       </h2>
       <p>
-        Supabase (our database and sign-in), Vercel (hosting), Google ({GOOGLE_ON ? "analytics, and Google sign-in if you use it" : "analytics"}) and our email provider (to deliver codes).
+        Supabase (our database and sign-in), Vercel (hosting), Google ({GOOGLE_ON ? "analytics, and Google sign-in if you use it" : "analytics"}) our email provider (to deliver codes) and Apple (to deliver notifications in the iPhone app).
         They process it for us under their own security and privacy terms.
       </p>
 
@@ -160,6 +177,8 @@ export default function Privacy() {
       </p>
 
       <footer className="guide-foot">
+        <Link href="/terms">Terms</Link>
+        <span> · </span>
         <Link href="/about">How we pick</Link>
         <span> · </span>
         <Link href="/best">Guides</Link>

@@ -1222,129 +1222,10 @@ select {
   flex-wrap: wrap;
   gap: 8px;
 }
-
-.reviews {
-  margin: 28px 22px 0;
-  padding-top: 12px;
-  border-top: 2px solid var(--ink);
-}
-.reviews-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-.score {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 6px 0 14px;
-  border-bottom: 1px solid var(--line);
-}
-.score-big {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.score-n {
-  font-family: var(--f-serif);
-  font-size: 42px;
-  line-height: 1;
-}
-.score-of {
-  font-size: 12.5px;
-  color: var(--muted);
-  line-height: 1.3;
-}
-.bars {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.bar-row {
-  display: grid;
-  grid-template-columns: 10px 1fr;
-  gap: 8px;
-  align-items: center;
-}
-.bar-n {
-  font-size: 11px;
-  color: var(--muted);
-}
-.bar {
-  height: 5px;
-  background: #e4dcc7;
-  overflow: hidden;
-}
-.bar span {
-  display: block;
-  height: 100%;
-  background: var(--green);
-}
-.review-form {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px 0 4px;
-}
-.review-form textarea {
-  width: 100%;
-  min-height: 152px;
-  resize: vertical;
-  padding: 0 12px;
-  border: 1px solid #8db39a;
-  outline: none;
-  font-family: var(--f-pen);
-  font-size: 23px;
-  line-height: 30px;
-  color: var(--pen);
-  background: repeating-linear-gradient(transparent 0 29px, var(--rule) 29px 30px) var(--check);
-  background-attachment: local;
-}
-.review-form textarea:focus {
-  border-color: var(--green);
-}
-.count {
-  font-size: 12px;
-  color: var(--muted);
-}
-.star-input {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.star-input button {
-  background: none;
-  border: 0;
-  padding: 1px;
-  color: #ddd3bc;
-}
-.star-input button path {
-  fill: currentColor;
-  stroke: var(--ink);
-  stroke-width: 1;
-}
-.star-input button.on {
-  color: var(--red);
-}
-.star-word {
-  font-size: 13px;
-  color: var(--muted);
-}
 .stars {
   display: inline-flex;
   gap: 1px;
   color: var(--red);
-}
-.review-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.review-list li {
-  padding: 14px 0 12px;
-  border-bottom: 1px dashed var(--line-2);
 }
 .r-body {
   margin: 0;
@@ -1373,11 +1254,6 @@ select {
 .r-sig .textbtn {
   font-size: 12px;
   color: var(--muted);
-}
-.empty-reviews p {
-  margin: 10px 0;
-  font-size: 14px;
-  color: var(--ink-2);
 }
 .skeleton-list span {
   display: block;
@@ -1653,10 +1529,6 @@ button.rv-chip {
   border-color: var(--green);
   color: var(--green);
   font-weight: 600;
-}
-.rv-helpful-n {
-  font-size: 12.5px;
-  color: var(--muted);
 }
 .rv-report-form {
   display: flex;
@@ -2920,10 +2792,6 @@ label.check input {
 .where-line .hit-bad {
   margin-left: 6px;
 }
-.grow {
-  flex: 1;
-  min-width: 0;
-}
 .hits {
   display: flex;
   flex-direction: column;
@@ -3627,20 +3495,6 @@ label.check input {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.p-saved {
-  list-style: none;
-  padding: 0;
-  margin: 10px 0 0;
-}
-.p-saved button {
-  width: 100%;
-  display: flex;
-  align-items: baseline;
-  background: none;
-  border: 0;
-  padding: 8px 0;
-  text-align: left;
-}
 .p-empty {
   margin: 0;
   padding: 16px 0;
@@ -3879,7 +3733,6 @@ label.check input {
     font-size: 12.5px;
   }
   .snaps,
-  .reviews,
   .nearby,
   .claim {
     margin-left: 16px;
@@ -3892,8 +3745,7 @@ label.check input {
     flex: 1 1 auto;
     min-height: 44px;
   }
-  .nearby button,
-  .p-saved button {
+  .nearby button {
     min-height: 44px;
     align-items: center;
   }
@@ -3921,12 +3773,8 @@ label.check input {
   .form input:not([type="checkbox"]):not([type="range"]):not([type="file"]),
   .form select,
   .form textarea,
-  .review-form textarea,
   .nl-row input {
     font-size: 16px;
-  }
-  .review-form textarea {
-    font-size: 23px;
   }
   .submit-bar {
     position: static;
@@ -4587,9 +4435,6 @@ label.check input {
   .detail > .detail-body {
     order: 4;
   }
-  .detail > .reviews {
-    order: 5;
-  }
   .detail > .nearby {
     order: 6;
   }
@@ -4682,14 +4527,10 @@ label.check input {
     font-size: 16px;
     line-height: 1.6;
   }
-  .reviews,
   .nearby,
   .claim {
     margin-left: 20px;
     margin-right: 20px;
-  }
-  .reviews {
-    margin-top: 32px;
   }
   .nearby {
     margin-top: 28px;
@@ -6159,7 +6000,6 @@ label.check input {
   border: 1px solid var(--rule);
 }
 
-
 /* ================================================================ friends
    Avatars, follow buttons, reactions and comments, the feed, member pages,
    gift cards and settings. Same paper, ink and ledger green as the rest. */
@@ -6617,6 +6457,15 @@ label.check input {
 .fr-pitch-sub {
   margin: 12px 0 0 !important;
   color: var(--muted) !important;
+}
+.push-ask h2 {
+  font-size: 19px;
+}
+.push-ask-act {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
 }
 .fr-pop-row {
   display: flex;
@@ -7383,5 +7232,31 @@ label.check input {
     bottom: var(--vvb, 0px);
     height: min(88dvh, calc(var(--vvh, 88dvh) - 8px));
     max-height: none;
+  }
+}
+
+/* standalone pages sit below an iPhone's status bar when opened from the home screen or the app */
+.about,
+.partners,
+.admin {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.credits {
+  padding-top: max(28px, env(safe-area-inset-top, 0px));
+}
+.guide {
+  padding-top: max(18px, env(safe-area-inset-top, 0px));
+}
+
+/* phones: no field under 16px, or iPhone Safari zooms in when it's tapped */
+@media (max-width: 900px) {
+  .sort select,
+  .rv-form input:not([type="checkbox"]),
+  .rv-form select,
+  .rv-form textarea,
+  .rv-tools select,
+  .mb-filters select,
+  .gift-note textarea {
+    font-size: 16px;
   }
 }

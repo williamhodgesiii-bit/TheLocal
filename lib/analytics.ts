@@ -5,6 +5,7 @@
  * Google never loads.
  */
 import { track as vercelTrack } from "@vercel/analytics";
+import { isNativeApp } from "./native";
 
 export const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? "";
 export const NO_ANALYTICS_KEY = "tl.noanalytics";
@@ -21,6 +22,8 @@ declare global {
 /** Google Analytics is allowed for this visitor (configured, no GPC, not opted out). */
 export function gaAllowed() {
   if (!GA_ID || typeof window === "undefined") return false;
+  // never inside the iPhone app: no cross-app tracking there, so no tracking prompt is needed
+  if (isNativeApp()) return false;
   try {
     if ((navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true) return false;
     if (localStorage.getItem(NO_ANALYTICS_KEY) === "1") return false;

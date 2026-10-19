@@ -18,6 +18,7 @@ import Photo from "./Photo";
 import { BeenButtons, Honors } from "./FrontPage";
 import GiftSheet from "./GiftSheet";
 import { giftFor } from "@/lib/gifts";
+import { shareLink } from "@/lib/native";
 
 type GPhoto = { url: string; author: string; authorUri: string | null };
 type Places = { enabled: boolean; photos: GPhoto[]; rating?: number | null; ratingCount?: number | null; website?: string | null };
@@ -68,7 +69,6 @@ export default function SpotDetail({
   const [uploading, setUploading] = useState(false);
   const [uploadKind, setUploadKind] = useState<PhotoKind>("food");
   const fileRef = useRef<HTMLInputElement>(null);
-  const g = GENRE_BY_ID[spot.genres[0]];
 
   useEffect(() => {
     let live = true;
@@ -84,6 +84,8 @@ export default function SpotDetail({
     return () => {
       live = false;
     };
+    // once per place: the name and address only change with it
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spot.id, backend]);
 
   // Building first, then food, the way you size a place up from the sidewalk.
@@ -164,17 +166,9 @@ export default function SpotDetail({
   }
 
   async function share() {
-    const url = `${location.origin}/spot/${spot.id}`;
-    try {
-      if (navigator.share) await navigator.share({ title: spot.name, text: `${spot.name}: ${spot.knownFor}`, url });
-      else {
-        await navigator.clipboard.writeText(url);
-        toast("Link copied");
-      }
-      track("share", { id: spot.id });
-    } catch {
-      /* dismissed */
-    }
+    const how = await shareLink({ title: spot.name, text: `${spot.name}: ${spot.knownFor}`, url: `${location.origin}/spot/${spot.id}` });
+    if (how === "copied") toast("Link copied");
+    if (how !== "dismissed") track("share", { id: spot.id });
   }
 
 

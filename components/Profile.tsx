@@ -319,6 +319,14 @@ export default function Profile({
           <Link href="/privacy" className="textbtn">
             What we keep, and why
           </Link>
+          <span aria-hidden> · </span>
+          <Link href="/terms" className="textbtn">
+            Terms
+          </Link>
+          <span aria-hidden> · </span>
+          <a href="mailto:emails@theplatenextdoor.com" className="textbtn">
+            Contact us
+          </a>
         </p>
         <p className="acct-row acct-danger">
           {confirmDelete ? (

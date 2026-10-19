@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { User } from "@/lib/backend";
 import { track } from "@/lib/analytics";
+import { isNativeApp } from "@/lib/native";
 import { useApp } from "./Providers";
 import GoogleButton from "./GoogleButton";
 
@@ -49,6 +50,7 @@ export default function AuthModal({
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [passkeys, setPasskeys] = useState(false);
+  const [inApp, setInApp] = useState(false);
   const [passkeyAdded, setPasskeyAdded] = useState(false);
   const codeRef = useRef<HTMLInputElement>(null);
   const autofill = useRef<AbortController | null>(null);
@@ -64,6 +66,7 @@ export default function AuthModal({
     setBusy(false);
     setPasskeyAdded(false);
     setPasskeys(backend.canUsePasskeys());
+    setInApp(isNativeApp());
     try {
       setEmail(localStorage.getItem(LAST_EMAIL_KEY) ?? "");
     } catch {
@@ -253,7 +256,8 @@ export default function AuthModal({
                   </h2>
                   <p className="muted">{reason ?? "Stamp your Plate Passport, save places to try, spin Surprise me, write reviews and post photos. Free, and no password."}</p>
 
-                  {backend.googleClientId && (
+                  {/* Google refuses to sign in inside an app's web view, so the iPhone app uses the emailed code */}
+                  {backend.googleClientId && !inApp && (
                     <>
                       <GoogleButton clientId={backend.googleClientId} onToken={google} onFallback={() => backend.signInWithGoogleRedirect(here).catch((e) => setErr(message(e)))} />
                       <p className="auth-or">
@@ -301,13 +305,11 @@ export default function AuthModal({
 
                   <p className="fine auth-fine">
                     {backend.mode === "local" ? (
-                      <>Preview mode: your account and everything you save stay on this device.</>
+                      <>Preview mode: your account and everything you save stay on this device. </>
                     ) : (
-                      <>
-                        New here or coming back, it&apos;s the same: we email you a code. No password to remember.{" "}
-                        <Link href="/privacy">Privacy</Link>
-                      </>
+                      <>New here or coming back, it&apos;s the same: we email you a code. No password to remember. </>
                     )}
+                    By continuing you agree to the <Link href="/terms">Terms</Link> (no abuse, no fake reviews) and the <Link href="/privacy">Privacy policy</Link>.
                   </p>
                 </motion.div>
               )}
@@ -358,7 +360,8 @@ export default function AuthModal({
                     </button>
                   </form>
                   <p className="fine auth-fine">
-                    Or tap the link in that email — either one signs you in.{" "}
+                    {/* in the app, a tapped link would open Safari and sign in there instead */}
+                    {inApp ? "Type it here to sign in. " : "Or tap the link in that email — either one signs you in. "}
                     {cooldown > 0 ? (
                       <span className="auth-wait">
                         New code in {Math.floor(cooldown / 60)}:{String(cooldown % 60).padStart(2, "0")}
