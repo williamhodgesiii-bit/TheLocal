@@ -1,5 +1,10 @@
 {
- "osmCount": 0,
+ "osmCount": 1122,
+ "osmLog": [
+  "https://overpass-api.de/api/interpreter 406 156 <html> <head><title>406 Not Acceptable</title></head> <body> <center><h1>406 Not Acceptable</h1></center> <hr><cente",
+  "https://overpass.private.coffee/api/interpreter 500 646 <!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\"> <html><head> <title>500 Inter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter 200 597711 { \"version\": 0.6, \"generator\": \"Overpass API 0.7.62.4 2390de5a\", \"osm3s\": { \"timestamp_osm_base\": \"2026-10-19T"
+ ],
  "places": {
   "helen": {
    "osm": null
@@ -8,16 +13,60 @@
    "osm": null
   },
   "bamboo-on-2nd": {
-   "osm": null
+   "osm": {
+    "name": "Bamboo on 2nd",
+    "d": 0,
+    "site": "https://www.bambooon2nd.com/"
+   },
+   "web": {
+    "site": "https://www.bambooon2nd.com/",
+    "status": 200,
+    "final": "https://www.bambooon2nd.com/",
+    "title": "Bamboo On 2nd | Birmingham, AL",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "the-essential": {
    "osm": null
   },
   "brick-and-tin": {
-   "osm": null
+   "osm": {
+    "name": "Brick & Tin",
+    "d": 13,
+    "site": "https://brickandtin.com/"
+   },
+   "web": {
+    "site": "https://brickandtin.com/",
+    "status": 200,
+    "final": "https://brickandtin.com/",
+    "title": "Best American Restaurant in Mountain Brook | Brick &amp; Tin",
+    "giftLinks": [
+     {
+      "href": "https://www.toasttab.com/b&tdowntown/giftcards",
+      "text": "Downtown"
+     },
+     {
+      "href": "https://www.toasttab.com/brick-tin/giftcards",
+      "text": "Mountain Brook"
+     }
+    ],
+    "mentions": true,
+    "toast": [
+     "https://www.toasttab.com/brick-tin/v3",
+     "https://www.toasttab.com/b%26tdowntown/v3",
+     "https://order.toasttab.com/online/brick-tin-huntsville",
+     "https://order.toasttab.com/online/brick-tin-cahaba-heights-3151-green-valley-road"
+    ]
+   }
   },
   "nikis-west": {
-   "osm": null
+   "osm": {
+    "name": "Niki’s West",
+    "d": 74,
+    "site": null
+   }
   },
   "collins-bar": {
    "osm": null
@@ -26,7 +75,28 @@
    "osm": null
   },
   "paramount": {
-   "osm": null
+   "osm": {
+    "name": "Paramount",
+    "d": 1,
+    "site": "https://paramountbirmingham.com/"
+   },
+   "web": {
+    "site": "https://paramountbirmingham.com/",
+    "status": 200,
+    "final": "https://paramountbirmingham.com/",
+    "title": "Paramount Birmingham and Homewood",
+    "giftLinks": [
+     {
+      "href": "https://www.toasttab.com/paramount-birmingham-200-20th-st-n/giftcards",
+      "text": "Gift Cards"
+     }
+    ],
+    "mentions": true,
+    "toast": [
+     "https://www.toasttab.com/paramount-birmingham-200-20th-st-n/giftcards",
+     "https://order.toasttab.com/online/locations/3ef2627b-ee26-4d2b-8293-1c057a7e1eb3/default"
+    ]
+   }
   },
   "pale-eddies": {
    "osm": null
@@ -35,10 +105,27 @@
    "osm": null
   },
   "good-people": {
-   "osm": null
+   "osm": {
+    "name": "Good People Brewing",
+    "d": 71,
+    "site": "https://www.goodpeoplebrewing.com/"
+   },
+   "web": {
+    "site": "https://www.goodpeoplebrewing.com/",
+    "status": 200,
+    "final": "https://www.goodpeoplebrewing.com/",
+    "title": "Good People Brewing Co.",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "back-forty": {
-   "osm": null
+   "osm": {
+    "name": "Back Forty Beer Company",
+    "d": 30,
+    "site": null
+   }
   },
   "bayonet": {
    "osm": null
@@ -50,7 +137,27 @@
    "osm": null
   },
   "current-charcoal": {
-   "osm": null
+   "osm": {
+    "name": "Current Charcoal Grill",
+    "d": 1,
+    "site": "https://www.currentcharcoalgrill.com/"
+   },
+   "web": {
+    "site": "https://www.currentcharcoalgrill.com/",
+    "status": 200,
+    "final": "https://www.currentcharcoalgrill.com/",
+    "title": "Current Charcoal Grill | Asian-American Restaurant in Birmingham, AL",
+    "giftLinks": [
+     {
+      "href": "https://www.toasttab.com/current-charcoal-grill/giftcards",
+      "text": "Gift Cards"
+     }
+    ],
+    "mentions": true,
+    "toast": [
+     "https://www.toasttab.com/current-charcoal-grill/giftcards"
+    ]
+   }
   },
   "reve": {
    "osm": null
@@ -71,19 +178,77 @@
    "osm": null
   },
   "the-fennec": {
-   "osm": null
+   "osm": {
+    "name": "The Fennec",
+    "d": 0,
+    "site": "https://thefennecbham.com"
+   },
+   "web": {
+    "site": "https://thefennecbham.com",
+    "status": 200,
+    "final": "https://thefennecbham.com/",
+    "title": "The Fennec - Live Music, Events, Entertainment",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "gus-hot-dogs": {
    "osm": null
   },
   "trattoria-zaza": {
-   "osm": null
+   "osm": {
+    "name": "Trattoria Zaza",
+    "d": 0,
+    "site": "https://www.zazabham.com/"
+   },
+   "web": {
+    "site": "https://www.zazabham.com/",
+    "status": 200,
+    "final": "https://www.zazabham.com/",
+    "title": "Trattoria zaza",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": [
+     "https://www.toasttab.com/trattoria-zaza-207a-20th-st-n"
+    ]
+   }
   },
   "salud-taqueria": {
-   "osm": null
+   "osm": {
+    "name": "Salud Taqueria",
+    "d": 1,
+    "site": "https://www.saludbham.com/"
+   },
+   "web": {
+    "site": "https://www.saludbham.com/",
+    "status": 200,
+    "final": "https://www.saludbham.com/",
+    "title": "Salud Taqueria",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": [
+     "https://www.toasttab.com/local/order/salud-taqueria-1931-2nd-avenue-north-101"
+    ]
+   }
   },
   "el-barrio": {
-   "osm": null
+   "osm": {
+    "name": "El Barrio",
+    "d": 0,
+    "site": "https://www.elbarriobirmingham.com/"
+   },
+   "web": {
+    "site": "https://www.elbarriobirmingham.com/",
+    "status": 200,
+    "final": "https://www.elbarriobirmingham.com/",
+    "title": "El Barrio | Birmingham, Alabama",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": [
+     "https://order.toasttab.com/online/locations/3ef2627b-ee26-4d2b-8293-1c057a7e1eb3/b518afb2-fb8e-44cd-8f9b-9e5d17e54165"
+    ]
+   }
   },
   "bandit-patisserie": {
    "osm": null
@@ -101,31 +266,140 @@
    "osm": null
   },
   "galley-and-garden": {
-   "osm": null
+   "osm": {
+    "name": "Galley & Garden",
+    "d": 1,
+    "site": "https://www.galleyandgarden.com/"
+   },
+   "web": {
+    "site": "https://www.galleyandgarden.com/",
+    "status": 403,
+    "final": "https://www.galleyandgarden.com/",
+    "title": "Just a moment...",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "bottega": {
-   "osm": null
+   "osm": {
+    "name": "Bottega",
+    "d": 0,
+    "site": "https://bottegarestaurant.com/"
+   },
+   "web": {
+    "site": "https://bottegarestaurant.com/",
+    "status": 403,
+    "final": "https://bottegarestaurant.com/",
+    "title": "403 - Forbidden",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "chez-fonfon": {
    "osm": null
   },
   "surin-west": {
-   "osm": null
+   "osm": {
+    "name": "Surin West",
+    "d": 1,
+    "site": "https://surinofthailand.com/location/surin-west/"
+   },
+   "web": {
+    "site": "https://surinofthailand.com/location/surin-west/",
+    "status": 200,
+    "final": "https://surinofthailand.com/locations/surin-west/",
+    "title": "Surin West Thai Restaurant Birmingham AL | Surin 5 Points Downtown",
+    "giftLinks": [
+     {
+      "href": "https://surinofthailand.com/gift-cards/",
+      "text": "GIFT CARDS"
+     }
+    ],
+    "mentions": true,
+    "toast": [],
+    "giftPage": {
+     "url": "https://surinofthailand.com/gift-cards/",
+     "status": 200,
+     "title": "Gift Cards | Surin of Thailand",
+     "buy": [
+      {
+       "href": "https://surinofthailand.com/gift-cards/",
+       "text": "GIFT CARDS"
+      }
+     ],
+     "text": " Gift Cards | Surin of Thailand Skip to content Menu ABOUT LOCATIONS / ONLINE ORDER Surin West Surin 280 Mountain Brook, AL Huntsville, AL MENU Menu Item Separator G"
+    }
+   }
   },
   "taj-india": {
-   "osm": null
+   "osm": {
+    "name": "Taj India",
+    "d": 33,
+    "site": "https://www.tajindia.net/"
+   },
+   "web": {
+    "site": "https://www.tajindia.net/",
+    "status": 200,
+    "final": "https://tajindia.net/",
+    "title": "Tajindia &#8211; Authentic Indian Cuisine Lunch and Dinner in Birmingham, AL &#8211; Award-winning Indian restaurant in ",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "fish-market": {
-   "osm": null
+   "osm": {
+    "name": "The Fish Market",
+    "d": 0,
+    "site": "https://www.thefishmarket.net/"
+   },
+   "web": {
+    "site": "https://www.thefishmarket.net/",
+    "status": 200,
+    "final": "https://www.thefishmarket.net/",
+    "title": "The Fish Market",
+    "giftLinks": [
+     {
+      "href": "https://thefishmarketdowntown.instagift.com/",
+      "text": "Gift Cards"
+     }
+    ],
+    "mentions": true,
+    "toast": []
+   }
   },
   "rojo": {
-   "osm": null
+   "osm": {
+    "name": "Rojo",
+    "d": 1,
+    "site": "https://www.rojobirmingham.com/"
+   },
+   "web": {
+    "site": "https://www.rojobirmingham.com/",
+    "status": 200,
+    "final": "https://www.rojobirmingham.com/",
+    "title": "Rojo",
+    "giftLinks": [
+     {
+      "href": "https://rojo.instagift.com/",
+      "text": "Gift Cards"
+     }
+    ],
+    "mentions": true,
+    "toast": []
+   }
   },
   "daves-pub": {
    "osm": null
   },
   "the-nick": {
-   "osm": null
+   "osm": {
+    "name": "The Nick",
+    "d": 6,
+    "site": null
+   }
   },
   "the-garage": {
    "osm": null
@@ -137,10 +411,27 @@
    "osm": null
   },
   "otsuka-ramen": {
-   "osm": null
+   "osm": {
+    "name": "Otsuka Ramen",
+    "d": 43,
+    "site": "https://otsukaramenal.com"
+   },
+   "web": {
+    "site": "https://otsukaramenal.com",
+    "status": 200,
+    "final": "https://www.otsukaramenal.com/",
+    "title": "OTSUKA RAMEN Restaurant - Birmingham, AL | Order Online | Japanese Takeout",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "university-tacos": {
-   "osm": null
+   "osm": {
+    "name": "University Tacos",
+    "d": 17,
+    "site": null
+   }
   },
   "automatic-seafood": {
    "osm": null
@@ -149,13 +440,48 @@
    "osm": null
   },
   "hot-and-hot": {
-   "osm": null
+   "osm": {
+    "name": "Hot and Hot Fish Club",
+    "d": 20,
+    "site": "https://www.hotandhotfishclub.com/"
+   },
+   "web": {
+    "site": "https://www.hotandhotfishclub.com/",
+    "status": 200,
+    "final": "https://www.hotandhotfishclub.com/",
+    "title": "Hot &amp; Hot Fish Club / by Chris Hastings",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "red-cat": {
-   "osm": null
+   "osm": {
+    "name": "The Red Cat",
+    "d": 0,
+    "site": "https://theredcatcoffeehouse.com/"
+   },
+   "web": {
+    "site": "https://theredcatcoffeehouse.com/",
+    "status": 200,
+    "final": "https://theredcatcoffeehouse.com/",
+    "title": "Red Cat Coffee House, Birmingham, AL &#8211; Coffee For All",
+    "giftLinks": [
+     {
+      "href": "https://squareup.com/gift/VAG8Y10T2KX29/order",
+      "text": ""
+     }
+    ],
+    "mentions": true,
+    "toast": []
+   }
   },
   "trimtab": {
-   "osm": null
+   "osm": {
+    "name": "TrimTab Brewing Company",
+    "d": 54,
+    "site": null
+   }
   },
   "mayawell": {
    "osm": null
@@ -164,25 +490,139 @@
    "osm": null
   },
   "bettola": {
-   "osm": null
+   "osm": {
+    "name": "Bettola",
+    "d": 61,
+    "site": null
+   }
   },
   "slice-pizza": {
-   "osm": null
+   "osm": {
+    "name": "Slice Pizza & Brew",
+    "d": 1,
+    "site": "https://www.slicebirmingham.com/"
+   },
+   "web": {
+    "site": "https://www.slicebirmingham.com/",
+    "status": 200,
+    "final": "https://www.slicebirmingham.com/",
+    "title": "Slice Pizza &amp; Brew",
+    "giftLinks": [
+     {
+      "href": "https://www.toasttab.com/slicebirmingham-lakeview/giftcards",
+      "text": "Lakeview"
+     },
+     {
+      "href": "https://www.toasttab.com/slicebirmingham/giftcards",
+      "text": "Vestavia"
+     },
+     {
+      "href": "https://www.toasttab.com/slice-pizza-brew-crestline-1101-dunston-avenue/giftcards",
+      "text": "Crestline"
+     },
+     {
+      "href": "https://www.toasttab.com/slice-homewood-llc-1010-oxmoor-road/giftcards?utm_source=undefined&utm_content=online--slice-homewood-llc-1010-oxmoor-road&utm_medium=toast_sites&utm_campaign=giftcards",
+      "text": "Homewood"
+     },
+     {
+      "href": "https://www.slicebirmingham.com/gift-card",
+      "text": "Folder: Gift Card"
+     }
+    ],
+    "mentions": true,
+    "toast": [
+     "https://order.toasttab.com/online/slicebirmingham-lakeview",
+     "https://order.toasttab.com/online/slicebirmingham",
+     "https://order.toasttab.com/online/slice-pizza-brew-crestline-1101-dunston-avenue",
+     "https://order.toasttab.com/online/slice-homewood-llc-1010-oxmoor-road"
+    ],
+    "giftPage": {
+     "url": "https://www.slicebirmingham.com/gift-card",
+     "status": 403,
+     "title": "Just a moment...",
+     "buy": [],
+     "text": ""
+    }
+   }
   },
   "burning-tree": {
    "osm": null
   },
   "saws-soul-kitchen": {
-   "osm": null
+   "osm": {
+    "name": "Saw's Soul Kitchen",
+    "d": 50,
+    "site": "https://www.sawsbbq.com/"
+   },
+   "web": {
+    "site": "https://www.sawsbbq.com/",
+    "status": 200,
+    "final": "https://sawsbbq.com/",
+    "title": "SAW&#039;s BBQ - Best Barbecue in Alabama | Authentic Southern BBQ",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "avondale-brewing": {
-   "osm": null
+   "osm": {
+    "name": "Avondale Brewing Company",
+    "d": 17,
+    "site": null
+   }
   },
   "big-spoon": {
-   "osm": null
+   "osm": {
+    "name": "Big Spoon Creamery",
+    "d": 15,
+    "site": "https://www.bigspooncreamery.com/"
+   },
+   "web": {
+    "site": "https://www.bigspooncreamery.com/",
+    "status": 200,
+    "final": "https://www.bigspooncreamery.com/",
+    "title": "Big Spoon Creamery",
+    "giftLinks": [
+     {
+      "href": "https://www.bigspooncreamery.com/gift-cards",
+      "text": "Gift Cards"
+     }
+    ],
+    "mentions": true,
+    "toast": [],
+    "giftPage": {
+     "url": "https://www.bigspooncreamery.com/gift-cards",
+     "status": 200,
+     "title": "Gift Cards &mdash; Big Spoon Creamery",
+     "buy": [
+      {
+       "href": "https://www.bigspooncreamery.com/gift-cards",
+       "text": "Gift Cards"
+      },
+      {
+       "href": "https://squareup.com/gift/0EQD93SYF9VYR/order",
+       "text": "PURCHASE E-GIFT CARD"
+      }
+     ],
+     "text": " Gift Cards &mdash; Big Spoon Creamery Home Menu About Locations Catering Join Our Team Gift Cards Press Home Menu About Locations Catering Join Our Team Gift Cards Press Gift Cards Be the best gift-giver in town! No matter the occasion, a gift card to"
+    }
+   }
   },
   "cahaba-brewing": {
-   "osm": null
+   "osm": {
+    "name": "Cahaba Brewing Company",
+    "d": 0,
+    "site": "https://cahababrewing.com/"
+   },
+   "web": {
+    "site": "https://cahababrewing.com/",
+    "status": 200,
+    "final": "https://cahababrewing.com/",
+    "title": "Home - Cahaba Brewing Co.",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "saturn": {
    "osm": null
@@ -200,7 +640,11 @@
    "osm": null
   },
   "little-donkey": {
-   "osm": null
+   "osm": {
+    "name": "Little Donkey",
+    "d": 35,
+    "site": null
+   }
   },
   "jinsei": {
    "osm": null
@@ -209,22 +653,90 @@
    "osm": null
   },
   "saws-bbq": {
-   "osm": null
+   "osm": {
+    "name": "Saw's BBQ",
+    "d": 1,
+    "site": null
+   }
   },
   "gianmarcos": {
-   "osm": null
+   "osm": {
+    "name": "GianMarco's",
+    "d": 148,
+    "site": null
+   }
   },
   "seeds-coffee": {
-   "osm": null
+   "osm": {
+    "name": "Seeds Coffee Company",
+    "d": 1,
+    "site": "https://www.seedscoffee.com/"
+   },
+   "web": {
+    "site": "https://www.seedscoffee.com/",
+    "status": 200,
+    "final": "https://seedscoffee.com/",
+    "title": "Seeds Coffee Co",
+    "giftLinks": [
+     {
+      "href": "https://seedscoffee.com/pages/subscription-gifts",
+      "text": "Gift Subscriptions"
+     }
+    ],
+    "mentions": false,
+    "toast": [],
+    "giftPage": {
+     "url": "https://seedscoffee.com/pages/subscription-gifts",
+     "status": 200,
+     "title": "Subscription Gifts\n &ndash; Seeds Coffee Co",
+     "buy": [
+      {
+       "href": "https://seedscoffee.com/products/loopz-gift-card",
+       "text": "Gift card"
+      }
+     ],
+     "text": " Subscription Gifts &ndash; Seeds Coffee Co Skip to content Home Coffee Subscription Merch Log in Facebook Instagram Home Coffee Subscription Merch Search Log in Cart Item added "
+    }
+   }
   },
   "edgewood-creamery": {
-   "osm": null
+   "osm": {
+    "name": "Edgewood Creamery",
+    "d": 0,
+    "site": null
+   }
   },
   "savages-bakery": {
-   "osm": null
+   "osm": {
+    "name": "Savage's Bakery",
+    "d": 1,
+    "site": "https://savagesbakery.com/"
+   },
+   "web": {
+    "site": "https://savagesbakery.com/",
+    "status": 200,
+    "final": "https://savagesbakery.com/",
+    "title": "Savage&apos;s Bakery - Homewood, AL",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "ocarrs": {
-   "osm": null
+   "osm": {
+    "name": "O’Carr’s Restaurant",
+    "d": 0,
+    "site": "https://ocarrs.com/"
+   },
+   "web": {
+    "site": "https://ocarrs.com/",
+    "status": 200,
+    "final": "https://ocarrs.com/",
+    "title": "Must-Try Cafe in Homewood, AL | O&apos;Carr&apos;s Delicatessen",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "demetris": {
    "osm": null
@@ -233,7 +745,20 @@
    "osm": null
   },
   "chez-lulu": {
-   "osm": null
+   "osm": {
+    "name": "Continental Bakery",
+    "d": 0,
+    "site": "https://www.continental-bakery.com/"
+   },
+   "web": {
+    "site": "https://www.continental-bakery.com/",
+    "status": 200,
+    "final": "https://www.continental-bakery.com/",
+    "title": "European Style Bakery &amp; Coffee Shop | Continental Bakery | Birmingham, AL",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "vino": {
    "osm": null
@@ -245,28 +770,61 @@
    "osm": null
   },
   "davenports": {
-   "osm": null
+   "osm": {
+    "name": "Davenport's Pizza Palace",
+    "d": 84,
+    "site": null
+   }
   },
   "gilchrist": {
    "osm": null
   },
   "church-street-coffee": {
-   "osm": null
+   "osm": {
+    "name": "Church Street Coffee",
+    "d": 54,
+    "site": null
+   }
   },
   "dyrons": {
    "osm": null
   },
   "oteys": {
-   "osm": null
+   "osm": {
+    "name": "Otey's",
+    "d": 572,
+    "site": null
+   }
   },
   "la-paz": {
-   "osm": null
+   "osm": {
+    "name": "La Paz Mexican",
+    "d": 24,
+    "site": null
+   }
   },
   "slims-pizzeria": {
-   "osm": null
+   "osm": {
+    "name": "Slim's Pizzeria",
+    "d": 3,
+    "site": null
+   }
   },
   "miss-myras": {
-   "osm": null
+   "osm": {
+    "name": "Miss Myra's",
+    "d": 25,
+    "site": "https://www.missmyras.com/"
+   },
+   "web": {
+    "site": "https://www.missmyras.com/",
+    "status": 200,
+    "final": "https://www.missmyras.com/",
+    "title": "missmyras",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "el-zunzun": {
    "osm": null
@@ -281,7 +839,11 @@
    "osm": null
   },
   "caveat-coffee": {
-   "osm": null
+   "osm": {
+    "name": "Caveat",
+    "d": 115,
+    "site": null
+   }
   },
   "daily-edition": {
    "osm": null
@@ -305,7 +867,22 @@
    "osm": null
   },
   "woodys": {
-   "osm": null
+   "osm": {
+    "name": "Woody's Food + Bar",
+    "d": 1,
+    "site": "https://www.eatatwoodys.com/"
+   },
+   "web": {
+    "site": "https://www.eatatwoodys.com/",
+    "status": 200,
+    "final": "https://eatatwoodys.com/",
+    "title": "Woody&#039;s Food &amp; Bar - Good Food. Cold Drinks. Good Times.",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": [
+     "https://order.toasttab.com/online/woodys-food-bar-2721-cahaba-road"
+    ]
+   }
   },
   "abhi": {
    "osm": null
@@ -317,22 +894,47 @@
    "osm": null
   },
   "bongiorno": {
-   "osm": null
+   "osm": {
+    "name": "Bongiorno",
+    "d": 126,
+    "site": null
+   }
   },
   "crestline-bagel": {
-   "osm": null
+   "osm": {
+    "name": "Crestline Bagel Company",
+    "d": 0,
+    "site": null
+   }
   },
   "foodbar": {
    "osm": null
   },
   "mudtown": {
-   "osm": null
+   "osm": {
+    "name": "Mudtown",
+    "d": 32,
+    "site": null
+   }
   },
   "bistro-v": {
    "osm": null
   },
   "diplomat-deli": {
-   "osm": null
+   "osm": {
+    "name": "Diplomat Delicatessen & Spirits",
+    "d": 1,
+    "site": "https://diplomatdeli.com/"
+   },
+   "web": {
+    "site": "https://diplomatdeli.com/",
+    "status": 200,
+    "final": "https://diplomatdeli.com/",
+    "title": "The Diplomat Deli - Restaurant in Vestavia Hills Alabama",
+    "giftLinks": [],
+    "mentions": true,
+    "toast": []
+   }
   },
   "kool-korner": {
    "osm": null
@@ -359,22 +961,83 @@
    "osm": null
   },
   "le-fresca": {
-   "osm": null
+   "osm": {
+    "name": "Lé Fresca",
+    "d": 0,
+    "site": "https://www.lefrescabhm.com/"
+   },
+   "web": {
+    "site": "https://www.lefrescabhm.com/",
+    "status": 200,
+    "final": "https://www.lefrescabhm.com/",
+    "title": "Lé Fresca",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "t-bones": {
    "osm": null
   },
   "jim-n-nicks": {
-   "osm": null
+   "osm": {
+    "name": "Jim 'N Nick's",
+    "d": 93,
+    "site": null
+   }
   },
   "dreamland-southside": {
-   "osm": null
+   "osm": {
+    "name": "Dreamland Bar-B-Que",
+    "d": 1,
+    "site": "https://www.dreamlandbbq.com/content/Dreamlandbbq/CustomPages/locations/Birmingham.htm"
+   },
+   "web": {
+    "site": "https://www.dreamlandbbq.com/content/Dreamlandbbq/CustomPages/locations/Birmingham.htm",
+    "status": 404,
+    "final": "https://dreamlandbbq.com/content/Dreamlandbbq/CustomPages/locations/Birmingham.htm",
+    "title": "Page not found - Dreamland BBQ",
+    "giftLinks": [
+     {
+      "href": "https://dreamlandbbq.com/corporate-gifts/",
+      "text": "Corporate Gifts"
+     },
+     {
+      "href": "https://www.storecard.com/",
+      "text": "Gift Card Balance"
+     }
+    ],
+    "mentions": true,
+    "toast": [
+     "https://order.toasttab.com/online/locations/5556b33c-5d62-47d8-9abd-9d186cbed05b/cd1accba-b33f-456c-9eaf-aa48c395764a"
+    ],
+    "giftPage": {
+     "url": "https://dreamlandbbq.com/corporate-gifts/",
+     "status": 200,
+     "title": "Corporate Gifts - Say Thank You with BBQ | Dreamland BBQ",
+     "buy": [],
+     "text": " Corporate Gifts - Say Thank You with BBQ | Dreamland BBQ Home of the Best Ribs on the Planet. World-Famous. ORDER ONLINE Rewards Locations MENU CATERING Sauce Map SHOP &#038;"
+    }
+   }
   },
   "son-of-a-butcher": {
    "osm": null
   },
   "high-dive": {
-   "osm": null
+   "osm": {
+    "name": "High Dive HiFi Lounge",
+    "d": 0,
+    "site": "https://highdive-bham.com"
+   },
+   "web": {
+    "site": "https://highdive-bham.com",
+    "status": 200,
+    "final": "https://highdive-bham.com/",
+    "title": "High Dive HiFi Lounge | Coffee, Cocktails &amp; Live Music in Birmingham Alabama",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "carliles": {
    "osm": null
@@ -389,19 +1052,53 @@
    "osm": null
   },
   "shiki": {
-   "osm": null
+   "osm": {
+    "name": "Shiki",
+    "d": 0,
+    "site": "https://www.shikibirmingham.com/"
+   },
+   "web": {
+    "site": "https://www.shikibirmingham.com/",
+    "status": 403,
+    "final": "https://www.shikibirmingham.com/",
+    "title": "Just a moment...",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "red-pearl": {
-   "osm": null
+   "osm": {
+    "name": "Red Pearl Restaurant",
+    "d": 0,
+    "site": "https://superorientalmkt.com/"
+   },
+   "web": {
+    "site": "https://superorientalmkt.com/",
+    "status": 200,
+    "final": "https://superorientalmkt.com/",
+    "title": "Super Oriental Market",
+    "giftLinks": [],
+    "mentions": false,
+    "toast": []
+   }
   },
   "curry-corner": {
    "osm": null
   },
   "taco-mama": {
-   "osm": null
+   "osm": {
+    "name": "Taco Mama",
+    "d": 0,
+    "site": null
+   }
   },
   "on-tap-liberty-park": {
-   "osm": null
+   "osm": {
+    "name": "On Tap Sports Cafe",
+    "d": 9,
+    "site": null
+   }
   },
   "golden-rule-irondale": {
    "osm": null
@@ -572,6 +1269,86 @@
   "https://www.toasttab.com/helen/giftcards": {
    "status": 403,
    "final": "https://order.toasttab.com/egiftcards/helen",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/brick-tin-huntsville/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/brick-tin-huntsville",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/brick-tin-cahaba-heights-3151-green-valley-road/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/brick-tin-cahaba-heights-3151-green-valley-road",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/locations/giftcards": {
+   "status": 404,
+   "final": "https://www.toasttab.com/locations/giftcards",
+   "title": null,
+   "unavailable": false,
+   "snippet": "",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/trattoria-zaza-207a-20th-st-n/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/trattoria-zaza-207a-20th-st-n",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/salud-taqueria-1931-2nd-avenue-north-101/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/salud-taqueria-1931-2nd-avenue-north-101",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/slicebirmingham-lakeview/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/slicebirmingham-lakeview",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/slicebirmingham/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/slicebirmingham",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/slice-pizza-brew-crestline-1101-dunston-avenue/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/slice-pizza-brew-crestline-1101-dunston-avenue",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/slice-homewood-llc-1010-oxmoor-road/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/slice-homewood-llc-1010-oxmoor-road",
+   "title": "Just a moment...",
+   "unavailable": false,
+   "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
+   "giftFlags": []
+  },
+  "https://www.toasttab.com/woodys-food-bar-2721-cahaba-road/giftcards": {
+   "status": 403,
+   "final": "https://order.toasttab.com/egiftcards/woodys-food-bar-2721-cahaba-road",
    "title": "Just a moment...",
    "unavailable": false,
    "snippet": " Just a moment... Enable JavaScript and cookies to continue ",
