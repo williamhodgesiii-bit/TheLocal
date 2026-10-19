@@ -43,14 +43,19 @@ const isGift = (l) => /gift/i.test(l.href) || /gift/i.test(l.text);
 const BB = "33.15,-87.10,33.65,-86.55";
 const oq = `[out:json][timeout:120];(nwr["amenity"~"^(restaurant|cafe|bar|pub|fast_food|ice_cream|biergarten|food_court)$"](${BB});nwr["shop"~"^(bakery|coffee|deli|wine|alcohol|butcher|confectionery|pastry|tea)$"](${BB});nwr["craft"~"^(brewery|winery|distillery)$"](${BB}););out tags center;`;
 let osm = [];
-for (const ep of ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]) {
+const osmLog = [];
+for (const ep of ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]) {
   try {
-    const r = await fetch(ep, { method: "POST", headers: { "user-agent": UA, "content-type": "application/x-www-form-urlencoded" }, body: "data=" + encodeURIComponent(oq) });
-    if (r.ok) {
-      osm = (await r.json()).elements;
-      break;
+    const r = await fetch(ep + "?data=" + encodeURIComponent(oq), { headers: { "user-agent": UA } });
+    const t = await r.text();
+    osmLog.push(`${ep} ${r.status} ${t.length} ${t.slice(0, 120).replace(/\s+/g, " ")}`);
+    if (r.ok && t.startsWith("{")) {
+      osm = JSON.parse(t).elements ?? [];
+      if (osm.length) break;
     }
-  } catch {}
+  } catch (e) {
+    osmLog.push(`${ep} error ${e.message}`);
+  }
 }
 const norm = (s) =>
   (s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/&/g, " and ").replace(/['’`.]/g, "").replace(/[^a-z0-9]+/g, " ")
@@ -63,7 +68,7 @@ const dist = (a, b) => {
 const osmRows = osm
   .map((e) => ({ name: e.tags?.name, n: norm(e.tags?.name), at: e.center ? [e.center.lat, e.center.lon] : [e.lat, e.lon], site: e.tags?.website || e.tags?.["contact:website"] || e.tags?.url || null, brand: e.tags?.brand ?? null }))
   .filter((e) => e.name && e.at[0]);
-const res = { osmCount: osmRows.length, places: {}, verify: {} };
+const res = { osmCount: osmRows.length, osmLog, places: {}, verify: {} };
 for (const p of places) {
   const pn = norm(p.name);
   let best = null;
@@ -121,10 +126,15 @@ const verify = [
   ...[...toastSlugs].map((s) => `https://www.toasttab.com/${encodeURIComponent(s)}/giftcards`),
 ];
 for (const u of [...new Set(verify)]) {
-  const g = await get(u);
+  let g = await get(u);
+  for (let k = 0; k < 2 && g.status === 403; k++) {
+    await sleep(6000);
+    g = await get(u.replace("https://www.toasttab.com/", "https://order.toasttab.com/egiftcards/").replace(/\/giftcards$/, ""));
+    if (g.status === 403) g = await get(u);
+  }
   const t = textOf(g.text);
   res.verify[u] = { status: g.status, final: g.url, title: title(g.text), unavailable: /unavailable|not (currently )?available|no longer/i.test(t), snippet: (t.match(/.{0,80}gift.{0,140}/i)?.[0] ?? t.slice(0, 160)).slice(0, 220), giftFlags: (g.text.match(/"(giftCard[A-Za-z]*|isGiftCard[A-Za-z]*|egift[A-Za-z]*)"\s*:\s*(true|false)/gi) ?? []).slice(0, 6) };
-  await sleep(400);
+  await sleep(2500);
 }
 await mkdir("probe", { recursive: true });
 await writeFile("probe/commons.json", JSON.stringify(res, null, 1));
