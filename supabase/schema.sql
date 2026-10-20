@@ -288,6 +288,8 @@ create table if not exists public.submissions (
   spot_id text,
   created_at timestamptz not null default now()
 );
+-- when the team was emailed about it (app/api/notify)
+alter table public.submissions add column if not exists notified_at timestamptz;
 create index if not exists submissions_status_idx on public.submissions (status, created_at);
 create index if not exists submissions_user_idx on public.submissions (submitted_by, created_at desc);
 

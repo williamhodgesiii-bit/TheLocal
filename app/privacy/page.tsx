@@ -59,7 +59,8 @@ export default function Privacy() {
           <b>Reviews and photos you post</b>. These are public and signed with your name.
         </li>
         <li>
-          <b>Places you send us</b>, and the note you add, so we can check them.
+          <b>Places you send us</b>, and the note you add, so we can check them. The team gets an email about each one, with your name and email so we can
+          write back.
         </li>
         <li>
           <b>Who you follow and who follows you</b>, your <b>comments</b> and <b>reactions</b> (Helpful, Want to go, Thanks), people you block or mute,

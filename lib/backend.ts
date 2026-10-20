@@ -729,6 +729,8 @@ function supabaseBackend(sb: SupabaseClient): Backend {
         .select()
         .single();
       if (error) throw new Error(error.message.includes("row-level security") ? "You have 10 spots waiting for review — hang tight while we verify those first." : error.message);
+      // tell the team (an email from the server; it finds the new place itself)
+      fetch("/api/notify", { method: "POST", keepalive: true }).catch(() => {});
       return mapSub(data);
     },
     async mySubmissions() {
