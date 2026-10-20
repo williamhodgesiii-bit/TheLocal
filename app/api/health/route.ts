@@ -25,7 +25,7 @@ export async function GET() {
         // what's switched on, so a setup problem shows here instead of as a quiet failure
         friends: friends.ok ? "ready" : "waiting for the database update",
         databaseUpdates: process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL || process.env.SUPABASE_DB_URL ? "automatic" : "by hand",
-        placeEmails: server && process.env.RESEND_API_KEY ? "on" : "off",
+        placeEmails: server && process.env.RESEND_API_KEY ? "on" : `off (needs ${[!server && "SUPABASE_SECRET_KEY", !process.env.RESEND_API_KEY && "RESEND_API_KEY"].filter(Boolean).join(" and ")} in Vercel)`,
       },
       { status: ok ? 200 : 502 }
     );
