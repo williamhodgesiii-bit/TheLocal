@@ -56,7 +56,8 @@ export default function Privacy() {
           <b>The name you pick</b>, your <b>home city</b>, your <b>passport stamps</b> and your <b>want-to-try list</b>, so they follow you to every device.
         </li>
         <li>
-          <b>Reviews and photos you post</b>. These are public and signed with your name.
+          <b>Reviews and photos you post</b>, including photos on your reviews. These are public and signed with your name. The team gets an email with
+          each new photo so we can check it, and we may feature one as the picture for that place (credited to you). You can delete your photos any time.
         </li>
         <li>
           <b>Places you send us</b>, and the note you add, so we can check them. The team gets an email about each one, with your name and email so we can
@@ -134,8 +135,8 @@ export default function Privacy() {
         <span>Email</span>
       </h2>
       <p>
-        {NEWSLETTER} goes only to people who ask for it, and every issue has an unsubscribe link. Sign-in codes aren&apos;t marketing; they only come when you
-        ask for one.
+        {NEWSLETTER} goes only to people who ask for it, once a week, and every issue has a one-tap unsubscribe link that takes your email off the list for
+        good. We send it through Resend, the same service that sends sign-in codes. Sign-in codes aren&apos;t marketing; they only come when you ask for one.
       </p>
 
       <h2 className="menu-head">

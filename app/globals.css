@@ -1484,6 +1484,73 @@ button.rv-chip {
   color: var(--ink);
   overflow-wrap: anywhere;
 }
+/* a review's photos: small prints under the words */
+.rv-pics {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0 2px;
+}
+.rv-pic {
+  position: relative;
+  flex: none;
+  width: 92px;
+  height: 92px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #e9e2cf;
+  cursor: zoom-in;
+}
+.rv-pic img,
+.rv-pic .img-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.rv-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.rv-pick .rv-pic {
+  width: 76px;
+  height: 76px;
+  cursor: default;
+}
+.rv-pic-x {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(34, 32, 28, 0.78);
+  color: #fff;
+  font-size: 17px;
+  line-height: 26px;
+  cursor: pointer;
+}
+.rv-pic-add {
+  display: grid;
+  place-items: center;
+  border: 1.5px dashed var(--line-2);
+  background: var(--card);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer !important;
+}
+.rv-pic-add:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
 .rv-extra {
   display: flex;
   flex-wrap: wrap;
@@ -1622,7 +1689,8 @@ button.rv-chip {
 .rv-scale button.on span {
   color: #fff;
 }
-.rv-hint {
+.rv-hint,
+.rv-photo-hint {
   margin: 0;
   font-size: 13px;
   color: var(--ink-2);
@@ -3276,6 +3344,113 @@ label.check input {
   flex-direction: column;
   gap: 16px;
 }
+/* five tabs: they scroll sideways on a phone instead of wrapping */
+.admin-tabs {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.admin-tabs button {
+  flex: none;
+  white-space: nowrap;
+}
+.desk-line {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+/* the Photos tab */
+.desk-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.desk-photos li {
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--line-2);
+}
+.desk-photos li.on {
+  border-color: var(--mustard);
+  box-shadow: 0 0 0 2px var(--mustard);
+}
+.dp-img {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  background: #e9e2cf;
+  overflow: hidden;
+}
+.dp-img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dp-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 3px 8px;
+  background: var(--mustard);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.dp-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 12px;
+}
+.dp-place {
+  font-weight: 700;
+  color: var(--ink);
+}
+.dp-cap {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+/* the Thursday letter tab */
+.letter-card.paused {
+  opacity: 0.65;
+}
+.lc-title {
+  margin: 2px 0 0;
+  font-family: var(--f-serif);
+  font-weight: 400;
+  font-size: 24px;
+}
+.lc-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.lc-slot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--line-2);
+}
+.lc-slot select {
+  width: 100%;
+}
+.lc-actions {
+  margin-bottom: 6px;
+}
+@media (max-width: 700px) {
+  .lc-slot {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .review-card {
   background: var(--card);
   border: 1px solid var(--ink);
@@ -3828,6 +4003,7 @@ label.check input {
 }
 .snap-img:has(.ph-in),
 .thumb:has(.ph-in),
+.thumb:has(> svg),
 .lb-frame:has(.ph-in) {
   animation: none;
   background-image: none;
@@ -4779,51 +4955,16 @@ label.check input {
   display: none; /* computers: the best four; "See all" for the rest */
 }
 
-/* this week's plate: text first, a small photo beside it */
+/* The Thursday Plate on the front page: this week's three, a small picture of the front beside each */
 .week {
-  container: week / inline-size;
   margin: 0 22px;
-  display: grid;
-  grid-template-columns: minmax(96px, 30%) minmax(0, 1fr);
-  grid-template-areas:
-    "img body"
-    "why why"
-    "foot foot";
-  column-gap: 14px;
-  padding: 12px;
+  padding: 14px 14px 10px;
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(34, 32, 28, 0.08), 0 12px 28px -14px rgba(34, 32, 28, 0.35);
 }
-.week-img {
-  grid-area: img;
-  position: relative;
-  display: block;
-  align-self: start;
-  width: 100%;
-  aspect-ratio: 1;
-  padding: 0;
-  border: 0;
-  border-radius: 12px;
-  background: #e9e2cf;
-  overflow: hidden;
-  cursor: pointer;
-}
-.week-img img,
-.week-img .img-fallback {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.week-body {
-  grid-area: body;
-  min-width: 0;
-  padding-top: 1px;
-}
 .week-kicker {
-  margin: 0;
+  margin: 0 2px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.09em;
@@ -4836,78 +4977,101 @@ label.check input {
   text-transform: none;
   color: var(--muted);
 }
-.week-name {
-  margin: 3px 0 0;
-  font-family: var(--f-serif);
-  font-weight: 400;
-  font-size: 23px;
-  line-height: 1.1;
-}
-.week-name button {
+.w3 {
+  margin: 8px 0 0;
   padding: 0;
+  list-style: none;
+}
+.w3 li + li {
+  border-top: 1px solid var(--line);
+}
+.w3-row {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+  padding: 10px 0;
   border: 0;
   background: none;
+  font: inherit;
+  color: inherit;
   text-align: left;
+  cursor: pointer;
 }
-.week-name button:hover {
+.w3-img {
+  position: relative;
+  display: block;
+  width: 84px;
+  height: 84px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #e9e2cf;
+}
+.w3-img img,
+.w3-img .img-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.w3-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.w3-slot {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+.w3-name {
+  margin-top: 1px;
+  font-family: var(--f-serif);
+  font-size: 20px;
+  line-height: 1.12;
+}
+.w3-row:hover .w3-name {
   color: var(--red);
 }
-.week-meta {
-  margin: 3px 0 0;
+.w3-meta {
+  margin-top: 2px;
   font-size: 13px;
   color: var(--muted);
 }
-.week-order {
+.w3-order {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: 2px 8px;
-  margin: 8px 0 0;
-  padding: 6px 10px 5px;
-  border-radius: 10px;
-  background: var(--check);
+  gap: 0 8px;
+  margin-top: 5px;
 }
-.week-order .pen {
-  font-size: 19px;
+.w3-order .pen {
+  font-size: 18px;
   line-height: 1.05;
 }
-.week-why {
-  grid-area: why;
-  margin: 10px 2px 0;
+.w3-note {
+  margin-top: 5px;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.4;
   color: var(--ink-2);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.week-foot {
-  grid-area: foot;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  margin-top: 10px;
+.w3-foot {
+  margin: 2px 2px 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--muted);
 }
-.week-foot .been {
-  margin-top: 0;
-}
-.week-foot .been-btn {
-  flex: none;
-  padding: 0 14px;
-  white-space: nowrap;
-}
-.week-go {
-  font-size: 14px;
-  white-space: nowrap;
-}
-/* a narrow card (a phone, or the side list on a computer): the name and photo already open the place */
-@container week (max-width: 440px) {
-  .week-go {
-    display: none;
-  }
+.w3-foot .textbtn {
+  font-size: 13px;
 }
 
 /* Want to try / I've been, then how it went */

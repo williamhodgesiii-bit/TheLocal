@@ -8,6 +8,7 @@ import { feel, isNativeApp, startNative } from "@/lib/native";
 import { HOME_KEY } from "@/lib/regions";
 import { canonicalSpotId } from "@/lib/data";
 import type { Me } from "@/lib/social";
+import type { MemberCover } from "@/lib/photos";
 import AuthModal, { type AuthStep } from "./AuthModal";
 import SignInNudge from "./SignInNudge";
 
@@ -47,6 +48,9 @@ type Ctx = {
   /** in-app moves the map page registers (a full page load when it hasn't) */
   nav: Nav;
   registerNav: (n: Partial<Nav> | null) => void;
+  /** per place, the member photo that stands for it (lib/photos → frontFor) */
+  covers: Record<string, MemberCover>;
+  refreshCovers: () => void;
 };
 export type Nav = { member: (handle: string) => void; spot: (id: string) => void; friends: (tab?: "following" | "everyone" | "activity") => void };
 
@@ -126,6 +130,11 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [unread, setUnread] = useState(0);
   const navRef = useRef<Partial<Nav> | null>(null);
+  const [covers, setCovers] = useState<Record<string, MemberCover>>({});
+  const refreshCovers = useCallback(() => {
+    backend.covers().then(setCovers).catch(() => {});
+  }, [backend]);
+  useEffect(refreshCovers, [refreshCovers]);
 
   const applyUser = useCallback((u: User | null) => {
     userRef.current = u;
@@ -459,9 +468,9 @@ export default function Providers({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome, saveSpot, me, setMe, unread,
-      refreshUnread, nav, registerNav,
+      refreshUnread, nav, registerNav, covers, refreshCovers,
     }),
-    [backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome, saveSpot, me, unread, refreshUnread, nav, registerNav]
+    [backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome, saveSpot, me, unread, refreshUnread, nav, registerNav, covers, refreshCovers]
   );
 
   return (

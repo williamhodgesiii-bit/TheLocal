@@ -114,7 +114,7 @@ function Storefront({ spot, mini = false }: { spot: Spot; mini?: boolean }) {
         fill={night ? "#FFD58A" : "#F4ECDD"}
         textLength={textLen}
         lengthAdjust={textLen ? "spacingAndGlyphs" : undefined}
-        style={night ? { filter: "drop-shadow(0 0 6px rgba(255,190,90,.8))" } : undefined}
+        style={night && !mini ? { filter: "drop-shadow(0 0 6px rgba(255,190,90,.8))" } : undefined}
       >
         {name}
       </text>
@@ -154,8 +154,8 @@ function Storefront({ spot, mini = false }: { spot: Spot; mini?: boolean }) {
       <circle cx="346" cy="336" r="3.5" fill="#C9A04A" />
       {(spot.genres.includes("coffee") || isDrinks) && (
         <g>
-          <rect x="398" y="272" width="56" height="22" rx="11" fill="none" stroke="#FF6A4A" strokeWidth="2.5" style={{ filter: "drop-shadow(0 0 5px #ff6a4a)" }} />
-          <text x="426" y="288" textAnchor="middle" fontFamily="'Big Shoulders Display', sans-serif" fontWeight={800} fontSize="15" fill="#FF8A6A" style={{ filter: "drop-shadow(0 0 4px #ff6a4a)" }}>
+          <rect x="398" y="272" width="56" height="22" rx="11" fill="none" stroke="#FF6A4A" strokeWidth="2.5" style={mini ? undefined : { filter: "drop-shadow(0 0 5px #ff6a4a)" }} />
+          <text x="426" y="288" textAnchor="middle" fontFamily="'Big Shoulders Display', sans-serif" fontWeight={800} fontSize="15" fill="#FF8A6A" style={mini ? undefined : { filter: "drop-shadow(0 0 4px #ff6a4a)" }}>
             OPEN
           </text>
         </g>
@@ -182,7 +182,7 @@ function Storefront({ spot, mini = false }: { spot: Spot; mini?: boolean }) {
             const seg = t < 0.5 ? t * 2 : (t - 0.5) * 2;
             const x = 80 + t * 480;
             const y = 250 + 4 * 19 * seg * (1 - seg) + 2;
-            return <circle key={i} cx={x} cy={y} r="3.6" fill="#FFD58A" style={{ filter: "drop-shadow(0 0 4px #ffcf70)" }} />;
+            return <circle key={i} cx={x} cy={y} r="3.6" fill="#FFD58A" style={mini ? undefined : { filter: "drop-shadow(0 0 4px #ffcf70)" }} />;
           })}
         </g>
       )}
@@ -198,7 +198,7 @@ function Storefront({ spot, mini = false }: { spot: Spot; mini?: boolean }) {
         </g>
       ))}
 
-      <rect width="640" height="400" filter={`url(#${uid}-grain)`} opacity=".55" />
+      {!mini && <rect width="640" height="400" filter={`url(#${uid}-grain)`} opacity=".55" />}
     </svg>
   );
 }

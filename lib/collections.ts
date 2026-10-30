@@ -134,51 +134,9 @@ export function greeting(now: Date) {
   return "Up late?";
 }
 
-/**
- * This week's plate: one place a week, the same for everyone in town, new every Thursday
- * (the day The Thursday Plate email goes out). Well-loved places come up more often,
- * and none repeats within eight weeks.
- */
-export function plateOfTheWeek(day: Date, pool: Spot[]): Spot | null {
-  if (!pool.length) return null;
-  const list = [...pool].sort((a, b) => a.id.localeCompare(b.id));
-  const week = weekKey(day);
-  const recent: string[] = [];
-  let pick: Spot | null = null;
-  for (let w = week - 7; w <= week; w++) {
-    const options = list.filter((s) => !recent.includes(s.id));
-    const weights = options.map((s) => Math.pow(s.pop / 100, 2));
-    let r = mulberry(w) * weights.reduce((a, b) => a + b, 0);
-    pick = options[options.length - 1];
-    for (let i = 0; i < options.length; i++) {
-      r -= weights[i];
-      if (r <= 0) {
-        pick = options[i];
-        break;
-      }
-    }
-    recent.push(pick.id);
-  }
-  return pick;
-}
-
-/** weeks since a Thursday, counted in local time, so the pick turns over Thursday at midnight */
-export function weekKey(day: Date) {
-  const local = Date.UTC(day.getFullYear(), day.getMonth(), day.getDate());
-  return Math.floor(local / 86400000 / 7); // day 0, 1 Jan 1970, was a Thursday
-}
-
 /** the Thursday this week's plate went up */
 export function weekStart(day: Date) {
   const d = new Date(day.getFullYear(), day.getMonth(), day.getDate());
   d.setDate(d.getDate() - ((d.getDay() + 3) % 7));
   return d;
-}
-
-// a small seeded random number in [0, 1) from the day number
-function mulberry(seed: number) {
-  let t = (seed + 0x6d2b79f5) | 0;
-  t = Math.imul(t ^ (t >>> 15), t | 1);
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }

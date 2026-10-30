@@ -1643,4 +1643,73 @@ create policy "staff read member reports" on public.member_reports for select us
 drop policy if exists "staff read gift clicks" on public.gift_clicks;
 create policy "staff read gift clicks" on public.gift_clicks for select using (public.is_admin());
 
+-- ---------- Photos on reviews, and photos the team features (Nov 2026) ----------
+-- A photo can go on its writer's review (up to 3); it shows there and with the place's photos.
+alter table public.photos add column if not exists review_id uuid references public.reviews (id) on delete cascade;
+create index if not exists photos_review_idx on public.photos (review_id) where review_id is not null;
+-- The team picks a member's photo to stand for a place, in lists and at the top of its page; the
+-- newest pick wins (lib/photos.ts → frontFor). Swap it any time in the Verification desk.
+alter table public.photos add column if not exists featured_at timestamptz;
+-- when the team was emailed about it (app/api/notify), so they can check every photo
+alter table public.photos add column if not exists notified_at timestamptz;
+
+create or replace function public.photo_rules() returns trigger
+  language plpgsql security definer set search_path = public
+as $$
+begin
+  if public.has_banned_word(new.caption) then raise exception 'That has a word we don''t allow here.'; end if;
+  if new.review_id is not null and (tg_op = 'INSERT' or new.review_id is distinct from old.review_id) then
+    if not exists (select 1 from public.reviews where id = new.review_id and user_id = new.user_id) then
+      raise exception 'A photo can only go on your own review.';
+    end if;
+    if (select count(*) from public.photos where review_id = new.review_id) >= 3 then
+      raise exception 'A review can have 3 photos.';
+    end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists photos_rules on public.photos;
+create trigger photos_rules before insert or update of caption, review_id on public.photos
+  for each row execute function public.photo_rules();
+
+drop policy if exists "approved photos are public" on public.photos;
+create policy "approved photos are public" on public.photos for select using (approved or auth.uid() = user_id or public.is_admin());
+drop policy if exists "staff feature photos" on public.photos;
+create policy "staff feature photos" on public.photos for update using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "staff take down photos" on public.photos;
+create policy "staff take down photos" on public.photos for delete using (public.is_admin());
+drop policy if exists "staff remove any upload" on storage.objects;
+create policy "staff remove any upload" on storage.objects for delete to authenticated
+  using (bucket_id = 'spot-photos' and public.is_admin());
+
+-- ---------- The Thursday Plate (Nov 2026): three picks, emailed Thursday morning ----------
+-- One row per week, keyed by its Thursday. A pick left empty is chosen automatically
+-- (lib/letter.ts: one fine dining, one casual, one wildcard); the team can swap any of them,
+-- add a line about it, or pause the week, in the Verification desk. app/api/letter sends it.
+create table if not exists public.letters (
+  week date primary key check (extract(isodow from week) = 4),
+  fine text,
+  casual text,
+  wild text,
+  fine_note text check (char_length(fine_note) <= 400),
+  casual_note text check (char_length(casual_note) <= 400),
+  wild_note text check (char_length(wild_note) <= 400),
+  intro text check (char_length(intro) <= 600),
+  paused boolean not null default false,
+  previewed_at timestamptz,
+  sent_at timestamptz,
+  sent_count integer not null default 0,
+  updated_at timestamptz not null default now()
+);
+alter table public.letters enable row level security;
+drop policy if exists "letters are public" on public.letters;
+create policy "letters are public" on public.letters for select using (true);
+drop policy if exists "staff write letters" on public.letters;
+create policy "staff write letters" on public.letters for insert with check (public.is_admin());
+drop policy if exists "staff edit letters" on public.letters;
+create policy "staff edit letters" on public.letters for update using (public.is_admin()) with check (public.is_admin());
+-- the week each subscriber last got, so each person gets each week once (and a send that hit
+-- the email service's daily limit finishes the next day)
+alter table public.subscribers add column if not exists last_letter date;
+
 commit;

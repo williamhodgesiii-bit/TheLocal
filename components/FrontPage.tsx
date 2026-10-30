@@ -3,27 +3,22 @@
 import { memo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { GENRE_BY_ID, areaLabelOf, priceLabel, type Spot } from "@/lib/data";
-import { coverFor } from "@/lib/photos";
 import { honorsOf } from "@/lib/honors";
+import { NEWSLETTER } from "@/lib/brand";
+import { SLOTS, weekLabel, type Letter } from "@/lib/letter";
 import { milestoneName, nextMilestone, weeklyStreak } from "@/lib/passport";
 import { useApp, type Verdict } from "./Providers";
-import Photo from "./Photo";
+import { FrontPic } from "./Photo";
 
 /* The front page: what's on this week, your passport, and ways in by occasion. */
 
-const cover = (s: Spot) => {
-  const c = coverFor(s);
-  return { src: c.src(500), srcSet: c.srcSet([330, 500, 960]), alt: c.alt };
-};
-
-/** A photo card: the dish or the place, the name, what to order. */
+/** A photo card: the front of the place, the name, what to order. */
 export function PlaceCard({ spot, onOpen, onHover, sizes = "(max-width: 900px) 62vw, 200px" }: { spot: Spot; onOpen: (id: string) => void; onHover?: (id: string | null) => void; sizes?: string }) {
   const { been, saved } = useApp();
-  const c = cover(spot);
   return (
     <button className="pcard" onClick={() => onOpen(spot.id)} onMouseEnter={() => onHover?.(spot.id)} onMouseLeave={() => onHover?.(null)}>
       <span className="pcard-img">
-        <Photo src={c.src} srcSet={c.srcSet} sizes={sizes} alt={c.alt} genre={spot.genres[0]} />
+        <FrontPic spot={spot} sizes={sizes} widths={[500, 330, 960]} />
         {been[spot.id] && <span className="stamp stamp-sm">Been</span>}
         {!been[spot.id] && saved.includes(spot.id) && <span className="pcard-heart" aria-label="On your want-to-try list" />}
       </span>
@@ -118,38 +113,50 @@ export function Honors({ id, max = 3 }: { id: string; max?: number }) {
 }
 
 /**
- * This week's plate: one place, new every Thursday. Compact on purpose: the name, what to
- * order and why come first with a small photo beside them, so the rest of the page peeks in.
+ * The Thursday Plate on the front page: this week's three (one fine dining, one casual, one
+ * wildcard), the same ones the email sends. Name, what to order and a small picture of the
+ * front each, so the rest of the page still peeks in below.
  */
-export const WeekPlate = memo(function WeekPlate({ spot, since, onOpen }: { spot: Spot; since: Date; onOpen: (id: string) => void }) {
-  const c = cover(spot);
+export const WeekPicks = memo(function WeekPicks({ letter, onOpen, onSignup }: { letter: Letter; onOpen: (id: string) => void; onSignup: () => void }) {
+  const rows = SLOTS.flatMap((slot) => (letter.picks[slot.id] ? [{ slot, spot: letter.picks[slot.id]!, note: letter.notes[slot.id] }] : []));
+  if (!rows.length) return null;
   return (
-    <article className="week" aria-label={`This week's plate: ${spot.name}`}>
-      <button className="week-img" onClick={() => onOpen(spot.id)} tabIndex={-1} aria-hidden>
-        <Photo src={c.src} srcSet={c.srcSet} sizes="(max-width: 900px) 34vw, 180px" alt="" genre={spot.genres[0]} eager />
-      </button>
-      <div className="week-body">
-        <p className="week-kicker">
-          This week&apos;s plate <span>· picked {since.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-        </p>
-        <h2 className="week-name">
-          <button onClick={() => onOpen(spot.id)}>{spot.name}</button>
-        </h2>
-        <p className="week-meta">
-          {spot.genres.map((g) => GENRE_BY_ID[g].short).join(", ")} · {areaLabelOf(spot)} · {priceLabel(spot.price)}
-        </p>
-        <p className="week-order">
-          <span className="cl">Order</span> <span className="pen">{spot.knownFor}</span>
-        </p>
-      </div>
-      <p className="week-why">{spot.blurb}</p>
-      <div className="week-foot">
-        <BeenButtons spot={spot} />
-        <button type="button" className="textbtn week-go" onClick={() => onOpen(spot.id)}>
-          See the place →
+    <section className="week" aria-label={`${NEWSLETTER}: this week's three`}>
+      <p className="week-kicker">
+        This week&apos;s three <span>· {NEWSLETTER}, {weekLabel(letter.week)}</span>
+      </p>
+      <ol className="w3">
+        {rows.map(({ slot, spot, note }) => (
+          <li key={slot.id}>
+            <button className="w3-row" onClick={() => onOpen(spot.id)}>
+              <span className="w3-img">
+                <FrontPic spot={spot} sizes="(max-width: 900px) 22vw, 96px" alt="" eager />
+              </span>
+              <span className="w3-body">
+                <span className="w3-slot">{slot.label}</span>
+                <span className="w3-name">{spot.name}</span>
+                <span className="w3-meta">
+                  {spot.genres.map((g) => GENRE_BY_ID[g].short).join(", ")} · {areaLabelOf(spot)} · {priceLabel(spot.price)}
+                </span>
+                {note ? (
+                  <span className="w3-note">{note}</span>
+                ) : (
+                  <span className="w3-order">
+                    <span className="cl">Order</span> <span className="pen">{spot.knownFor}</span>
+                  </span>
+                )}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ol>
+      <p className="w3-foot">
+        New three every Thursday.{" "}
+        <button type="button" className="textbtn" onClick={onSignup}>
+          Get them by email
         </button>
-      </div>
-    </article>
+      </p>
+    </section>
   );
 });
 
@@ -268,7 +275,7 @@ export const TrailCard = memo(function TrailCard({
       <span className="trail-dots" aria-hidden>
         {peek.map((s) => (
           <span key={s.id} className={`trail-dot ${been[s.id] ? "on" : ""}`}>
-            <Photo src={coverFor(s).src(330)} sizes="40px" alt="" genre={s.genres[0]} />
+            <FrontPic spot={s} sizes="40px" alt="" />
           </span>
         ))}
       </span>

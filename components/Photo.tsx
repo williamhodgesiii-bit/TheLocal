@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { GENRE_BY_ID, type GenreId, type Spot } from "@/lib/data";
-import { coverFor } from "@/lib/photos";
+import { frontFor } from "@/lib/photos";
+import { useApp } from "./Providers";
+import Storefront from "./Storefront";
 
 /**
  * One image, done properly: responsive srcset, lazy by default, fades in over a
@@ -56,8 +58,7 @@ export default function Photo({
       alt={alt}
       loading={eager ? "eager" : "lazy"}
       decoding="async"
-      // @ts-expect-error: valid attribute, React 18 types lag
-      fetchpriority={eager ? "high" : undefined}
+      fetchPriority={eager ? "high" : undefined}
       referrerPolicy="no-referrer"
       style={position ? { objectPosition: position } : undefined}
       onLoad={() => setState("in")}
@@ -66,12 +67,22 @@ export default function Photo({
   );
 }
 
-/** A little dish print at the end of a menu line, like a diner's photo menu. */
+/**
+ * A place from the sidewalk, the same picture its page opens with (lib/photos → frontFor): a
+ * photo of the front, or our sketch of it. The parent sets the box.
+ */
+export function FrontPic({ spot, sizes, widths = [330, 500], eager, alt }: { spot: Spot; sizes: string; widths?: number[]; eager?: boolean; alt?: string }) {
+  const { covers } = useApp();
+  const f = frontFor(spot, covers[spot.id]);
+  if (f.kind === "sketch") return <Storefront spot={spot} mini />;
+  return <Photo src={f.src(widths[0])} srcSet={f.srcSet?.(widths)} sizes={f.srcSet ? sizes : undefined} alt={alt ?? f.alt} genre={spot.genres[0]} eager={eager} />;
+}
+
+/** A little print of the front at the end of a menu line. */
 export function Thumb({ spot, w = 64 }: { spot: Spot; w?: number }) {
-  const c = coverFor(spot);
   return (
     <span className="thumb" aria-hidden>
-      <Photo src={c.src(330)} srcSet={c.srcSet([330, 500])} sizes={`${w}px`} alt="" genre={spot.genres[0]} />
+      <FrontPic spot={spot} sizes={`${w}px`} alt="" />
     </span>
   );
 }

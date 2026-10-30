@@ -13,3 +13,9 @@ export const CHECKED = "October 2026";
  * signals a new site can show. Leave name empty and the About page skips the section.
  */
 export const FOUNDER = { name: "Lawson Brown & Will Hodges", line: "", email: "emails@theplatenextdoor.com" };
+/**
+ * The postal address at the bottom of every Thursday Plate email (US law asks for one in
+ * marketing email; a PO box works). LETTER_ADDRESS in Vercel overrides it. The letter won't
+ * send while both are empty.
+ */
+export const MAILING_ADDRESS = "";

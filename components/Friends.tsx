@@ -23,6 +23,7 @@ import {
   type Reaction,
 } from "@/lib/social";
 import { Thumb } from "./Photo";
+import { ReviewPhotos } from "./Lightbox";
 import { Avatar, NameLink, PersonRow } from "./People";
 import { useApp } from "./Providers";
 import { ReviewActions } from "./Reviews";
@@ -444,6 +445,7 @@ export function FeedReviewCard({
           <p className={`rv-body ${full ? "" : "clamp"}`} onClick={() => setFull(true)}>
             {r.body}
           </p>
+          <ReviewPhotos photos={r.photos} spot={spot} />
           <ReviewActions
             r={r}
             mine={r.userId === user?.id}

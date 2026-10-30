@@ -11,6 +11,7 @@ import {
   GENRE_BY_ID,
   PINS_EXACT,
   SPOTS,
+  SPOT_BY_ID,
   TOWN_BY_ID,
   areaLabelOf,
   atLocation,
@@ -25,9 +26,10 @@ import {
   type Spot,
   type TownId,
 } from "@/lib/data";
-import type { RatingSummary } from "@/lib/backend";
+import type { LetterWeek, RatingSummary } from "@/lib/backend";
 import { BRAND, MANTRA, NEWSLETTER, SIGNOFF } from "@/lib/brand";
-import { COLLECTION_BY_ID, collectionsFor, greeting, plateOfTheWeek, weekStart } from "@/lib/collections";
+import { COLLECTION_BY_ID, collectionsFor, greeting } from "@/lib/collections";
+import { letterFor, thursdayOf } from "@/lib/letter";
 import { AVG_MIN, rankScore, siteAverage, wordFor } from "@/lib/reviews";
 import { TRAILS, trailProgress } from "@/lib/trails";
 import { CITY_BY_ID, DEFAULT_CITY, HERE_KEY, HOME_KEY, HOME_TOWN_KEY, apState, cityPath, stateName, type City } from "@/lib/regions";
@@ -43,7 +45,7 @@ import Profile from "./Profile";
 import MapCards from "./MapCards";
 import { Thumb } from "./Photo";
 import { Logo, PlateMark } from "./Brand";
-import { CollectionRow, PassportCard, PlaceCard, TrailCard, WeekPlate } from "./FrontPage";
+import { CollectionRow, PassportCard, PlaceCard, TrailCard, WeekPicks } from "./FrontPage";
 import Passport from "./Passport";
 import StampPicker from "./StampPicker";
 import Friends, { type FriendsTab, type Pins } from "./Friends";
@@ -572,6 +574,8 @@ export default function Explorer({
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || surprise) return;
+      // a photo or sheet that's open takes the keys (Esc closes it, not the place behind it)
+      if (document.querySelector('[aria-modal="true"]')) return;
       if (e.key === "/") {
         e.preventDefault();
         select(null);
@@ -624,8 +628,25 @@ export default function Explorer({
   // server and first paint use the build time; the visitor's clock takes over right after
   const clock = useMemo(() => now ?? new Date(Number(process.env.NEXT_PUBLIC_BUILT_AT) || 0), [now]);
   const rows = useMemo(() => collectionsFor(clock, scoped, 3, !!now).slice(0, 3), [clock, scoped, now]);
-  const week = useMemo(() => plateOfTheWeek(clock, allSpots.filter((s) => !s.addedBy)), [clock, allSpots]);
-  const weekSince = useMemo(() => weekStart(clock), [clock]);
+  // The Thursday Plate: this week's three, as the team set them (Birmingham's letter) or picked on their own
+  const week = thursdayOf(clock);
+  const [letterRow, setLetterRow] = useState<LetterWeek | null>(null);
+  useEffect(() => {
+    if (city.id !== DEFAULT_CITY) return setLetterRow(null);
+    let live = true;
+    backend.letterWeek(week).then((r) => live && setLetterRow(r)).catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [backend, city.id, week]);
+  // Birmingham's picks come from the same list the email uses (app/api/letter), so the two always agree
+  const letterPool = useMemo(() => (city.id === DEFAULT_CITY ? [...SPOTS, ...community.filter((x) => x.city === city.id && !SPOT_BY_ID[x.id])] : allSpots), [city.id, community, allSpots]);
+  const letter = useMemo(() => letterFor(week, letterPool, letterRow), [week, letterPool, letterRow]);
+  const toLetter = useCallback(() => {
+    const f = document.getElementById("letter-signup");
+    f?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => f?.querySelector("input")?.focus({ preventScroll: true }), 500);
+  }, []);
   const trail = useMemo(() => {
     for (const t of TRAILS) {
       const p = trailProgress(t, allSpots, areas, (id) => !!been[id], clock);
@@ -899,7 +920,7 @@ export default function Explorer({
 
                   {showFront && (
                     <div className="front">
-                      {week && <WeekPlate spot={week} since={weekSince} onOpen={select} />}
+                      <WeekPicks letter={letter} onOpen={select} onSignup={toLetter} />
                       <PassportCard total={allSpots.length} count={stampedCount} onStampMany={openStamps} onOpen={openPassport} />
                       {rows.map((r, i) => (
                         <CollectionRow
@@ -1314,6 +1335,7 @@ function Newsletter({ city }: { city: City }) {
   const [done, setDone] = useState(false);
   return (
     <form
+      id="letter-signup"
       className="newsletter"
       onSubmit={async (e) => {
         e.preventDefault();
@@ -1327,7 +1349,7 @@ function Newsletter({ city }: { city: City }) {
       }}
     >
       <h2>{NEWSLETTER}</h2>
-      <p>This week&apos;s plate, what opened and closed around {city.name}, and a few places worth the drive. Every Thursday, short.</p>
+      <p>Three places every Thursday morning: one fine dining, one casual, one wildcard. Plus what&apos;s new on the map around {city.name}. Short, and you can stop it any time.</p>
       {done ? (
         <p className="nl-done">You&apos;re on the list. See you Thursday.</p>
       ) : (

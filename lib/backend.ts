@@ -2,6 +2,8 @@
 
 import { createClient, type SupabaseClient, type User as AuthUser } from "@supabase/supabase-js";
 import { resizeImage } from "./image";
+import { pickCovers, type MemberCover } from "./photos";
+import { mapLetter } from "./letter";
 import { canonicalSpotId, cleanGenres, slugify, type DrinkKind, type GenreId, type Spot } from "./data";
 import { DAILY_MAX } from "./reviews";
 import { BANNED_MESSAGE, hasBannedWord } from "./moderation";
@@ -79,6 +81,8 @@ export type Review = {
   comments?: number;
   /** who the writer lets comment */
   writerComments?: CommentPolicy;
+  /** pictures the writer put on it, up to REVIEW_PHOTOS_MAX */
+  photos?: Photo[];
 };
 export type ReviewInput = {
   rating: number;
@@ -99,6 +103,24 @@ export type Photo = {
   kind: PhotoKind;
   caption?: string;
   createdAt: string;
+  /** the team picked it to stand for the place (the newest pick wins) */
+  featured?: boolean;
+  /** the review it was posted with */
+  reviewId?: string;
+};
+/** how many photos one review can carry */
+export const REVIEW_PHOTOS_MAX = 3;
+/** one week of The Thursday Plate as the team set it; anything left empty is picked automatically */
+export type LetterWeek = {
+  week: string;
+  fine?: string;
+  casual?: string;
+  wild?: string;
+  notes: Partial<Record<"fine" | "casual" | "wild", string>>;
+  intro?: string;
+  paused?: boolean;
+  sentAt?: string;
+  sentCount?: number;
 };
 export type RatingSummary = Record<string, { avg: number; count: number; goBack?: number | null }>;
 export type SpotInput = {
@@ -168,7 +190,12 @@ export interface Backend {
   voteHelpful(reviewId: string, on: boolean): Promise<void>;
   reportReview(reviewId: string, reason: string, note?: string): Promise<void>;
   listPhotos(spotId: string): Promise<Photo[]>;
-  addPhoto(spotId: string, file: File, kind: PhotoKind, caption?: string): Promise<Photo>;
+  /** pass a review's id to put the photo on that review (it shows with the place's photos too) */
+  addPhoto(spotId: string, file: File, kind: PhotoKind, caption?: string, reviewId?: string): Promise<Photo>;
+  /** your own photo, or any photo for the team (the file goes too) */
+  deletePhoto(photo: Photo): Promise<void>;
+  /** per place: the member photo that stands for it, featured or the newest of the front */
+  covers(): Promise<Record<string, MemberCover>>;
   ratings(): Promise<RatingSummary>;
   subscribe(email: string): Promise<void>;
   lead(l: Lead): Promise<void>;
@@ -230,6 +257,14 @@ export interface Backend {
   listSubmissions(status: SubmissionStatus): Promise<Submission[]>;
   approveSubmission(sub: Submission, edits: SpotInput & { pop: number }, checklist: Checklist): Promise<Spot>;
   rejectSubmission(id: string, reason: string): Promise<void>;
+  /** the newest member photos, for the team to check and feature */
+  recentPhotos(): Promise<Photo[]>;
+  featurePhoto(id: string, on: boolean): Promise<void>;
+  /** the Thursday Plate for one week (a Thursday, "2026-10-29"); null when the team hasn't touched it */
+  letterWeek(week: string): Promise<LetterWeek | null>;
+  saveLetterWeek(w: LetterWeek): Promise<void>;
+  /** the staff-only letter controls on the server (app/api/letter/desk), signed in as you */
+  letterDesk(test?: { week: string }): Promise<{ ready?: boolean; missing?: string[]; people?: number | null; ok?: boolean; to?: string; error?: string }>;
 }
 
 const newSpotId = (name: string) => `${slugify(name)}-${Math.random().toString(36).slice(2, 6)}`;
@@ -353,7 +388,12 @@ function supabaseBackend(sb: SupabaseClient): Backend {
     !!e && (e.code === "PGRST204" || e.code === "42703" || /column .* does not exist|Could not find the '.*' column/i.test(e.message ?? ""));
   const mapPhoto = (p: Record<string, any>): Photo => ({
     id: p.id, spotId: p.spot_id, userId: p.user_id, userName: p.display_name, url: p.url, kind: p.kind, caption: p.caption ?? undefined, createdAt: p.created_at,
+    featured: !!p.featured_at, reviewId: p.review_id ?? undefined,
   });
+  /** "…/storage/v1/object/public/spot-photos/<path>" → "<path>" */
+  const storagePath = (url: string) => decodeURIComponent(url.split("/object/public/spot-photos/")[1]?.split("?")[0] ?? "");
+  /** the team hears about every new photo (an email from the server; it finds them itself) */
+  const tellTeam = () => fetch("/api/notify", { method: "POST", keepalive: true }).catch(() => {});
 
   async function requireUser() {
     const { data } = await sb.auth.getUser();
@@ -419,13 +459,16 @@ function supabaseBackend(sb: SupabaseClient): Backend {
     const uIds = Array.from(new Set(list.map((r) => r.userId)));
     const me = (await sb.auth.getSession()).data.session?.user.id;
     const none = Promise.resolve({ data: [] as any[], error: null });
-    const [rx, mine, cc, tot, who] = await Promise.all([
+    const [rx, mine, cc, tot, who, pics] = await Promise.all([
       sb.from("review_reactions").select("review_id, kind, n").in("review_id", rIds),
       me ? sb.from("review_votes").select("review_id, kind").eq("user_id", me).in("review_id", rIds) : none,
       sb.from("review_comment_counts").select("review_id, n").in("review_id", rIds),
       sb.from("reviewer_totals").select("user_id, reviews").in("user_id", uIds),
       membersById(uIds),
+      sb.from("photos").select("*").in("review_id", rIds).order("created_at"),
     ]);
+    const photos = new Map<string, Photo[]>();
+    for (const p of pics.error ? [] : pics.data ?? []) photos.set(p.review_id, [...(photos.get(p.review_id) ?? []), mapPhoto(p)]);
     const counts = new Map<string, Partial<Record<Reaction, number>>>();
     if (rx.error) {
       // before the friends update: Helpful is the only reaction
@@ -445,6 +488,7 @@ function supabaseBackend(sb: SupabaseClient): Backend {
         ...r, reactions: rc, myReactions: mr, helpful: rc.helpful ?? 0, votedHelpful: mr.includes("helpful"), comments: comments.get(r.id) ?? 0,
         reviewerCount: totals.get(r.userId), handle: who.get(r.userId)?.handle, writerComments: who.get(r.userId)?.comments,
         ...(who.get(r.userId) ? { userName: who.get(r.userId)!.name } : {}),
+        ...(photos.get(r.id) ? { photos: photos.get(r.id) } : {}),
       };
     });
   }
@@ -729,8 +773,7 @@ function supabaseBackend(sb: SupabaseClient): Backend {
         .select()
         .single();
       if (error) throw new Error(error.message.includes("row-level security") ? "You have 10 spots waiting for review — hang tight while we verify those first." : error.message);
-      // tell the team (an email from the server; it finds the new place itself)
-      fetch("/api/notify", { method: "POST", keepalive: true }).catch(() => {});
+      tellTeam();
       return mapSub(data);
     },
     async mySubmissions() {
@@ -763,8 +806,12 @@ function supabaseBackend(sb: SupabaseClient): Backend {
         .update({ status: "approved", spot_id: id, checklist, reviewed_at: reviewedAt, reviewed_by: u.id })
         .eq("id", sub.id);
       if (upd.error) throw upd.error;
-      if (sub.photoUrl)
-        await sb.from("photos").insert({ spot_id: id, user_id: sub.submittedBy, display_name: sub.submitterName, url: sub.photoUrl, kind: "building" });
+      if (sub.photoUrl) {
+        // the team saw it with the place, so it doesn't need its own email
+        const row = { spot_id: id, user_id: sub.submittedBy, display_name: sub.submitterName, url: sub.photoUrl, kind: "building" };
+        const p = await sb.from("photos").insert({ ...row, notified_at: reviewedAt });
+        if (oldSchema(p.error)) await sb.from("photos").insert(row);
+      }
       return spot;
     },
     async rejectSubmission(id, reason) {
@@ -774,6 +821,38 @@ function supabaseBackend(sb: SupabaseClient): Backend {
         .update({ status: "rejected", reject_reason: reason, reviewed_at: new Date().toISOString(), reviewed_by: u.id })
         .eq("id", id);
       if (error) throw error;
+    },
+    async recentPhotos() {
+      const { data, error } = await sb.from("photos").select("*").order("created_at", { ascending: false }).limit(90);
+      if (error) throw error;
+      return (data ?? []).map(mapPhoto);
+    },
+    async featurePhoto(id, on) {
+      const { data, error } = await sb.from("photos").update({ featured_at: on ? new Date().toISOString() : null }).eq("id", id).select("id");
+      if (error || !data?.length) throw new Error(oldSchema(error) ? "Run the database update first (README → Setup)." : "Couldn't change that. Are you signed in as staff?");
+    },
+    async letterWeek(week) {
+      const { data, error } = await sb.from("letters").select("*").eq("week", week).maybeSingle();
+      return error || !data ? null : mapLetter(data);
+    },
+    async saveLetterWeek(w) {
+      const { error } = await sb.from("letters").upsert(
+        {
+          week: w.week, fine: w.fine ?? null, casual: w.casual ?? null, wild: w.wild ?? null, fine_note: w.notes.fine ?? null,
+          casual_note: w.notes.casual ?? null, wild_note: w.notes.wild ?? null, intro: w.intro ?? null, paused: !!w.paused, updated_at: new Date().toISOString(),
+        },
+        { onConflict: "week" }
+      );
+      if (error) throw new Error(/letters/.test(error.message) ? "Run the database update first (README → Setup)." : error.message);
+    },
+    async letterDesk(test) {
+      const token = (await sb.auth.getSession()).data.session?.access_token;
+      const r = await fetch("/api/letter/desk", {
+        method: test ? "POST" : "GET",
+        headers: { Authorization: `Bearer ${token ?? ""}`, ...(test ? { "content-type": "application/json" } : {}) },
+        ...(test ? { body: JSON.stringify(test) } : {}),
+      }).catch(() => null);
+      return r ? r.json().catch(() => ({ error: "Something went wrong." })) : { error: "Couldn't reach the site. Try again?" };
     },
     async getUser() {
       const { data } = await sb.auth.getSession();
@@ -935,20 +1014,39 @@ function supabaseBackend(sb: SupabaseClient): Backend {
       if (error) throw error;
       return (data ?? []).map(mapPhoto);
     },
-    async addPhoto(spotId, file, kind, caption) {
+    async addPhoto(spotId, file, kind, caption, reviewId) {
       const u = await requireUser();
+      if (caption && hasBannedWord(caption)) throw new Error(BANNED_MESSAGE);
       const blob = await resizeImage(file, 1600, 0.82);
-      const path = `${u.id}/${spotId}/${Date.now()}.jpg`;
+      const path = `${u.id}/${spotId}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.jpg`;
       const up = await sb.storage.from("spot-photos").upload(path, blob, { contentType: "image/jpeg" });
       if (up.error) throw up.error;
       const url = sb.storage.from("spot-photos").getPublicUrl(path).data.publicUrl;
-      const { data, error } = await sb
-        .from("photos")
-        .insert({ spot_id: spotId, user_id: u.id, display_name: u.name, url, kind, caption: caption || null })
-        .select()
-        .single();
-      if (error) throw error;
-      return mapPhoto(data);
+      const row: Record<string, unknown> = { spot_id: spotId, user_id: u.id, display_name: u.name, url, kind, caption: caption || null };
+      let res = await sb.from("photos").insert(reviewId ? { ...row, review_id: reviewId } : row).select().single();
+      // a database from before review photos: it still goes up with the place's photos
+      if (reviewId && oldSchema(res.error)) res = await sb.from("photos").insert(row).select().single();
+      if (res.error) {
+        await sb.storage.from("spot-photos").remove([path]);
+        throw new Error(/banned|allow here/i.test(res.error.message) ? BANNED_MESSAGE : /3 photos/.test(res.error.message) ? res.error.message : "Couldn't add that photo. Try again?");
+      }
+      tellTeam();
+      return mapPhoto(res.data);
+    },
+    async deletePhoto(p) {
+      const { error } = await sb.from("photos").delete().eq("id", p.id);
+      if (error) throw new Error("Couldn't take that photo down. Try again?");
+      // the same file can also be a place's submitted photo; only remove it when nothing else uses it
+      const path = storagePath(p.url);
+      if (path) {
+        const { count } = await sb.from("photos").select("id", { count: "exact", head: true }).eq("url", p.url);
+        if (!count) await sb.storage.from("spot-photos").remove([path]);
+      }
+    },
+    async covers() {
+      let res = await sb.from("photos").select("spot_id, url, display_name, kind, featured_at, created_at").or("featured_at.not.is.null,kind.eq.building").order("created_at", { ascending: false }).limit(2000);
+      if (res.error) res = (await sb.from("photos").select("spot_id, url, display_name, kind, created_at").eq("kind", "building").order("created_at", { ascending: false }).limit(2000)) as typeof res;
+      return pickCovers(((res.data ?? []) as any[]).map((p) => ({ spotId: canonicalSpotId(p.spot_id), url: p.url, by: p.display_name, kind: p.kind, featuredAt: p.featured_at ?? null })));
     },
     async ratings() {
       const { data, error } = await sb.from("spot_ratings").select("*");
@@ -958,7 +1056,7 @@ function supabaseBackend(sb: SupabaseClient): Backend {
       );
     },
     async subscribe(email) {
-      const { error } = await sb.from("subscribers").insert({ email });
+      const { error } = await sb.from("subscribers").insert({ email: email.trim().toLowerCase() });
       if (error && !String(error.message).includes("duplicate")) throw error;
     },
     async lead(l) {
@@ -978,7 +1076,7 @@ const K = {
   // friends, on this device (other members here are seeded, e.g. by tests)
   members: "tl.members", follows: "tl.follows", blocks: "tl.blocks", mutes: "tl.mutes", reactions: "tl.reactions",
   comments: "tl.comments", notes: "tl.notes", places: "tl.memberPlaces", handles: "tl.handleHistory", memberReports: "tl.memberReports",
-  commentReports: "tl.commentReports",
+  commentReports: "tl.commentReports", letters: "tl.letters",
 };
 type LMember = Omit<Me, "avatar"> & { avatar?: string };
 type LFollow = { a: string; b: string; status: "accepted" | "pending"; at: string };
@@ -1110,6 +1208,7 @@ function localBackend(): Backend {
     const all = read<Review[]>(K.reviews, []);
     const rx = reactions();
     const cs = read<LComment[]>(K.comments, []);
+    const pics = read<Photo[]>(K.photos, []);
     return list
       .filter((r) => !(me && blockedWith(me, r.userId)))
       .map((r) => {
@@ -1120,6 +1219,7 @@ function localBackend(): Backend {
           ...r, reactions: counts, myReactions: mine, helpful: counts.helpful ?? 0, votedHelpful: mine.includes("helpful"),
           comments: cs.filter((c) => c.reviewId === r.id && c.status === "live").length,
           reviewerCount: all.filter((x) => x.userId === r.userId).length, ...(m ? { handle: m.handle, userName: m.name, writerComments: m.comments } : {}),
+          ...(pics.some((p) => p.reviewId === r.id) ? { photos: pics.filter((p) => p.reviewId === r.id).reverse() } : {}),
         };
       });
   };
@@ -1636,19 +1736,35 @@ function localBackend(): Backend {
     },
     async deleteReview(id) {
       const u = current();
+      const gone = read<Review[]>(K.reviews, []).some((r) => r.id === id && r.userId === u?.id);
       write(K.reviews, read<Review[]>(K.reviews, []).filter((r) => !(r.id === id && r.userId === u?.id)));
+      // its photos go with it, like the database's cascade
+      if (gone) write(K.photos, read<Photo[]>(K.photos, []).filter((p) => p.reviewId !== id));
     },
     async listPhotos(spotId) {
       return read<Photo[]>(K.photos, []).filter((p) => p.spotId === spotId);
     },
-    async addPhoto(spotId, file, kind, caption) {
+    async addPhoto(spotId, file, kind, caption, reviewId) {
       const u = current();
       if (!u) throw new Error("Sign in first.");
       if (caption && hasBannedWord(caption)) throw new Error(BANNED_MESSAGE);
+      const all = read<Photo[]>(K.photos, []);
+      if (reviewId && all.filter((p) => p.reviewId === reviewId).length >= REVIEW_PHOTOS_MAX) throw new Error(`A review can have ${REVIEW_PHOTOS_MAX} photos.`);
       const blob = await resizeImage(file, 1000, 0.72);
-      const p: Photo = { id: uid(), spotId, userId: u.id, userName: u.name, url: await blobToDataUrl(blob), kind, caption, createdAt: new Date().toISOString() };
-      write(K.photos, [p, ...read<Photo[]>(K.photos, [])]);
+      const p: Photo = { id: uid(), spotId, userId: u.id, userName: u.name, url: await blobToDataUrl(blob), kind, caption, createdAt: new Date().toISOString(), ...(reviewId ? { reviewId } : {}) };
+      write(K.photos, [p, ...all]);
       return p;
+    },
+    async deletePhoto(p) {
+      const u = current();
+      if (!u) throw new Error("Sign in first.");
+      if (p.userId !== u.id && !(await this.isAdmin())) throw new Error("That isn't your photo.");
+      write(K.photos, read<Photo[]>(K.photos, []).filter((x) => x.id !== p.id));
+    },
+    async covers() {
+      return pickCovers(
+        read<(Photo & { featuredAt?: string })[]>(K.photos, []).map((p) => ({ spotId: canonicalSpotId(p.spotId), url: p.url, by: p.userName, kind: p.kind, featuredAt: p.featuredAt ?? null }))
+      );
     },
     async ratings() {
       const by = new Map<string, Review[]>();
@@ -1756,6 +1872,21 @@ function localBackend(): Backend {
         K.submissions,
         read<Submission[]>(K.submissions, []).map((x) => (x.id === id ? { ...x, status: "rejected", rejectReason: reason, reviewedAt: new Date().toISOString() } : x))
       );
+    },
+    async recentPhotos() {
+      return read<Photo[]>(K.photos, []).slice(0, 90);
+    },
+    async featurePhoto(id, on) {
+      write(K.photos, read<(Photo & { featuredAt?: string })[]>(K.photos, []).map((p) => (p.id === id ? { ...p, featured: on, featuredAt: on ? new Date().toISOString() : undefined } : p)));
+    },
+    async letterWeek(week) {
+      return read<LetterWeek[]>(K.letters, []).find((w) => w.week === week) ?? null;
+    },
+    async saveLetterWeek(w) {
+      write(K.letters, [w, ...read<LetterWeek[]>(K.letters, []).filter((x) => x.week !== w.week)]);
+    },
+    async letterDesk(test) {
+      return test ? { error: "Test emails need the live site." } : { ready: false, missing: ["the live database (this is demo mode)"], people: read<string[]>(K.subs, []).length };
     },
   };
 }

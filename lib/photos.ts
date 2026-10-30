@@ -319,6 +319,44 @@ export const licenseUrl = (l: StockPhoto["license"]) => LICENSE_URL[l];
 
 export type Cover = { alt: string; real: boolean; src: (width: number) => string; srcSet: (widths: number[]) => string };
 
+/** a member's photo that can stand for a place: the one the team featured, or the newest of the front */
+export type MemberCover = { url: string; by: string; featured: boolean };
+
+/** a place from the sidewalk: a photo, or our sketch of the front when there isn't one yet */
+export type Front =
+  | { kind: "img"; src: (width: number) => string; srcSet?: (widths: number[]) => string; file?: string; alt: string; label: string; credit?: string; link?: string }
+  | { kind: "sketch"; alt: string; label: string };
+
+/**
+ * The first picture on a place's page, and the one beside its name everywhere else, so a place
+ * looks the same before and after you tap it. A member's photo the team featured leads; then
+ * the place's own photo, a member's photo of the front, an openly licensed one, and last our
+ * sketch of the front.
+ */
+export function frontFor(spot: Spot, member?: MemberCover | null): Front {
+  const fromMember = (m: MemberCover): Front => ({ kind: "img", src: () => m.url, alt: `${spot.name}, photo by ${m.by}`, label: m.featured ? "Featured" : "Out front", credit: `photo by ${m.by}` });
+  if (member?.featured) return fromMember(member);
+  const own = HOUSE_PHOTOS[spot.id]?.[0];
+  if (own)
+    return { kind: "img", src: (w) => (w <= 600 ? own.small : own.src), srcSet: () => houseSrcSet(own), alt: `${spot.name}: ${own.caption.toLowerCase()}`, label: own.caption, credit: `photo from ${own.credit}`, link: own.link };
+  if (member) return fromMember(member);
+  const real = PLACE_PHOTOS[spot.id]?.[0];
+  if (real)
+    return {
+      kind: "img",
+      src: (w) => commonsSrc(real.file, w),
+      srcSet: (ws) => commonsSrcSet(real.file, ws),
+      file: real.file,
+      alt: `${spot.name}: ${real.caption.toLowerCase()}`,
+      label: real.caption,
+      credit: `${real.author}, ${real.license}`,
+      link: commonsPage(real.file),
+    };
+  const cc = spot.photos?.find((p) => p.kind === "building");
+  if (cc) return { kind: "img", src: () => cc.url, alt: `${spot.name} from the street`, label: "Out front", credit: cc.credit, link: cc.link };
+  return { kind: "sketch", alt: `Drawing of the front of ${spot.name}`, label: "Our sketch of the front" };
+}
+
 /** The single best picture to represent a place in lists and cards. */
 export function coverFor(spot: Spot): Cover {
   const own = HOUSE_PHOTOS[spot.id]?.[0];
@@ -328,4 +366,17 @@ export function coverFor(spot: Spot): Cover {
   if (real) return commons(real.file, `${spot.name}: ${real.caption.toLowerCase()}`, true);
   const d = dishesFor(spot)[0];
   return commons(d.file, `Stock photo of ${d.dish}`, false);
+}
+
+/** per place, the member photo that stands for it: the newest the team featured, else the newest of the front */
+export function pickCovers(rows: { spotId: string; url: string; by: string; kind: string; featuredAt: string | null }[]): Record<string, MemberCover> {
+  const out: Record<string, MemberCover> = {};
+  const featuredAt: Record<string, string> = {};
+  for (const r of rows) {
+    if (r.featuredAt && (!out[r.spotId]?.featured || r.featuredAt > featuredAt[r.spotId])) {
+      out[r.spotId] = { url: r.url, by: r.by, featured: true };
+      featuredAt[r.spotId] = r.featuredAt;
+    } else if (r.kind === "building" && !out[r.spotId]) out[r.spotId] = { url: r.url, by: r.by, featured: false }; // rows come newest first
+  }
+  return out;
 }

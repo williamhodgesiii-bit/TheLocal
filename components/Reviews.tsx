@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { track } from "@/lib/analytics";
-import type { Review } from "@/lib/backend";
+import { REVIEW_PHOTOS_MAX, type Photo as MemberPhoto, type Review } from "@/lib/backend";
 import { spotIdsOf, type Spot } from "@/lib/data";
 import {
   AVG_MIN,
@@ -39,6 +39,7 @@ import { useApp } from "./Providers";
 import { Stars } from "./Stars";
 import { Avatar, NameLink } from "./People";
 import ReviewThread from "./ReviewThread";
+import { ReviewPhotos } from "./Lightbox";
 
 const SUBS: SubKey[] = ["taste", "service", "vibe"];
 /** dish-like bits of our one-line "known for" ("Pulled pork & cheese biscuits"), to tap instead of type */
@@ -333,6 +334,7 @@ export default function Reviews({ spot }: { spot: Spot }) {
             <ReviewCard
               key={r.id}
               r={r}
+              spot={spot}
               labels={labels}
               mine={r.userId === user?.id}
               friend={friendIds.has(r.userId)}
@@ -359,6 +361,7 @@ export default function Reviews({ spot }: { spot: Spot }) {
 
 function ReviewCard({
   r,
+  spot,
   labels,
   mine,
   friend,
@@ -368,6 +371,7 @@ function ReviewCard({
   onCount,
 }: {
   r: Review;
+  spot: Spot;
   labels: Record<SubKey, string>;
   mine: boolean;
   friend?: boolean;
@@ -409,6 +413,7 @@ function ReviewCard({
         </p>
       )}
       <p className="rv-body">{r.body}</p>
+      <ReviewPhotos photos={r.photos} spot={spot} />
       {(subs.length > 0 || !!r.goodFor?.length) && (
         <p className="rv-extra">
           {subs.map((k) => (
@@ -510,6 +515,11 @@ function ReviewForm({
   const [details, setDetails] = useState(!!mine?.sub && Object.keys(mine.sub).length > 0);
   const [busy, setBusy] = useState(false);
   const [tried, setTried] = useState(false);
+  // photos: the ones already on it (minus any taken off) and new ones, shown before they upload
+  const [keep, setKeep] = useState<MemberPhoto[]>(mine?.photos ?? []);
+  const [adds, setAdds] = useState<{ file: File; url: string }[]>([]);
+  const picker = useRef<HTMLInputElement>(null);
+  const room = REVIEW_PHOTOS_MAX - keep.length - adds.length;
   const labels = subLabels(spot);
   const months = useMemo(() => visitMonths(), []);
   const set = <K extends keyof ReviewDraft>(k: K, v: ReviewDraft[K]) => setD((x) => ({ ...x, [k]: v }));
@@ -519,6 +529,15 @@ function ReviewForm({
     .map((k) => suggestions.find((x) => x.toLowerCase() === k)!)
     .filter((x) => x.length > 1 && !d.ordered.some((o) => o.toLowerCase() === x.toLowerCase()))
     .slice(0, 5);
+
+  useEffect(() => () => adds.forEach((a) => URL.revokeObjectURL(a.url)), []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function pick(files: FileList | null) {
+    const list = Array.from(files ?? []).filter((f) => f.type.startsWith("image/"));
+    if (list.length > room) toast(`A review can have ${REVIEW_PHOTOS_MAX} photos.`);
+    setAdds((x) => [...x, ...list.slice(0, Math.max(0, room)).map((file) => ({ file, url: URL.createObjectURL(file) }))]);
+    if (picker.current) picker.current.value = "";
+  }
 
   function addDish(name: string) {
     const v = cleanDish(name);
@@ -545,7 +564,22 @@ function ReviewForm({
         goodFor: draft.goodFor,
         sub: draft.sub,
       });
-      onPosted(r, draft);
+      // then the photos: off the ones taken away, up with the new ones; the review stands either way
+      const dropped = (mine?.photos ?? []).filter((p) => !keep.some((k) => k.id === p.id));
+      await Promise.all(dropped.map((p) => backend.deletePhoto(p).catch(() => {})));
+      const up: MemberPhoto[] = [];
+      let missed = 0;
+      for (const a of adds) {
+        try {
+          up.push(await backend.addPhoto(spot.id, a.file, "food", undefined, r.id));
+        } catch {
+          missed++;
+        }
+      }
+      if (missed) toast(missed === adds.length ? "Your review is up, but the photos didn't upload. Try adding them again." : "Your review is up, but one photo didn't upload.", "err");
+      if (up.length) track("review_photos", { id: spot.id, n: up.length });
+      const photos = [...keep, ...up];
+      onPosted({ ...r, ...(photos.length ? { photos } : { photos: undefined }) }, draft);
     } catch (err) {
       toast(err instanceof Error ? err.message : "Couldn't post that review.", "err");
     } finally {
@@ -631,6 +665,47 @@ function ReviewForm({
         </p>
       </fieldset>
 
+      <fieldset className="rv-f">
+        <legend>
+          Photos <span className="rv-opt">optional, up to {REVIEW_PHOTOS_MAX}</span>
+        </legend>
+        <div className="rv-pick">
+          {keep.map((p) => (
+            <span key={p.id} className="rv-pic">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.url} alt="" />
+              <button type="button" className="rv-pic-x" onClick={() => setKeep((x) => x.filter((k) => k.id !== p.id))} aria-label="Take this photo off">
+                ×
+              </button>
+            </span>
+          ))}
+          {adds.map((a) => (
+            <span key={a.url} className="rv-pic">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={a.url} alt="" />
+              <button
+                type="button"
+                className="rv-pic-x"
+                onClick={() => {
+                  URL.revokeObjectURL(a.url);
+                  setAdds((x) => x.filter((y) => y.url !== a.url));
+                }}
+                aria-label="Take this photo off"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+          {room > 0 && (
+            <button type="button" className="rv-pic rv-pic-add" onClick={() => picker.current?.click()}>
+              + Photo
+            </button>
+          )}
+        </div>
+        <input ref={picker} type="file" accept="image/*" multiple hidden onChange={(e) => pick(e.target.files)} />
+        <p className="rv-photo-hint">The food, the room, the people you went with. They show with the place&apos;s photos too.</p>
+      </fieldset>
+
       <fieldset className="rv-f rv-f-row">
         <label>
           <span className="rv-lab">When did you go?</span>
@@ -709,7 +784,7 @@ function ReviewForm({
           Never mind
         </button>
         <button className="btn btn-green" disabled={busy}>
-          {busy ? "Posting…" : mine ? "Save changes" : "Post review"}
+          {busy ? (adds.length ? "Posting and uploading…" : "Posting…") : mine ? "Save changes" : "Post review"}
         </button>
       </div>
     </motion.form>

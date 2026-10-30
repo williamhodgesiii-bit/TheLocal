@@ -11,6 +11,8 @@ import type { Submission, SubmissionStatus } from "@/lib/backend";
 import { CITY_BY_ID, DEFAULT_CITY } from "@/lib/regions";
 import { useApp } from "./Providers";
 import { Logo } from "./Brand";
+import DeskPhotos from "./DeskPhotos";
+import DeskLetter from "./DeskLetter";
 
 const PinPicker = dynamic(() => import("./PinPicker"), { ssr: false, loading: () => <div className="pin-picker" /> });
 
@@ -26,7 +28,16 @@ const REASONS = ["Chain or fast food", "Permanently closed", "Couldn't verify it
 export default function AdminQueue() {
   const { backend, user, openAuth } = useApp();
   const [allowed, setAllowed] = useState<boolean | null>(null);
-  const [tab, setTab] = useState<SubmissionStatus>("pending");
+  // ?tab=photos and ?tab=letter open those (the team's emails link straight to them)
+  const [tab, setTab] = useState<SubmissionStatus | "photos" | "letter">("pending");
+  useEffect(() => {
+    const t = new URLSearchParams(location.search).get("tab");
+    if (t === "photos" || t === "letter") setTab(t);
+  }, []);
+  const pick = (t: typeof tab) => {
+    setTab(t);
+    history.replaceState(history.state, "", t === "pending" ? "/admin" : `/admin?tab=${t}`);
+  };
   const [list, setList] = useState<Submission[] | null>(null);
   const [counts, setCounts] = useState<Record<SubmissionStatus, number>>({ pending: 0, approved: 0, rejected: 0 });
 
@@ -39,7 +50,7 @@ export default function AdminQueue() {
     setList(null);
     const [p, a, r] = await Promise.all((["pending", "approved", "rejected"] as const).map((s) => backend.listSubmissions(s)));
     setCounts({ pending: p.length, approved: a.length, rejected: r.length });
-    setList({ pending: p, approved: a, rejected: r }[tab]);
+    setList(tab === "photos" || tab === "letter" ? [] : { pending: p, approved: a, rejected: r }[tab]);
   }, [backend, tab]);
 
   useEffect(() => {
@@ -78,12 +89,22 @@ export default function AdminQueue() {
           )}
           <div className="admin-tabs">
             {(["pending", "approved", "rejected"] as const).map((t) => (
-              <button key={t} className={tab === t ? "on" : ""} onClick={() => setTab(t)}>
+              <button key={t} className={tab === t ? "on" : ""} onClick={() => pick(t)}>
                 {t === "pending" ? "Needs verification" : t === "approved" ? "Approved" : "Declined"} <span>{counts[t]}</span>
               </button>
             ))}
+            <button className={tab === "photos" ? "on" : ""} onClick={() => pick("photos")}>
+              Photos
+            </button>
+            <button className={tab === "letter" ? "on" : ""} onClick={() => pick("letter")}>
+              Thursday letter
+            </button>
           </div>
-          {list === null ? (
+          {tab === "photos" ? (
+            <DeskPhotos />
+          ) : tab === "letter" ? (
+            <DeskLetter />
+          ) : list === null ? (
             <p className="admin-msg">Loading…</p>
           ) : list.length === 0 ? (
             <p className="admin-msg">{tab === "pending" ? "Nothing waiting. Check back later." : "Nothing here yet."}</p>
