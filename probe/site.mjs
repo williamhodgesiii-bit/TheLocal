@@ -30,3 +30,15 @@ for (const [t, col] of [["review_votes", "kind"], ["notifications", "pushed_at"]
   const r = await fetch(`${url}/rest/v1/${t}?select=${col}&limit=1`, { headers: H });
   out(`column ${t}.${col}`, `${r.status} ${(await r.text()).slice(0, 120)}`);
 }
+// Google Places photos on, and how many member photos exist
+for (const s of ["helen", "caveat-coffee", "yo-mamas"]) {
+  const r = await fetch(`${SITE}/api/places?spot=${s}`);
+  const j = await r.json().catch(() => ({}));
+  out(`places ${s}`, `${r.status} enabled=${j.enabled} photos=${j.photos?.length ?? 0} ${j.photos?.[0]?.url ? "first=" + j.photos[0].url.slice(0, 60) : ""}`);
+}
+{
+  const r = await fetch(`${url}/rest/v1/photos?select=spot_id,kind,created_at&order=created_at.desc&limit=20`, { headers: { ...H, Prefer: "count=exact" } });
+  out("photos", `${r.status} total=${r.headers.get("content-range")} ${(await r.text()).slice(0, 400)}`);
+  const s = await fetch(`${url}/rest/v1/spots?select=id,status&limit=50`, { headers: { ...H, Prefer: "count=exact" } });
+  out("spots", `${s.status} total=${s.headers.get("content-range")}`);
+}
