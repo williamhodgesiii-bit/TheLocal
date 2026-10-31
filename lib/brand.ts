@@ -18,4 +18,4 @@ export const FOUNDER = { name: "Lawson Brown & Will Hodges", line: "", email: "e
  * marketing email; a PO box works). LETTER_ADDRESS in Vercel overrides it. The letter won't
  * send while both are empty.
  */
-export const MAILING_ADDRESS = "";
+export const MAILING_ADDRESS = "212 Rockaway Road, Birmingham, AL 35209";

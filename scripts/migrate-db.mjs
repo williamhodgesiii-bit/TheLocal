@@ -36,8 +36,8 @@ const hash = createHash("sha256").update(sql).digest("hex");
 /** Supabase's certificate isn't in Node's store; the connection is still encrypted */
 function clientFor(url) {
   const u = new URL(url);
-  u.searchParams.delete("sslmode");
-  u.searchParams.delete("supa");
+  // the Vercel ↔ Supabase integration's URLs carry settings meant for other tools; Postgres would reject them
+  for (const k of ["sslmode", "supa", "pgbouncer", "connection_limit", "pool_timeout"]) u.searchParams.delete(k);
   const isLocal = /^(localhost|127\.0\.0\.1|\/)/.test(u.hostname) || u.searchParams.has("host");
   return new pg.Client({ connectionString: u.toString(), ssl: isLocal ? false : { rejectUnauthorized: false }, connectionTimeoutMillis: 15000 });
 }
