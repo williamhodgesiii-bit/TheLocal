@@ -30,6 +30,8 @@ export async function GET() {
         friends: friends.ok ? "ready" : "waiting for the database update",
         reviewPhotos: photos.ok ? "ready" : "waiting for the database update",
         thursdayLetter: letterNeeds.length ? `off (needs ${letterNeeds.join(", ")})` : "on",
+        // which update is live (the commit), to tell a new deploy from the last one
+        version: (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7) || "local",
         databaseUpdates: process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL || process.env.SUPABASE_DB_URL ? "automatic" : "by hand",
         placeEmails: server && process.env.RESEND_API_KEY ? "on" : `off (needs ${[!server && "SUPABASE_SECRET_KEY", !process.env.RESEND_API_KEY && "RESEND_API_KEY"].filter(Boolean).join(" and ")} in Vercel)`,
       },
