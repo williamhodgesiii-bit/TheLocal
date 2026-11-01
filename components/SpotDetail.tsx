@@ -275,7 +275,7 @@ export default function SpotDetail({
               Picked and checked by {BRAND}, {CHECKED}.
             </>
           )}{" "}
-          <Link href="/about">How we pick</Link> · <Link href={`/partners?spot=${spot.id}#contact`}>Report a change</Link>
+          <Link href="/about">How we pick</Link> · <Link href={`/partners?spot=${spot.id}&fix=1#contact`}>Report a change</Link>
           {spot.sponsored && <span className="paid">Sponsored</span>}
         </p>
       </div>

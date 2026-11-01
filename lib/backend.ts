@@ -153,7 +153,7 @@ export type Submission = SpotInput & {
   createdAt: string;
 };
 export type Checklist = Record<string, boolean>;
-export type Lead = { name: string; business: string; email: string; tier: string; message?: string };
+export type Lead = { name: string; business: string; email: string; tier: string; message?: string; spot?: string };
 
 export interface Backend {
   mode: "supabase" | "local";
@@ -1060,7 +1060,12 @@ function supabaseBackend(sb: SupabaseClient): Backend {
       if (error && !String(error.message).includes("duplicate")) throw error;
     },
     async lead(l) {
-      const { error } = await sb.from("partner_leads").insert(l);
+      // the server saves it and emails the team; without its keys, save it here as before
+      const r = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(l) }).catch(() => null);
+      if (r?.ok) return;
+      if (r && r.status !== 501) throw new Error((await r.json().catch(() => ({}))).error ?? "That didn't go through.");
+      const { spot: _, ...row } = l;
+      const { error } = await sb.from("partner_leads").insert(row);
       if (error) throw error;
     },
   };

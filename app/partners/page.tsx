@@ -37,7 +37,7 @@ const TIERS = [
   },
 ];
 
-export default function Partners({ searchParams }: { searchParams: { spot?: string } }) {
+export default function Partners({ searchParams }: { searchParams: { spot?: string; fix?: string } }) {
   return (
     <main className="partners">
       <header className="partners-top">
@@ -103,7 +103,7 @@ export default function Partners({ searchParams }: { searchParams: { spot?: stri
       <section id="contact" className="contact">
         <h2>Get in touch</h2>
         <p className="muted">Tell us about your place, or tell us if a listing is closed or wrong.</p>
-        <PartnerForm spot={searchParams.spot} />
+        <PartnerForm spot={searchParams.spot} fix={!!searchParams.fix} />
       </section>
     </main>
   );

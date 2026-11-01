@@ -5,7 +5,7 @@ import { SPOT_BY_ID } from "@/lib/data";
 import { useApp } from "./Providers";
 import { NEWSLETTER } from "@/lib/brand";
 
-export default function PartnerForm({ spot }: { spot?: string }) {
+export default function PartnerForm({ spot, fix }: { spot?: string; fix?: boolean }) {
   const { backend, toast } = useApp();
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -22,10 +22,11 @@ export default function PartnerForm({ spot }: { spot?: string }) {
         email: String(f.get("email")),
         tier: String(f.get("tier")),
         message: String(f.get("message") || ""),
+        ...(known ? { spot: known.id } : {}),
       });
       setDone(true);
-    } catch {
-      toast("That didn't go through. Try again?", "err");
+    } catch (err) {
+      toast(err instanceof Error && err.message ? err.message : "That didn't go through. Try again?", "err");
     } finally {
       setBusy(false);
     }
@@ -56,7 +57,7 @@ export default function PartnerForm({ spot }: { spot?: string }) {
         </label>
         <label>
           <span>I&apos;m interested in</span>
-          <select name="tier" defaultValue={known ? "neighbor" : "regular"}>
+          <select name="tier" defaultValue={fix ? "correction" : known ? "neighbor" : "regular"}>
             <option value="neighbor">Free listing (claim my page)</option>
             <option value="regular">Featured, $39 a month</option>
             <option value="institution">Front page, $99 a month</option>
