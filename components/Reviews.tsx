@@ -55,7 +55,7 @@ const blank = (): ReviewDraft => ({ rating: 0, goBack: null, body: "", ordered: 
  * people order, then the two most useful reviews. Everything else is one tap away, sorted the
  * way you want. Members write one review per place, one paragraph, and can edit it any time.
  */
-export default function Reviews({ spot }: { spot: Spot }) {
+export default function Reviews({ spot, openSignal = 0 }: { spot: Spot; /** bump to open the form (the Review button up top) */ openSignal?: number }) {
   const { backend, user, requireAuth, toast, been, markBeen, saveSpot, saved, nav } = useApp();
   const [reviews, setReviews] = useState<Review[] | null>(null);
   const [friends, setFriends] = useState<FriendAt[]>([]);
@@ -112,6 +112,17 @@ export default function Reviews({ spot }: { spot: Spot }) {
     if (!requireAuth(`Sign in to review ${spot.name}. It takes a few seconds, no password.`, open)) return;
     setWriting(true);
   }
+  useEffect(() => {
+    if (!openSignal) return;
+    open();
+    // after the form starts to open, bring the section up under the top bar
+    const t = window.setTimeout(() => {
+      const el = top.current;
+      if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 76, behavior: "smooth" });
+    }, 80);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSignal]);
   function filterStars(n: number) {
     setStars((cur) => (cur === n ? null : n));
     setAll(true);
@@ -402,20 +413,30 @@ function ReviewCard({
 
   return (
     <motion.li className="rv-card" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <div className="rv-author">
+        <Avatar m={{ id: r.userId, name: r.userName }} size={32} />
+        <span className="rv-author-t">
+          {r.handle ? <NameLink m={{ id: r.userId, handle: r.handle, name: r.userName }} /> : <b>{r.userName}</b>}
+          <span>
+            {friend && <span className="rv-friend">You follow · </span>}
+            {r.reviewerCount && r.reviewerCount > 1 ? `${r.reviewerCount} reviews · ` : ""}
+            {r.visited ? `went ${monthLabel(r.visited)}` : new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+            {r.updatedAt ? " · edited" : ""}
+          </span>
+        </span>
+      </div>
       <div className="rv-top">
-        <Stars value={r.rating} size={13} />
+        <Stars value={r.rating} size={14} />
         <b className="rv-label">{RATING_WORDS[r.rating]?.short}</b>
         {typeof r.goBack === "boolean" && <span className={r.goBack ? "rv-go go-yes" : "rv-go go-no"}>{r.goBack ? "Would go back" : "Wouldn't go back"}</span>}
       </div>
-      {!!r.ordered?.length && (
-        <p className="rv-got">
-          <span className="cl">Got</span> {r.ordered.join(" · ")}
-        </p>
-      )}
       <p className="rv-body">{r.body}</p>
       <ReviewPhotos photos={r.photos} spot={spot} />
-      {(subs.length > 0 || !!r.goodFor?.length) && (
-        <p className="rv-extra">
+      {(!!r.ordered?.length || subs.length > 0 || !!r.goodFor?.length) && (
+        <p className="post-tags">
+          {r.ordered?.map((o) => (
+            <span key={o}>{o}</span>
+          ))}
           {subs.map((k) => (
             <span key={k}>
               {labels[k]} {r.sub![k]}
@@ -424,17 +445,6 @@ function ReviewCard({
           {r.goodFor?.map((g) => GOOD_FOR_LABEL[g] && <span key={g}>{GOOD_FOR_LABEL[g]}</span>)}
         </p>
       )}
-      <div className="rv-sig">
-        {r.handle ? (
-          <NameLink m={{ id: r.userId, handle: r.handle, name: r.userName }} className="pen-sig" />
-        ) : (
-          <span className="pen-sig">{r.userName}</span>
-        )}
-        {friend && <span className="rv-friend">You follow</span>}
-        {r.reviewerCount && r.reviewerCount > 1 ? <span>{r.reviewerCount} reviews</span> : null}
-        <span>{r.visited ? `Went ${monthLabel(r.visited)}` : new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>
-        {r.updatedAt && <span>Edited</span>}
-      </div>
       <ReviewActions
         r={r}
         mine={mine}

@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GENRE_BY_ID, type GenreId, type Spot } from "@/lib/data";
-import { frontFor } from "@/lib/photos";
-import { useApp } from "./Providers";
-import Storefront from "./Storefront";
+import { Cover } from "./Cover";
 
 /**
  * One image, done properly: responsive srcset, lazy by default, fades in over a
@@ -19,6 +17,7 @@ export default function Photo({
   genre,
   eager,
   position,
+  fallback,
 }: {
   src: string;
   srcSet?: string;
@@ -28,6 +27,8 @@ export default function Photo({
   eager?: boolean;
   /** object-position, for shots whose subject sits off-center */
   position?: string;
+  /** shown instead when the file can't be reached */
+  fallback?: ReactNode;
 }) {
   const [state, setState] = useState<"loading" | "in" | "failed">("loading");
   const ref = useRef<HTMLImageElement>(null);
@@ -39,6 +40,7 @@ export default function Photo({
     if (el?.complete) setState(el.naturalWidth ? "in" : "failed");
   }, [src]);
 
+  if (state === "failed" && fallback) return <>{fallback}</>;
   if (state === "failed") {
     const g = genre ? GENRE_BY_ID[genre] : null;
     return (
@@ -67,22 +69,16 @@ export default function Photo({
   );
 }
 
-/**
- * A place from the sidewalk, the same picture its page opens with (lib/photos → frontFor): a
- * photo of the front, or our sketch of it. The parent sets the box.
- */
+/** A place's cover (lib/photos → frontFor): its photo, or its matchbook. The parent sets the box. */
 export function FrontPic({ spot, sizes, widths = [330, 500], eager, alt }: { spot: Spot; sizes: string; widths?: number[]; eager?: boolean; alt?: string }) {
-  const { covers } = useApp();
-  const f = frontFor(spot, covers[spot.id]);
-  if (f.kind === "sketch") return <Storefront spot={spot} mini />;
-  return <Photo src={f.src(widths[0])} srcSet={f.srcSet?.(widths)} sizes={f.srcSet ? sizes : undefined} alt={alt ?? f.alt} genre={spot.genres[0]} eager={eager} />;
+  return <Cover spot={spot} sizes={sizes} widths={widths} eager={eager} alt={alt} />;
 }
 
-/** A little print of the front at the end of a menu line. */
+/** A little square of the cover, beside a name in a list. */
 export function Thumb({ spot, w = 64 }: { spot: Spot; w?: number }) {
   return (
-    <span className="thumb" aria-hidden>
-      <FrontPic spot={spot} sizes={`${w}px`} alt="" />
+    <span className="thumb" aria-hidden style={{ width: w, height: w }}>
+      <Cover spot={spot} sizes={`${w}px`} alt="" small />
     </span>
   );
 }

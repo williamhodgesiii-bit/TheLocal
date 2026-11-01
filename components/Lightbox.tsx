@@ -8,7 +8,7 @@ import { commonsSrcSet } from "@/lib/photos";
 import type { Spot } from "@/lib/data";
 import type { Photo as MemberPhoto } from "@/lib/backend";
 import Photo from "./Photo";
-import Storefront from "./Storefront";
+import { Matchbook } from "./Cover";
 
 export type Slide = { key: string; kind: "svg" | "img"; url?: string; file?: string; srcSet?: string; label: string; alt: string; credit?: string; link?: string; stock?: boolean };
 
@@ -87,7 +87,7 @@ export default function Lightbox({ slides, index, spot, onIndex, onClose }: { sl
         </button>
       )}
       <motion.figure key={s.key} initial={{ scale: 0.97, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.18 }} onClick={(e) => e.stopPropagation()}>
-        <div className="lb-frame">{s.kind === "svg" ? <Storefront spot={spot} /> : <Photo src={s.url!} srcSet={s.file ? commonsSrcSet(s.file) : s.srcSet} sizes="100vw" alt={s.alt} genre={spot.genres[0]} eager />}</div>
+        <div className="lb-frame">{s.kind === "svg" ? <Matchbook spot={spot} /> : <Photo src={s.url!} srcSet={s.file ? commonsSrcSet(s.file) : s.srcSet} sizes="100vw" alt={s.alt} genre={spot.genres[0]} eager />}</div>
         <figcaption>
           <span>
             {s.stock ? "Stock photo: " : ""}

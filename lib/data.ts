@@ -28,7 +28,7 @@ export interface Genre {
   label: string;
   short: string;
   color: string;
-  icon: string; // which drawing in components/PlateIcons.tsx
+  icon: string; // a drawing name (the old plate icons; kept for stored data)
   tagline: string;
 }
 

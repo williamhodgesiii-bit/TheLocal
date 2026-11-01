@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
-import "@fontsource/yellowtail/400.css";
-import "@fontsource/young-serif/400.css";
+import "@fontsource/yellowtail/latin-400.css";
+import "@fontsource-variable/newsreader/opsz";
+import "@fontsource-variable/newsreader/opsz-italic";
 import "@fontsource-variable/libre-franklin/index.css";
-import "@fontsource-variable/libre-franklin/wght-italic.css";
-import "@fontsource/nanum-pen-script/400.css";
+import "@fontsource-variable/big-shoulders-display";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
+import "./ui.css";
 import Providers from "@/components/Providers";
 import JsonLd from "@/components/JsonLd";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FBF8EF",
+  themeColor: "#F4EFE1",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

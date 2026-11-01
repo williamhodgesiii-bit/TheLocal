@@ -61,7 +61,7 @@ export default function AdminQueue() {
     <div className="admin">
       <header className="admin-top">
         <Link href="/" className="textbtn">
-          ← Back to the map
+          ← Back
         </Link>
         <span>
           <Logo size={32} /> <span className="cap-kicker" style={{ display: "inline" }}>verification desk</span>

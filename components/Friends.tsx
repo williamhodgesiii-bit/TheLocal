@@ -159,7 +159,7 @@ export default function Friends({
           {tab === "following" && authReady && !user && (
             <section className="fr-pitch">
               <h2>See where your friends eat</h2>
-              <p>Follow people whose taste you trust. Their reviews, visits and want-to-go lists show up here, and their favorite places light up on the map.</p>
+              <p>Follow people whose taste you trust. Their reviews, photos and visits show up here, newest first.</p>
               <button className="btn btn-green" onClick={() => openAuth("Sign in to follow friends. It takes a few seconds, no password.")}>
                 Sign in to follow people
               </button>
@@ -232,7 +232,7 @@ export default function Friends({
 }
 
 /** a page of the feed at a time; the next loads when the end scrolls into view */
-function useFeed(scope: "following" | "everyone", on: boolean) {
+export function useFeed(scope: "following" | "everyone", on: boolean) {
   const { backend, user } = useApp();
   const [items, setItems] = useState<Activity[] | null>(null);
   const [reviews, setReviews] = useState<Record<string, Review>>({});
@@ -417,48 +417,57 @@ export function FeedReviewCard({
     }
   }
 
+  const photos = r.photos ?? [];
   return (
-    <li className={`fd fd-review ${plain ? "plain" : ""}`}>
-      {!plain && <Avatar m={actor} size={32} />}
-      <div className="fd-main">
-        {!plain && (
-          <p className="fd-line">
-            <NameLink m={actor} /> reviewed{" "}
-            <button type="button" className="fd-place" onClick={() => onOpen(spot.id)}>
-              {spot.name}
-            </button>
-            <span className="fd-time"> · {timeAgo(at)}</span>
+    <li className={`post ${plain ? "plain" : ""}`}>
+      {!plain && (
+        <header className="post-head">
+          <Avatar m={actor} size={36} />
+          <p className="post-who">
+            <NameLink m={actor} />
+            <span className="post-when">
+              {actor.handle ? `@${actor.handle} · ` : ""}
+              {timeAgo(at)}
+            </span>
           </p>
-        )}
-        <div className="fd-card">
-          <PlaceMini s={spot} onOpen={onOpen} />
-          <div className="rv-top">
-            <Stars value={r.rating} size={13} />
-            <b className="rv-label">{RATING_WORDS[r.rating]?.short}</b>
-            {typeof r.goBack === "boolean" && <span className={r.goBack ? "rv-go go-yes" : "rv-go go-no"}>{r.goBack ? "Would go back" : "Wouldn't go back"}</span>}
-          </div>
-          {!!r.ordered?.length && (
-            <p className="rv-got">
-              <span className="cl">Got</span> {r.ordered.join(" · ")}
-            </p>
-          )}
-          <p className={`rv-body ${full ? "" : "clamp"}`} onClick={() => setFull(true)}>
-            {r.body}
-          </p>
-          <ReviewPhotos photos={r.photos} spot={spot} />
-          <ReviewActions
-            r={r}
-            mine={r.userId === user?.id}
-            thread={thread}
-            onReact={react}
-            onThread={() => setThread((t) => (t ? null : window.matchMedia("(max-width: 900px)").matches ? "sheet" : "inline"))}
-          />
-          <AnimatePresence initial={false}>
-            {thread === "inline" && <ReviewThread key="t" review={r} onClose={() => setThread(null)} onCount={(n) => n !== r.comments && onReview({ ...r, comments: n })} />}
-          </AnimatePresence>
-          {thread === "sheet" && <ReviewThread review={r} sheet onClose={() => setThread(null)} onCount={(n) => n !== r.comments && onReview({ ...r, comments: n })} />}
-        </div>
-      </div>
+        </header>
+      )}
+      <button type="button" className="post-place" onClick={() => onOpen(spot.id)}>
+        <Thumb spot={spot} w={44} />
+        <span className="post-place-t">
+          <b>{spot.name}</b>
+          <span>
+            {GENRE_BY_ID[spot.genres[0]]?.short} · {areaLabelOf(spot)}
+          </span>
+        </span>
+        <span className="post-score" aria-label={`${r.rating} out of 5, ${RATING_WORDS[r.rating]?.short}`}>
+          <Stars value={r.rating} size={13} />
+          <span>{RATING_WORDS[r.rating]?.short}</span>
+        </span>
+      </button>
+      {photos.length > 0 && <ReviewPhotos photos={photos} spot={spot} />}
+      <p className={`post-body ${full ? "" : "clamp"}`} onClick={() => setFull(true)}>
+        {r.body}
+      </p>
+      {(!!r.ordered?.length || typeof r.goBack === "boolean") && (
+        <p className="post-tags">
+          {typeof r.goBack === "boolean" && <span className={r.goBack ? "go-yes" : "go-no"}>{r.goBack ? "Would go back" : "Wouldn't go back"}</span>}
+          {r.ordered?.map((o) => (
+            <span key={o}>{o}</span>
+          ))}
+        </p>
+      )}
+      <ReviewActions
+        r={r}
+        mine={r.userId === user?.id}
+        thread={thread}
+        onReact={react}
+        onThread={() => setThread((t) => (t ? null : window.matchMedia("(max-width: 900px)").matches ? "sheet" : "inline"))}
+      />
+      <AnimatePresence initial={false}>
+        {thread === "inline" && <ReviewThread key="t" review={r} onClose={() => setThread(null)} onCount={(n) => n !== r.comments && onReview({ ...r, comments: n })} />}
+      </AnimatePresence>
+      {thread === "sheet" && <ReviewThread review={r} sheet onClose={() => setThread(null)} onCount={(n) => n !== r.comments && onReview({ ...r, comments: n })} />}
     </li>
   );
 }

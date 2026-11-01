@@ -322,7 +322,7 @@ export type Cover = { alt: string; real: boolean; src: (width: number) => string
 /** a member's photo that can stand for a place: the one the team featured, or the newest of the front */
 export type MemberCover = { url: string; by: string; featured: boolean };
 
-/** a place from the sidewalk: a photo, or our sketch of the front when there isn't one yet */
+/** a place's cover: a photo, or its matchbook when there isn't one yet */
 export type Front =
   | { kind: "img"; src: (width: number) => string; srcSet?: (widths: number[]) => string; file?: string; alt: string; label: string; credit?: string; link?: string }
   | { kind: "sketch"; alt: string; label: string };
@@ -333,7 +333,7 @@ export type Front =
  * the place's own photo, a member's photo of the front, an openly licensed one, and last our
  * sketch of the front.
  */
-export function frontFor(spot: Spot, member?: MemberCover | null): Front {
+export function frontFor(spot: Spot, member?: MemberCover | null, google?: { name: string; author: string } | null): Front {
   const fromMember = (m: MemberCover): Front => ({ kind: "img", src: () => m.url, alt: `${spot.name}, photo by ${m.by}`, label: m.featured ? "Featured" : "Out front", credit: `photo by ${m.by}` });
   if (member?.featured) return fromMember(member);
   const own = HOUSE_PHOTOS[spot.id]?.[0];
@@ -354,6 +354,9 @@ export function frontFor(spot: Spot, member?: MemberCover | null): Front {
     };
   const cc = spot.photos?.find((p) => p.kind === "building");
   if (cc) return { kind: "img", src: () => cc.url, alt: `${spot.name} from the street`, label: "Out front", credit: cc.credit, link: cc.link };
+  // Google's first photo of the place, once GOOGLE_PLACES_API_KEY is set (app/api/pins, app/api/cover)
+  if (google)
+    return { kind: "img", src: (w) => `/api/cover?n=${encodeURIComponent(google.name)}&w=${Math.min(1200, Math.max(400, w))}`, alt: `${spot.name}`, label: "Photo", credit: `Google · ${google.author}` };
   return { kind: "sketch", alt: `Drawing of the front of ${spot.name}`, label: "Our sketch of the front" };
 }
 

@@ -45,7 +45,7 @@ export default function BestHub() {
     <main className="guide hub">
       <JsonLd data={jsonLd} />
       <header className="partners-top">
-        <Link href="/" className="textbtn">← Back to the map</Link>
+        <Link href="/" className="textbtn">← Back</Link>
         <Link href="/" className="brand" aria-label={`${BRAND}, home`}>
           <Logo size={36} />
         </Link>

@@ -32,7 +32,7 @@ export default function GuideView({ guide }: { guide: Guide }) {
       <JsonLd data={jsonLd} />
 
       <header className="partners-top">
-        <Link href="/" className="textbtn">← Back to the map</Link>
+        <Link href="/" className="textbtn">← Back</Link>
         <Link href="/" className="brand" aria-label={`${BRAND}, home`}>
           <Logo size={36} />
         </Link>

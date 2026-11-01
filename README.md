@@ -4,18 +4,19 @@
 
 **The brand**: the mark is a diner plate with a red band and a front door on it (`components/Brand.tsx`); the name, the line under it and the sign-off live in `lib/brand.ts`, so the voice is the same on every page, the share image and the app icon.
 
-**The look**: the site is built to look like things you'd find around town, not a template. A restaurant's page is a green guest check with taped-up snapshots and reviews in handwriting. The map is a printed city map whose numbered pins match the list. Surprise Me prints a kitchen ticket. The header reads like a newspaper masthead with an AP-style dateline. Fonts: Yellowtail (sign script), Young Serif, Libre Franklin and Nanum Pen Script, all self-hosted.
+**The look** (Nov 2026 redesign; the plan and what to sell are in `docs/STRATEGY.md`): paper, ink, tomato red and ledger green, set like a good menu. Big serif names (Newsreader), plain sans for the facts (Libre Franklin), the script logo (Yellowtail) and matchbook covers (Big Shoulders), all self-hosted. Space instead of boxes, pictures doing the talking, one idea per screen. Styles: `app/ui.css` (the system) on top of `app/globals.css` (older pieces).
 
-- **The browse bar** (same on computers and phones), top to bottom: one search box; **what sounds good**, every kind of food on its own little plate (Southern, BBQ, Burgers & Sandwiches, Pizza, Italian, Seafood, Steaks & Live Fire, Latin, Asian, Greek, French, Brunch, Sweets & Bakeries, Coffee, and **Bars** with cocktails, pubs & dives, wine bars and breweries). Plates are kinds of food only; occasions like Date night and Special occasion are rows on the front page; then three buttons that always show their current value: **Where** (a town, then a neighborhood; nobody is asked on the first visit), **Price**, and **Want to try**. Under it: how many places match, *Clear all*, and the sort.
-- **The map**: drag it with the mouse or one finger, zoom with the wheel, a pinch, double-click, the +/− buttons or keys. The camera frames your picks; once you move it yourself, **Recenter** brings it back.
-- **Names on the pins**: zoom in to neighborhood level and each pin's name prints beside it, wherever there's room. The top of your list claims room first; a name tries the right, left, below and above, never covers another pin, name, the caption or the buttons, and is worked out again every frame as you zoom, so names make way and come back. Tap a name to open the place. (`placeNames` in `components/map-shared.tsx`.)
-- **Front page** (until you narrow things down): **This week's three** from The Thursday Plate (one fine dining, one casual, one wildcard, the same three the email sends; see **The Thursday Plate**), your **Plate Passport** card, three **occasion rows** picked for the time of day (Date night, Patio weather, Cheap & good, Brunch, Coffee to work from, Bring the kids, Big groups, Award winners, Breweries; built only from place tags, never padded), and a **trail**. "See all" turns a row into a filter that also reframes the map.
+- **Home** (`/`, `components/Home.tsx`): a feed. *For you* opens with **This week's three** from The Thursday Plate, then members' reviews with their photos, with shelves of places in between (occasions picked for the time of day, no place on two shelves, the order shifting a little each day) and at most one labeled Featured post. *Friends* is only the people you follow, with Activity behind the bell.
+- **Explore** (`/explore`, `components/ExploreView.tsx`): one search box, then Cuisine, Where, Price and Want to try in one row; every place as a cover in a grid. Sort and **Map** sit on the line under it. On a computer the map opens beside a numbered list; on a phone it takes the screen with swipeable cards.
+- **The map**: drag, pinch, wheel, +/−; pins numbered to match the list. It only loads when you open it.
+- **Names on the pins**: zoom in to neighborhood level and each pin's name prints beside it, wherever there's room (`placeNames` in `components/map-shared.tsx`).
+- **Lists** (`/lists`, `components/ListsView.tsx`, `lib/lists.ts`): Want to try and Been, then your own. A list is a name plus rules (occasion, price, town or neighborhood, cuisine, "not been yet", "only want to try") and/or places added by hand (List on any place page). Public lists show on your page. Kept in the account (`user_lists`), or on the device until the database has the table.
+- **Surprise me** (`components/Surprise.tsx`): pick where to spin from (Anywhere, your filters, Want to try, any of your lists, old favorites), the covers flip like a Rolodex and land on a pick. Weighted toward well-loved places, never toward paid ones.
 - **Plate Passport** (`lib/passport.ts`, the Passport tab): tap **I've been** on any place to stamp it, then say how it went (Loved it / It was good / Not for me). Shows how many of the listed places you've stamped, stamps by neighborhood, milestones (1, 5, 10, 25, 50, all), a forgiving weekly streak (a quiet week doesn't break it), trails (`lib/trails.ts`: a seasonal coffee trail, Over the mountain, Meat-and-threes) and a share card drawn in the browser (progress, not places). **Where have you eaten already?** lets people stamp the places they've been in one go, so nobody starts at zero. It's for members (signing in takes seconds, no password) and follows them to every device.
 - **Restaurant page**: name, the basics and what to order first, then **reviews**, then awards (dated, each links to where it was announced; `lib/honors.ts`), Want to try / I've been, photos, the write-up, Directions & hours, nearby places, and who checked it and when, with **Report a change**.
 - **Sort**: Most loved, **Nearest to me** (asks for your location only when you pick it), Top rated, A to Z. Nobody can pay to move up.
-- **Surprise me**: a random pick, a little more likely for well-loved places, never for paid ones. If you've narrowed things down it starts inside your picks.
 - **Trust**: a one-line promise under the headline (every place checked by a person, nobody pays to rank), and `/about` (**How we pick**): what counts as locally owned, how places get on, keeping it current, how we make money, and the review rules. Put your name and email in `FOUNDER` in `lib/brand.ts`; named people are one of the strongest trust signals a new site has.
-- **Keyboard**: `/` search · `↑/↓` browse · `Esc` back · `S` surprise.
+- **Keyboard**: `/` search · `Esc` back · `S` surprise.
 
 ## Coverage today
 
@@ -30,13 +31,10 @@ The **Birmingham area**, by town: Birmingham (Downtown, Southside, Lakeview, Avo
 
 ## Phones first
 
-On a phone the site works like an app. A bottom tab bar has **Explore · Map · Surprise · Passport**.
-- **Explore**: the front page (this week's plate, your passport, occasion rows you swipe, a trail), then the full list. The same browse bar; the plates swipe sideways, and the bar tucks away while you scroll down the list and comes back when you scroll up. Where and Price open as sheets from the bottom.
-- **Map**: full screen, with swipeable place cards that steer the map.
-- **Opening a place**: the place page sits under a strip of map with the pin on it.
-- **Forms**: open as sheets from the bottom.
+On a phone the site works like an app: a top bar with the logo, and a bottom tab bar with **Home · Explore · Surprise · Lists · You** (Surprise in the middle, in red). Everything that opens over the page is a sheet from the bottom you can drag down to close; on a computer the same sheets are small centered panels. Tap targets are 44px or more, spacing is on a 4px grid with a 16–20px gutter, and inputs are 16px so iPhones don't zoom.
+- **A place**: its cover at the top (Back and Share float on it), the name, four actions (Want to try, Been, Review, List), what to order, photos, reviews, then where it is: a little printed locator drawn from our own data (`components/LocatorMap.tsx`, no tiles to download) and Directions. On a computer the locator and links sit in a column on the right.
+- **You** (`/me`): name and @name, Been / Want to try / Lists counts, your Plate Passport, then your reviews, photos, the places you've added and settings.
 - **Home screen**: it can be added as an app (manifest and app icon included).
-- **Passport** (`/me`): your Plate Passport (stamps, neighborhoods, trails, Been and Want to try lists, share card) for everyone; members also see their reviews, photos and the places they've added, and can edit their name and sign out.
 
 ## Reviews
 
@@ -90,7 +88,8 @@ We never sell cards, take payment or hold a balance: selling another business's 
 2. **A cover the restaurant supplied** (Galley & Garden), credited and linked to the restaurant, and listed on `/credits`. Put the file in `public/photos/` (a full size and a 600px one) and add it to `HOUSE_PHOTOS` in `lib/photos.ts`.
 3. **A member's photo of the front** (the newest).
 4. An openly licensed photo of the place (Johnny's, Good People).
-5. Otherwise **our drawing of the front**, unique per place. (With `GOOGLE_PLACES_API_KEY`, the place page shows Google's photo there instead.)
+5. **Google's first photo of the place**, credited, once `GOOGLE_PLACES_API_KEY` is set (`app/api/pins` asks for it in the same weekly lookup as the pins, at no extra cost; `app/api/cover` serves it without exposing the key, cached a week).
+6. Otherwise **a matchbook cover**, unique per place: its name set in one of four styles and ten inks (`components/Cover.tsx`). Honest about having no photo yet, and a reason for owners to send theirs.
 
 **Every photo members add** (with a review, on a place page, or with a place they add) goes up right away, and the team gets an email with the picture in it so they can check it (`app/api/notify`). **Photos** in the Verification desk lists them newest first, to take one down or feature one.
 
@@ -98,7 +97,7 @@ Below the first picture, the place page shows the rest, in this order:
 1. Member uploads, including review photos.
 2. Openly licensed photos taken at the place itself, credited on the page. Add more in `PLACE_PHOTOS` in `lib/photos.ts`.
 3. **Google Places photos** of the building and the food, once `GOOGLE_PLACES_API_KEY` is set. `npm run geocode` also saves each place's Google ID, so photo lookups are a single cheap call.
-4. **Stock photos of the dishes each place is known for**. About 50 photos were hand-picked from Wikimedia Commons, all licensed for commercial use (CC0, public domain, CC BY, CC BY-SA). Each place is mapped to its own dishes in `lib/photos.ts`: white sauce chicken at Saw's, shrimp and grits at Dyron's, a Cubano at Kool Korner. Member-added places fall back to their kind of food. Stock photos carry a yellow **stock** tag and credit their photographer. Every one is listed on `/credits`.
+4. (Not shown any more: the place page only shows real photos of the place. The stock library below stays for `/credits` and old links.) **Stock photos of the dishes each place is known for**. About 50 photos were hand-picked from Wikimedia Commons, all licensed for commercial use (CC0, public domain, CC BY, CC BY-SA). Each place is mapped to its own dishes in `lib/photos.ts`: white sauce chicken at Saw's, shrimp and grits at Dyron's, a Cubano at Kool Korner. Member-added places fall back to their kind of food. Stock photos carry a yellow **stock** tag and credit their photographer. Every one is listed on `/credits`.
 
 Images are served at sizes that fit the screen (`srcset`), load lazily, and fade in once decoded. On a phone the food photos are a strip you swipe sideways. The viewer shows each photo whole, not cropped, and you can swipe between them.
 
@@ -313,10 +312,11 @@ Photos without a member or Google image fall back to two things. The storefront 
 
 | Lever | Where |
 | --- | --- |
-| Listing (free) / Partner $39 a month / Sponsored spot $99 a month | `/partners`. Leads go to `partner_leads`. Partner is presentation and a monthly report; it never changes order |
-| Sponsored spot | set `sponsored: true` on a spot. It shows as one card labeled **Sponsored**, apart from the list, once someone has picked a kind of food or part of town. At most one per kind of food and one per neighborhood (keep it that way when you sell it). Never in rankings, awards or Surprise me |
-| "Presented by" | a sponsor line on The Thursday Plate email or a seasonal trail (banks, credit unions, local services) |
-| In-list "Own a place like these?" card | the 5th position of any list with 7+ results |
+| Listing (free) / Partner $39 a month / Featured $99 a month | `/partners`. Leads go to `partner_leads`. `/partners?spot=<id>` shows the owner live counts for their place (saves, stamps, lists, reviews; `app/api/snapshot`, needs `SUPABASE_SECRET_KEY`). Partner is presentation and a monthly report; it never changes order |
+| Featured: Sponsored card | set `sponsored: true` on a spot. One card labeled **Sponsored** at the top of Explore once someone has picked a kind of food or part of town. At most one per kind of food and one per neighborhood. Never in rankings, awards or Surprise me |
+| Featured: post in *For you* | add it to `FEATURED` in `lib/sponsors.ts` (the restaurant's photo, a headline, dates). At most one in any feed, never in *Friends*, labeled Sponsored |
+| "Presented by" | `THURSDAY_SPONSOR` in `lib/sponsors.ts`: a line on This week's three (and the email) |
+| "Own a local place?" line | far down the *For you* feed, and on every place page ("Is this your place?") |
 | Claim-your-listing CTA | bottom of every spot page (pre-fills the partner form) |
 | The Thursday Plate email | the signup at the end of the list goes to `subscribers`. Sponsorship inventory |
 | Partner analytics | Vercel Analytics events: `spot_view`, `directions`, `website`, `share`, `review`, `photo_upload`, `surprise_spin`. These are the numbers in partner reports |
@@ -326,4 +326,4 @@ Trust rules (on `/partners` and `/about`): nobody pays to rank; anything paid sa
 
 ## Stack
 
-Next.js 14 (App Router) · React 18 · MapLibre GL with OpenFreeMap vector tiles, drawn in the site's own style (`lib/map-style-print.ts`; Leaflet and plain OpenStreetMap tiles when WebGL is off or the tiles are down) · Framer Motion · Supabase (optional) · self-hosted Yellowtail, Young Serif, Libre Franklin and Nanum Pen Script.
+Next.js 14 (App Router) · React 18 · Newsreader, Libre Franklin, Yellowtail and Big Shoulders (self-hosted) · MapLibre GL with OpenFreeMap vector tiles, drawn in the site's own style (`lib/map-style-print.ts`; Leaflet and plain OpenStreetMap tiles when WebGL is off or the tiles are down) · Framer Motion · Supabase (optional).

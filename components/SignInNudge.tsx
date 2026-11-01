@@ -23,7 +23,7 @@ import GoogleButton from "./GoogleButton";
  *    only when there's a real database behind it (Supabase); on-device otherwise.
  */
 const KEY = "tl.signinNudge";
-const DELAY = 4000; // let the page breathe first — value before the ask
+const DELAY = 12000; // let them look around first: value before the ask
 const COOLDOWN_DAYS = [3, 14]; // the wait after the 1st and 2nd "maybe later"
 const MAX_SHOWS = 3; // then stop asking for good
 const DAY = 86_400_000;
@@ -135,8 +135,8 @@ export default function SignInNudge({ authOpen }: { authOpen: boolean }) {
     guest && synced
       ? `You've marked ${guest} ${guest === 1 ? "place" : "places"} on this device. Sign in — free, no password — to keep ${guest === 1 ? "it" : "them"} on every device you use.`
       : synced
-        ? "Exploring is free. Sign in to stamp your Plate Passport, save places to try, spin Surprise me and write reviews, on every device. Free, and no password."
-        : "Exploring is free. Sign in to stamp your Plate Passport, save places to try, spin Surprise me and write reviews. Free, and no password.";
+        ? "Save places, stamp where you've been, make lists and spin Surprise me, on every device. Free, no password."
+        : "Save places, stamp where you've been, make lists and spin Surprise me. Free, no password.";
 
   return (
     <AnimatePresence>
@@ -152,7 +152,6 @@ export default function SignInNudge({ authOpen }: { authOpen: boolean }) {
           <button className="nudge-x" onClick={later} aria-label="Not now">
             ×
           </button>
-          <span className="cap-kicker">The Plate Next Door</span>
           <h2 className="nudge-title">{title}</h2>
           <p className="nudge-text">{text}</p>
 

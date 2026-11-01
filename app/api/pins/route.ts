@@ -20,17 +20,18 @@ export const dynamic = "force-dynamic";
 const WEEK = 604800;
 const MAX_MOVE_KM = 3;
 
-type Hit = { id: string; coords?: [number, number]; closed?: boolean };
-type Body = { enabled: true; pins: Record<string, [number, number]>; closed: string[] };
+type Hit = { id: string; coords?: [number, number]; closed?: boolean; photo?: { name: string; author: string } };
+/** photos: each place's first Google photo (its resource name and who took it), for cards; see /api/cover */
+type Body = { enabled: true; pins: Record<string, [number, number]>; closed: string[]; photos: Record<string, { name: string; author: string }> };
 
 // last good answer on this server, so a cache-busting URL can't trigger fresh (paid) lookups
 let memo: { body: Body; at: number } | null = null;
 
 export async function GET(req: Request) {
   const key = process.env.GOOGLE_PLACES_API_KEY;
-  if (!key) return NextResponse.json({ enabled: false, pins: {}, closed: [] });
+  if (!key) return NextResponse.json({ enabled: false, pins: {}, closed: [], photos: {} });
   if (memo && Date.now() - memo.at < WEEK * 1000) return NextResponse.json(memo.body, { headers: cacheFor(WEEK) });
-  if (rateLimited(req, "pins", 4)) return NextResponse.json({ enabled: false, pins: {}, closed: [] }, { status: 429 });
+  if (rateLimited(req, "pins", 4)) return NextResponse.json({ enabled: false, pins: {}, closed: [], photos: {} }, { status: 429 });
 
   const results: Hit[] = [];
   const queue = [...SPOTS];
@@ -44,7 +45,8 @@ export async function GET(req: Request) {
             headers: {
               "Content-Type": "application/json",
               "X-Goog-Api-Key": key,
-              "X-Goog-FieldMask": "places.location,places.businessStatus",
+              // photos is in the same (Pro) tier as businessStatus, so asking for it costs nothing more
+              "X-Goog-FieldMask": "places.location,places.businessStatus,places.photos",
             },
             body: JSON.stringify({ textQuery: `${s.name}, ${s.address}, Birmingham area, AL`, maxResultCount: 1 }),
             cache: "no-store",
@@ -54,7 +56,13 @@ export async function GET(req: Request) {
           if (!p?.location) continue;
           const at: [number, number] = [+p.location.latitude.toFixed(5), +p.location.longitude.toFixed(5)];
           if (distanceKm(at, s.coords) > MAX_MOVE_KM) continue;
-          results.push({ id: s.id, coords: at, closed: p.businessStatus === "CLOSED_PERMANENTLY" /* not hours, not temporary */ });
+          const ph = p.photos?.[0];
+          results.push({
+            id: s.id,
+            coords: at,
+            closed: p.businessStatus === "CLOSED_PERMANENTLY" /* not hours, not temporary */,
+            ...(ph?.name ? { photo: { name: ph.name as string, author: (ph.authorAttributions?.[0]?.displayName as string) || "Google user" } } : {}),
+          });
         } catch {
           /* leave this pin where it was */
         }
@@ -66,6 +74,7 @@ export async function GET(req: Request) {
     enabled: true,
     pins: Object.fromEntries(results.filter((x) => x.coords).map((x) => [x.id, x.coords!])),
     closed: results.filter((x) => x.closed).map((x) => x.id),
+    photos: Object.fromEntries(results.filter((x) => x.photo).map((x) => [x.id, x.photo!])),
   };
   const good = results.length >= SPOTS.length / 2;
   if (good) memo = { body, at: Date.now() };

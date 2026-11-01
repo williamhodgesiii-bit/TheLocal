@@ -3,13 +3,12 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { track } from "@/lib/analytics";
 import {
   DRINK_KINDS,
   GENRE_BY_ID,
-  PINS_EXACT,
   SPOTS,
   SPOT_BY_ID,
   TOWN_BY_ID,
@@ -19,7 +18,6 @@ import {
   deriveAreas,
   distanceKm,
   locationsOf,
-  priceLabel,
   type AreaId,
   type DrinkKind,
   type GenreId,
@@ -27,34 +25,36 @@ import {
   type TownId,
 } from "@/lib/data";
 import type { LetterWeek, RatingSummary } from "@/lib/backend";
-import { BRAND, MANTRA, NEWSLETTER, SIGNOFF } from "@/lib/brand";
+import { BRAND, NEWSLETTER, SIGNOFF } from "@/lib/brand";
 import { COLLECTION_BY_ID, collectionsFor, greeting } from "@/lib/collections";
 import { letterFor, thursdayOf } from "@/lib/letter";
-import { AVG_MIN, rankScore, siteAverage, wordFor } from "@/lib/reviews";
-import { TRAILS, trailProgress } from "@/lib/trails";
-import { CITY_BY_ID, DEFAULT_CITY, HERE_KEY, HOME_KEY, HOME_TOWN_KEY, apState, cityPath, stateName, type City } from "@/lib/regions";
-import BrowseBar from "./BrowseBar";
+import { rankScore, siteAverage } from "@/lib/reviews";
+import { TRAILS } from "@/lib/trails";
+import { cleanList, newListId, type SpinList } from "@/lib/lists";
+import { CITY_BY_ID, DEFAULT_CITY, HERE_KEY, HOME_KEY, HOME_TOWN_KEY, apState, cityPath, type City } from "@/lib/regions";
+import { canLocate, currentPosition } from "@/lib/native";
+import { hash } from "@/lib/images";
 import WherePicker from "./WherePicker";
-import CityPicker, { WhereBar } from "./CityPicker";
+import CityPicker from "./CityPicker";
 import SubmitSpot from "./SubmitSpot";
 import MySubmissions from "./MySubmissions";
 import { useApp } from "./Providers";
 import SpotDetail from "./SpotDetail";
 import Surprise from "./Surprise";
-import Profile from "./Profile";
-import MapCards from "./MapCards";
-import { Thumb } from "./Photo";
-import { Logo, PlateMark } from "./Brand";
-import { CollectionRow, PassportCard, PlaceCard, TrailCard, WeekPicks } from "./FrontPage";
-import Passport from "./Passport";
+import { PlateMark } from "./Brand";
 import StampPicker from "./StampPicker";
-import Friends, { type FriendsTab, type Pins } from "./Friends";
+import type { FriendsTab, Pins } from "./Friends";
 import MemberPage from "./MemberPage";
-import { canLocate, currentPosition, shareLink } from "@/lib/native";
+import Home, { Shelf } from "./Home";
+import ExploreView, { type Sort } from "./ExploreView";
+import ListsView, { ListEditor } from "./ListsView";
+import You from "./You";
+import { Icon, type IconName } from "./Icons";
+import { Avatar } from "./People";
 
-type View = "list" | "map" | "me" | "friends" | "member";
+type View = "home" | "friends" | "explore" | "lists" | "me" | "member";
 /** what a history entry remembers about the screen */
-type Screen = { view: View; selectedId: string | null; handle: string | null; friendsTab: FriendsTab; returnView: View; depth: number };
+type Screen = { view: View; selectedId: string | null; handle: string | null; friendsTab: FriendsTab; returnView: View; mapMode: boolean; depth: number };
 
 function useIsMobile() {
   const [m, setM] = useState(false);
@@ -70,16 +70,12 @@ function useIsMobile() {
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false, loading: () => <div className="leaflet-host map-loading" /> });
 
-type Sort = "popular" | "rating" | "az" | "near";
 /* exploring is open to everyone; these belong to an account (stamps and saves are gated in Providers) */
 const SURPRISE_WHY = "Sign in to spin Surprise me. It takes a few seconds, no password.";
-const PASSPORT_WHY = "Sign in to open your Plate Passport. It takes a few seconds, no password.";
 const STAMP_WHY = "Sign in to stamp your Plate Passport. It takes a few seconds, no password.";
 /** an occasion collection or a trail, picked from the front page; filters the list and frames the map */
 type Theme = { kind: "collection" | "trail"; id: string } | null;
 const SEEN_KEY = "tl.seenApproved";
-/** set once the first page of this visit has drawn; after that, "/" means Birmingham, not "take me home" */
-let booted = false;
 const writeHere = (id: string) => {
   try {
     sessionStorage.setItem(HERE_KEY, id);
@@ -87,12 +83,22 @@ const writeHere = (id: string) => {
     /* ignore */
   }
 };
+const explorePath = (c: City) => (c.id === DEFAULT_CITY ? "/explore" : cityPath(c));
+/** which screen an address shows */
+function viewOfPath(path: string): View {
+  if (path === "/") return "home";
+  if (path === "/me") return "me";
+  if (path === "/friends") return "friends";
+  if (path === "/lists") return "lists";
+  if (path.startsWith("/u/")) return "member";
+  return "explore";
+}
 
 export default function Explorer({
   cityId,
   initialSpot,
   initialSpotData,
-  initialView = "list",
+  initialView,
   initialHandle,
 }: {
   cityId?: string;
@@ -102,12 +108,11 @@ export default function Explorer({
   /** /u/[handle]: whose page */
   initialHandle?: string;
 }) {
-  const { backend, user, openAuth, requireAuth, saved, toggleSaved, toast, been, home, unread, registerNav, me } = useApp();
+  const { backend, user, openAuth, requireAuth, toast, saved, home, unread, registerNav, me, google } = useApp();
   const router = useRouter();
   const [city, setCity] = useState<City>(CITY_BY_ID[cityId ?? initialSpotData?.city ?? DEFAULT_CITY] ?? CITY_BY_ID[DEFAULT_CITY]);
   const [community, setCommunity] = useState<Spot[]>(initialSpotData ? [initialSpotData] : []);
   const [picker, setPicker] = useState<{ open: boolean; first: boolean }>({ open: false, first: false });
-  /** "Where are you?": which city's map you're looking at */
   const [cityPicker, setCityPicker] = useState(false);
   const [adding, setAdding] = useState(false);
   const [mine, setMine] = useState(false);
@@ -121,81 +126,52 @@ export default function Explorer({
   const [savedOnly, setSavedOnly] = useState(false);
   const [theme, setTheme] = useState<Theme>(null);
   const [stampPicker, setStampPicker] = useState(false);
-  /** where you are, only once you ask for "Nearest" */
   const [here, setHere] = useState<[number, number] | null>(null);
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => setNow(new Date()), []);
-  /** phones: the browse bar slides away while you scroll down the list, back when you scroll up */
-  const [tucked, setTucked] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(initialSpot ? canonicalSpotId(initialSpot) : null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [surprise, setSurprise] = useState(false);
+  const [surprise, setSurprise] = useState<{ open: boolean; from: string | null }>({ open: false, from: null });
+  const [newList, setNewList] = useState<SpinList | null>(null);
   const [ratings, setRatings] = useState<RatingSummary>({});
   const [userMenu, setUserMenu] = useState(false);
-  const [view, setView] = useState<View>(initialView);
-  const [returnView, setReturnView] = useState<View>("list");
+  const [view, setView] = useState<View>(initialView ?? (cityId ? "explore" : "home"));
+  const [returnView, setReturnView] = useState<View>("home");
   const [focusId, setFocusId] = useState<string | null>(null);
   const [profileKey, setProfileKey] = useState(0);
-  /** Friends and member pages: whose page, which tab, and the places they light up on the map */
   const [handle, setHandle] = useState<string | null>(initialHandle ?? null);
   const [friendsTab, setFriendsTab] = useState<FriendsTab>("following");
   const [pins, setPins] = useState<Pins>(null);
+  const [mapMode, setMapMode] = useState(false);
   const isMobile = useIsMobile();
-  // The map engine is the heaviest thing on the page. Computers show the map right away; phones
-  // start on the list, so there it loads when the Map tab or a place opens (and quietly in the
-  // background once the list is up, so it's ready by then).
-  const [mapOn, setMapOn] = useState(false);
-  // rows drawn so far: the first screenful right away, the rest as you scroll (big lists are slow to lay out on phones)
-  const [shown, setShown] = useState(24);
-  const moreRows = useCallback(() => setShown((n) => n + 30), []);
   const q = useDeferredValue(query);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const hydrated = useRef(false);
-  /** on the way to another city's page: don't write this page's address over the move */
-  const leaving = useRef(false);
-  /**
-   * In-app history: opening a place, a tab, Friends or someone's page is a new entry (so Back and
-   * the iPhone's swipe-back return to where you were); filters just update the one you're on.
-   */
+  /** opening a place, a tab or someone's page is a new history entry; filters update the one you're on */
   const push = useRef(false);
 
   /* ---------- city ---------- */
-  // Home is where the map opens each visit; "Where are you?" (this tab only) can point somewhere else.
-  // "/" has no city in the URL, so on arrival it goes to where you said you are, else home.
+  // Home is where the map opens; "Where are you?" (this tab only) can point somewhere else.
   useEffect(() => {
-    const arriving = !booted;
-    booted = true;
     let saved: string | null = null;
     let town: string | null = null;
-    let here: string | null = null;
+    let hereCity: string | null = null;
     try {
       saved = localStorage.getItem(HOME_KEY);
       town = localStorage.getItem(HOME_TOWN_KEY);
-      here = sessionStorage.getItem(HERE_KEY);
+      hereCity = sessionStorage.getItem(HERE_KEY);
     } catch {
       /* ignore */
     }
-    // in your home city, start in the town you eat in most, unless the link says otherwise
-    // (a shared link to one place shows it in context, not filtered out by your home town)
     if ((saved ?? DEFAULT_CITY) === city.id && town && TOWN_BY_ID[town as TownId] && !initialSpot && !new URLSearchParams(location.search).get("a")) setArea(`t:${town}`);
-    if (cityId || initialSpot || initialView !== "list") return;
-    if (!arriving) return writeHere(DEFAULT_CITY); // came back to "/" from inside the site
-    // first visit: no question up front; show the guide, and let "Where" be asked when wanted
-    const start = here ?? saved;
-    if (start && start !== DEFAULT_CITY && CITY_BY_ID[start]) {
-      leaving.current = true;
-      router.replace(cityPath(CITY_BY_ID[start]));
-    }
+    if (cityId || initialSpot) return;
+    const start = hereCity ?? saved;
+    if (start && start !== city.id && CITY_BY_ID[start]) setCity(CITY_BY_ID[start]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cityId, initialSpot, router]);
-
-  // a city's own page means you're looking there
+  }, [cityId, initialSpot]);
   useEffect(() => {
     if (cityId && CITY_BY_ID[cityId]) writeHere(cityId);
   }, [cityId]);
-
-  // back/forward between city routes
   useEffect(() => {
     if (cityId && CITY_BY_ID[cityId] && cityId !== city.id) {
       setCity(CITY_BY_ID[cityId]);
@@ -216,7 +192,6 @@ export default function Explorer({
   useEffect(() => {
     if (!user) return setAdmin(false);
     backend.isAdmin().then(setAdmin).catch(() => setAdmin(false));
-    // let members know when a spot they added has been verified
     backend
       .mySubmissions()
       .then((subs) => {
@@ -235,15 +210,6 @@ export default function Explorer({
       .catch(() => {});
   }, [user, backend, toast]);
 
-  // exact pins and closures from Google, once a key is set on the server (see /api/pins)
-  const [google, setGoogle] = useState<{ pins: Record<string, [number, number]>; closed: string[] } | null>(null);
-  useEffect(() => {
-    fetch("/api/pins")
-      .then((r) => r.json())
-      .then((j) => j.enabled && Object.keys(j.pins ?? {}).length > 0 && setGoogle({ pins: j.pins, closed: j.closed ?? [] }))
-      .catch(() => {});
-  }, []);
-
   const allSpots = useMemo(() => {
     const closed = new Set(google?.closed ?? []);
     const seed =
@@ -255,15 +221,11 @@ export default function Explorer({
   }, [city.id, community, google, initialSpot]);
   const spotById = useMemo(() => Object.fromEntries(allSpots.map((x) => [x.id, x])) as Record<string, Spot>, [allSpots]);
   const areas = useMemo(() => deriveAreas(city.id, allSpots), [city.id, allSpots]);
-  // stamps for places still on the list (a place that closed drops out of the count)
-  const stampedCount = useMemo(() => allSpots.filter((s) => been[s.id]).length, [allSpots, been]);
   const areaById = useMemo(() => Object.fromEntries(areas.map((a) => [a.id, a])), [areas]);
-  /** is this location in the picked area: "all", a town ("t:homewood") or one neighborhood */
   const inArea = useCallback(
     (locArea: AreaId, a: string) => a === "all" || (a.startsWith("t:") ? areaById[locArea]?.town === a.slice(2) : locArea === a),
     [areaById]
   );
-  /** area filter; a place with more than one location counts wherever any of them is */
   const inScope = useCallback(
     (s: Spot, a: string = area) => a === "all" || (s.also?.length ? locationsOf(s).some((l) => inArea(l.area, a)) : inArea(s.area, a)),
     [area, inArea]
@@ -285,23 +247,28 @@ export default function Explorer({
     const t = p.get("t");
     if (c && COLLECTION_BY_ID[c]) setTheme({ kind: "collection", id: c });
     else if (t && TRAILS.some((x) => x.id === t)) setTheme({ kind: "trail", id: t });
-    if (location.pathname === "/me") setView("me");
+    if (p.get("view") === "map") setMapMode(true);
+    // an old link to the list with filters on it lands on Explore
+    if (!initialView && !cityId && !initialSpot && (g || a || c || t || p.get("view"))) setView("explore");
     if (location.pathname === "/friends") {
-      setView("friends");
-      const t = p.get("tab");
-      if (t === "everyone" || t === "activity") setFriendsTab(t);
+      const tab = p.get("tab");
+      if (tab === "everyone" || tab === "activity") setFriendsTab(tab);
     }
     hydrated.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (!hydrated.current || leaving.current) return;
+    if (!hydrated.current) return;
     const p = new URLSearchParams();
-    if (genre !== "all") p.set("g", genre);
-    if (genre === "drinks" && drink !== "all") p.set("d", drink);
-    if (area !== "all") p.set("a", area);
-    if (theme) p.set(theme.kind === "collection" ? "c" : "t", theme.id);
     const sel = selectedId ? spotById[selectedId] : null;
+    if (!sel && view === "explore") {
+      if (genre !== "all") p.set("g", genre);
+      if (genre === "drinks" && drink !== "all") p.set("d", drink);
+      if (area !== "all") p.set("a", area);
+      if (theme) p.set(theme.kind === "collection" ? "c" : "t", theme.id);
+      if (mapMode) p.set("view", "map");
+    }
     if (!sel && view === "friends" && friendsTab !== "following") p.set("tab", friendsTab);
     const path = sel
       ? `/spot/${sel.id}`
@@ -309,48 +276,57 @@ export default function Explorer({
         ? "/me"
         : view === "friends"
           ? "/friends"
-          : view === "member" && handle
-            ? `/u/${handle}`
-            : cityPath(city);
+          : view === "lists"
+            ? "/lists"
+            : view === "member" && handle
+              ? `/u/${handle}`
+              : view === "explore"
+                ? explorePath(city)
+                : "/";
     const qs = p.toString();
     const url = qs ? `${path}?${qs}` : path;
     const cur: Screen | undefined = history.state?.tl;
-    const screen: Screen = { view, selectedId, handle, friendsTab, returnView, depth: cur?.depth ?? 0 };
-    // a comment sheet that closed by itself left an entry behind: the move takes that entry over
+    const screen: Screen = { view, selectedId, handle, friendsTab, returnView, mapMode, depth: cur?.depth ?? 0 };
     const dead = !!history.state?.tlDead;
     if (push.current && dead) history.replaceState({ tl: { ...screen, depth: screen.depth + 1 } }, "", url);
     else if (push.current && url !== location.pathname + location.search) history.pushState({ tl: { ...screen, depth: screen.depth + 1 } }, "", url);
-    // an open comment sheet keeps its mark, so closing it still steps back
     else history.replaceState({ tl: screen, ...(history.state?.tlSheet ? { tlSheet: 1 } : {}) }, "", url);
     push.current = false;
     document.title = sel
       ? `${sel.name} · ${BRAND}`
       : view === "friends"
         ? `Friends · ${BRAND}`
-        : view === "member" && handle
-          ? `@${handle} · ${BRAND}`
-          : `${BRAND} · ${city.name} restaurants, coffee & bars`;
-  }, [genre, drink, area, selectedId, spotById, city, view, theme, friendsTab, handle, returnView]);
+        : view === "lists"
+          ? `Lists · ${BRAND}`
+          : view === "me"
+            ? `You · ${BRAND}`
+            : view === "member" && handle
+              ? `@${handle} · ${BRAND}`
+              : view === "explore"
+                ? `Explore ${city.name} · ${BRAND}`
+                : `${BRAND} · ${city.name}'s locally owned restaurants, coffee & bars`;
+  }, [genre, drink, area, selectedId, spotById, city, view, theme, friendsTab, handle, returnView, mapMode]);
 
   // Back and Forward: put the screen back the way it was
   useEffect(() => {
     const onPop = (e: PopStateEvent) => {
-      if (leaving.current) return;
       const tl: Screen | undefined = e.state?.tl;
       const path = location.pathname;
       const m = path.match(/^\/(spot|u)\/([^/]+)/);
       const next: Omit<Screen, "depth"> = tl ?? {
-        view: path === "/me" ? "me" : path === "/friends" ? "friends" : m?.[1] === "u" ? "member" : "list",
+        view: m?.[1] === "spot" ? "home" : viewOfPath(path),
         selectedId: m?.[1] === "spot" ? canonicalSpotId(decodeURIComponent(m[2])) : null,
         handle: m?.[1] === "u" ? decodeURIComponent(m[2]) : null,
         friendsTab: "following",
-        returnView: "list",
+        returnView: "home",
+        mapMode: new URLSearchParams(location.search).get("view") === "map",
       };
       setView(next.view);
       setSelectedId(next.selectedId);
       setHandle(next.handle);
       setFriendsTab(next.friendsTab);
       setReturnView(next.returnView);
+      setMapMode(!!next.mapMode);
       setHoveredId(null);
       setFocusId(null);
     };
@@ -363,7 +339,6 @@ export default function Explorer({
   }, [backend, selectedId]);
 
   /* ---------- filtering ---------- */
-  /** price, saved and search: everything but the kind of food */
   const matchesRest = useCallback(
     (s: Spot) => {
       if (prices.length && !prices.includes(s.price)) return false;
@@ -377,7 +352,6 @@ export default function Explorer({
     },
     [prices, savedOnly, saved, q]
   );
-  // the places in the picked collection or trail
   const themeIds = useMemo(() => {
     if (!theme) return null;
     if (theme.kind === "collection") return new Set(allSpots.filter(COLLECTION_BY_ID[theme.id].match).map((s) => s.id));
@@ -393,7 +367,6 @@ export default function Explorer({
     },
     [genre, drink, matchesRest, themeIds]
   );
-
   /** a place with more than one location shows the one in the part of town you picked, or the nearest one */
   const placeOf = useCallback(
     (s: Spot): Spot => {
@@ -408,10 +381,8 @@ export default function Explorer({
   );
   const placed = useMemo(() => allSpots.map(placeOf), [allSpots, placeOf]);
   const placedById = useMemo(() => Object.fromEntries(placed.map((x) => [x.id, x])) as Record<string, Spot>, [placed]);
-
   const list = useMemo(() => {
     const out = placed.filter((s) => matchesBase(s) && inScope(s));
-    // best-reviewed: a few reviews are pulled toward the site average, so one 5 can't top the list
     const mean = siteAverage(ratings);
     const r = (s: Spot) => rankScore(ratings[s.id], mean);
     // nobody can pay to move up this list: order is by the sort alone
@@ -424,11 +395,8 @@ export default function Explorer({
     return out;
   }, [placed, matchesBase, inScope, sort, ratings, here]);
 
-  // on Friends and member pages the map shows their places instead of the list's
   const pinsOn = !!pins && (view === "friends" || view === "member");
   const visible = useMemo(() => new Set(pinsOn ? pins!.ids : list.map((s) => s.id)), [list, pins, pinsOn]);
-
-  // what each plate would show right now (same place, price and search)
   const genreCounts = useMemo(() => {
     const c: Record<string, number> = { all: 0 };
     for (const s of allSpots) {
@@ -438,13 +406,11 @@ export default function Explorer({
     }
     return c;
   }, [allSpots, inScope, matchesRest]);
-
   const areaCounts = useMemo(() => {
     const c: Record<string, number> = { all: 0 };
     for (const s of allSpots) {
       if (!matchesBase(s)) continue;
       c.all++;
-      // each neighborhood and town once, however many locations it has there
       const keys = new Set<string>();
       for (const l of locationsOf(s)) {
         keys.add(l.area);
@@ -456,21 +422,18 @@ export default function Explorer({
     return c;
   }, [allSpots, matchesBase, areaById]);
 
-  /* ---------- actions ---------- */
+  /* ---------- moving around ---------- */
+  const top = () => window.scrollTo({ top: 0 });
   const select = useCallback(
     (id: string | null, opts?: { replace?: boolean }) => {
       if (!opts?.replace && id !== selectedId) push.current = true;
-      if (id) {
-        // remember where they came from so Back returns there
-        if (!selectedId) setReturnView(view);
-        setView("list");
-      } else if (selectedId) setView(returnView);
+      if (id && !selectedId) setReturnView(view);
       setSelectedId(id);
       setHoveredId(null);
       setFocusId(null);
-      scrollRef.current?.scrollTo({ top: 0 });
+      top();
     },
-    [selectedId, view, returnView]
+    [selectedId, view]
   );
   const goView = useCallback((v: View) => {
     push.current = true;
@@ -478,11 +441,8 @@ export default function Explorer({
     setSelectedId(null);
     setFocusId(null);
     setView(v);
-    scrollRef.current?.scrollTo({ top: 0 });
+    top();
   }, []);
-  const openPassport = useCallback(() => {
-    if (requireAuth(PASSPORT_WHY, () => goView("me"))) goView("me");
-  }, [goView, requireAuth]);
   const openFriends = useCallback(
     (tab?: FriendsTab) => {
       if (tab) setFriendsTab(tab);
@@ -492,39 +452,36 @@ export default function Explorer({
   );
   const openMember = useCallback(
     (h: string) => {
-      // Back from their page returns to wherever you were
       push.current = true;
-      setReturnView(selectedId ? "list" : view === "member" ? returnView : view);
+      setReturnView(selectedId ? view : view === "member" ? returnView : view);
       setHandle(h);
       setSelectedId(null);
       setFocusId(null);
       setView("member");
-      scrollRef.current?.scrollTo({ top: 0 });
+      top();
     },
     [selectedId, view, returnView]
   );
-  /** Back: one step through the app's own history when there is one, else out to the list */
-  const goBack = useCallback(
-    (fallback: () => void) => {
-      if ((history.state?.tl?.depth ?? 0) > 0) history.back();
-      else {
-        fallback();
-        push.current = false;
-      }
-    },
-    []
-  );
+  /** Back: one step through the app's own history when there is one, else somewhere sensible */
+  const goBack = useCallback((fallback: () => void) => {
+    if ((history.state?.tl?.depth ?? 0) > 0) history.back();
+    else {
+      fallback();
+      push.current = false;
+    }
+  }, []);
   useEffect(() => {
     registerNav({ member: openMember, spot: (id) => select(id), friends: openFriends });
     return () => registerNav(null);
   }, [registerNav, openMember, select, openFriends]);
 
+  const toExplore = useCallback(() => {
+    if (view !== "explore" || selectedId) goView("explore");
+  }, [view, selectedId, goView]);
   const chooseGenre = (g: GenreId | "all") => {
     setGenre((cur) => (cur === g && g !== "all" ? "all" : g));
     setDrink("all");
-    select(null);
   };
-  /** remember the town they eat in at home, so the next visit starts there (not while visiting elsewhere) */
   const remember = useCallback(
     (a: string) => {
       if ((home ?? DEFAULT_CITY) !== city.id) return;
@@ -538,97 +495,100 @@ export default function Explorer({
     },
     [areaById, city.id, home]
   );
-  /** "Where are you?": look at another city's food for this visit; home stays put */
   const goCity = useCallback(
     (c: City) => {
       writeHere(c.id);
       setCityPicker(false);
-      if (c.id === city.id) {
-        if (selectedId || view !== "list") router.push(cityPath(c));
-        return;
-      }
-      router.push(cityPath(c));
+      if (c.id === city.id) return;
+      router.push(explorePath(c));
     },
-    [city.id, selectedId, view, router]
+    [city.id, router]
   );
   const pickArea = (a: string) => {
     remember(a);
     setArea(a);
-    select(null);
   };
   const closePicker = () => {
     if (picker.first) remember(area);
     setPicker({ open: false, first: false });
   };
-  // a neighborhood name tapped on the map; tapping the one you're in steps back out to its town
   const chooseArea = useCallback(
     (a: AreaId | "all") => {
       setArea((cur) => (cur === a && a !== "all" ? (areaById[a]?.town ? `t:${areaById[a].town}` : "all") : a));
-      select(null);
     },
-    [select, areaById]
+    [areaById]
+  );
+  const openSurprise = useCallback(
+    (from: string | null = null) => {
+      if (!allSpots.length) return setAdding(true);
+      if (requireAuth(SURPRISE_WHY, () => setSurprise({ open: true, from }))) setSurprise({ open: true, from });
+    },
+    [allSpots.length, requireAuth]
   );
 
-  // keyboard: "/" search, "s" surprise, arrows browse, Esc back
+  // keyboard: "/" search, "s" surprise, Esc back
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || surprise) return;
-      // a photo or sheet that's open takes the keys (Esc closes it, not the place behind it)
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || surprise.open) return;
       if (document.querySelector('[aria-modal="true"]')) return;
       if (e.key === "/") {
         e.preventDefault();
-        select(null);
-        setTimeout(() => searchRef.current?.focus(), 50);
-      } else if (e.key.toLowerCase() === "s" && !e.metaKey && !e.ctrlKey) {
-        if (requireAuth(SURPRISE_WHY, () => setSurprise(true))) setSurprise(true);
+        toExplore();
+        setTimeout(() => searchRef.current?.focus(), 60);
+      } else if (e.key.toLowerCase() === "s" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        openSurprise();
       } else if (e.key === "Escape" && selectedId) {
         goBack(() => select(null));
-      } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && list.length) {
-        e.preventDefault();
-        const i = list.findIndex((s) => s.id === (selectedId ?? hoveredId));
-        const n = e.key === "ArrowDown" ? Math.min(list.length - 1, i + 1) : Math.max(0, i - 1);
-        select(list[n].id, { replace: !!selectedId });
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [list, selectedId, hoveredId, surprise, select, requireAuth, goBack]);
+  }, [selectedId, surprise.open, select, goBack, toExplore, openSurprise]);
 
   const selected = selectedId ? placedById[selectedId] ?? null : null;
+
+  // the map engine is the heaviest thing on the page: it loads only for Explore's map
+  const showMap = view === "explore" && mapMode && !selected;
+  const [mapOn, setMapOn] = useState(false);
   useEffect(() => {
-    if (mapOn) return;
-    const phone = window.matchMedia("(max-width: 900px)").matches;
-    const idle = (cb: () => void, wait: number) => (typeof window.requestIdleCallback === "function" ? window.requestIdleCallback(cb, { timeout: wait }) : setTimeout(cb, wait)); // Safari has no requestIdleCallback
-    if (!phone || view === "map") return setMapOn(true);
-    // a place opened on a phone: its name, photos and buttons first, the little map right after
-    if (selectedId) return void idle(() => setMapOn(true), 1200);
-    const t = window.setTimeout(() => idle(() => import("./MapViewGL").catch(() => {}), 6000), 2500);
+    if (showMap) return setMapOn(true);
+    if (mapOn || view !== "explore") return;
+    const idle = (cb: () => void, wait: number) => (typeof window.requestIdleCallback === "function" ? window.requestIdleCallback(cb, { timeout: wait }) : setTimeout(cb, wait));
+    const t = window.setTimeout(() => idle(() => import("./MapViewGL").catch(() => {}), 6000), 3000);
     return () => window.clearTimeout(t);
-  }, [mapOn, view, selectedId]);
-  const activeGenre = genre === "all" ? null : GENRE_BY_ID[genre];
+  }, [showMap, mapOn, view]);
+
   const activeArea = area === "all" || area.startsWith("t:") ? null : areaById[area] ?? null;
   const frame = useMemo(() => {
     if (activeArea) return { center: activeArea.center, zoom: activeArea.zoom, maxZoom: activeArea.zoom + 0.4 };
     if (activeTown) return { center: TOWN_BY_ID[activeTown].center, zoom: TOWN_BY_ID[activeTown].zoom, maxZoom: 16 };
     return { center: city.center, zoom: city.zoom, maxZoom: 15 };
   }, [activeArea, activeTown, city]);
-  const founding = city.status === "founding";
   const openAdd = () => {
     if (requireAuth(`Sign in to add a place in ${city.name}. It takes a few seconds, no password.`, () => setAdding(true))) setAdding(true);
   };
-  // anything narrowing the list beyond the town you're in
   const narrowed = genre !== "all" || !!query || prices.length > 0 || savedOnly || sort !== "popular" || !!activeArea || !!theme;
   const themeLabel = theme ? (theme.kind === "collection" ? COLLECTION_BY_ID[theme.id]?.title : TRAILS.find((t) => t.id === theme.id)?.title) ?? null : null;
-  // the front page (this week's plate, your passport, trails, occasions) shows until you narrow things down
-  const showFront = !narrowed && !founding && allSpots.length > 0;
-  // at most one sponsored card, and only once you've picked a kind of food or a part of town
   const sponsoredPick = (genre !== "all" || area !== "all") && !selectedId ? list.find((s) => s.sponsored) ?? null : null;
   const scoped = useMemo(() => allSpots.filter((s) => inScope(s)), [allSpots, inScope]);
-  // server and first paint use the build time; the visitor's clock takes over right after
   const clock = useMemo(() => now ?? new Date(Number(process.env.NEXT_PUBLIC_BUILT_AT) || 0), [now]);
-  const rows = useMemo(() => collectionsFor(clock, scoped, 3, !!now).slice(0, 3), [clock, scoped, now]);
-  // The Thursday Plate: this week's three, as the team set them (Birmingham's letter) or picked on their own
+  // three shelves for the front page, fresh each day: well-loved places lead, nobody shows up on
+  // two shelves at once, and the order shifts a little every morning
+  const rows = useMemo(() => {
+    const day = clock.toISOString().slice(0, 10);
+    const jitter = (id: string) => 0.65 + ((hash(`${day}:${id}`) % 1000) / 1000) * 0.7;
+    const seen = new Set<string>();
+    return collectionsFor(clock, scoped.length >= 20 ? scoped : allSpots, 4, !!now)
+      .slice(0, 3)
+      .map((r) => {
+        const order = [...r.spots].sort((a, b) => b.pop * jitter(b.id) - a.pop * jitter(a.id));
+        const fresh = order.filter((s) => !seen.has(s.id));
+        const spots = [...fresh, ...order.filter((s) => seen.has(s.id))];
+        spots.slice(0, 6).forEach((s) => seen.add(s.id));
+        return { ...r, spots };
+      });
+  }, [clock, scoped, allSpots, now]);
   const week = thursdayOf(clock);
   const [letterRow, setLetterRow] = useState<LetterWeek | null>(null);
   useEffect(() => {
@@ -639,35 +599,28 @@ export default function Explorer({
       live = false;
     };
   }, [backend, city.id, week]);
-  // Birmingham's picks come from the same list the email uses (app/api/letter), so the two always agree
   const letterPool = useMemo(() => (city.id === DEFAULT_CITY ? [...SPOTS, ...community.filter((x) => x.city === city.id && !SPOT_BY_ID[x.id])] : allSpots), [city.id, community, allSpots]);
   const letter = useMemo(() => letterFor(week, letterPool, letterRow), [week, letterPool, letterRow]);
+  const fresh = useMemo(() => community.filter((s) => s.verifiedAt).sort((a, b) => (b.verifiedAt ?? "").localeCompare(a.verifiedAt ?? "")).slice(0, 10), [community]);
   const toLetter = useCallback(() => {
     const f = document.getElementById("letter-signup");
     f?.scrollIntoView({ behavior: "smooth", block: "center" });
     setTimeout(() => f?.querySelector("input")?.focus({ preventScroll: true }), 500);
   }, []);
-  const trail = useMemo(() => {
-    for (const t of TRAILS) {
-      const p = trailProgress(t, allSpots, areas, (id) => !!been[id], clock);
-      if (p.open && p.list.length && !p.finished) return { t, p };
-    }
-    return null;
-  }, [clock, allSpots, areas, been]);
   const pickTheme = useCallback(
     (t: Theme) => {
       setTheme(t);
-      select(null);
-      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      setGenre("all");
+      goView("explore");
     },
-    [select]
+    [goView]
   );
   const seeCollection = useCallback((id: string) => pickTheme({ kind: "collection", id }), [pickTheme]);
-  const seeTrail = useCallback((id: string) => pickTheme({ kind: "trail", id }), [pickTheme]);
   const openStamps = useCallback(() => {
     if (requireAuth(STAMP_WHY, () => setStampPicker(true))) setStampPicker(true);
   }, [requireAuth]);
-  const askNear = () => {
+  const pickSort = (v: Sort) => {
+    if (v !== "near" || here) return setSort(v);
     if (!canLocate()) return toast("This browser can't share your location.", "err");
     currentPosition(8000).then(
       (p) => {
@@ -680,26 +633,9 @@ export default function Explorer({
       }
     );
   };
-
-  const numbers = useMemo(
-    () => Object.fromEntries((pinsOn ? pins!.ids : list.map((s) => s.id)).map((id, i) => [id, i + 1])) as Record<string, number>,
-    [list, pins, pinsOn]
-  );
-  const [today, setToday] = useState("");
-  useEffect(() => {
-    setToday(new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }));
-  }, []);
-
-  const placeName = activeArea ? activeArea.label : activeTown ? TOWN_BY_ID[activeTown].label : city.name;
+  const numbers = useMemo(() => Object.fromEntries((pinsOn ? pins!.ids : list.map((s) => s.id)).map((id, i) => [id, i + 1])) as Record<string, number>, [list, pins, pinsOn]);
   const whereLabel = activeArea ? activeArea.label : activeTown ? TOWN_BY_ID[activeTown].label : "Anywhere";
   const whereText = activeArea ? `in ${activeArea.label}` : activeTown ? `in ${TOWN_BY_ID[activeTown].label}` : `around ${city.name}`;
-  const mapTitle = selected ? selected.name : pinsOn ? pins!.title : placeName;
-  const mapSub = selected
-    ? `${areaLabelOf(selected)}. ${selected.address}`
-    : pinsOn
-      ? pins!.sub
-    : `${list.length} ${list.length === 1 ? "place" : "places"}${themeLabel ? `: ${themeLabel.toLowerCase()}` : ""}${activeGenre ? `, ${activeGenre.label.toLowerCase()}` : ""}${activeArea || activeTown || themeLabel ? "" : ", all over town"}`;
-  /** back to everything in your town (a neighborhood steps out to its town) */
   const clearFilters = () => {
     setGenre("all");
     setDrink("all");
@@ -710,88 +646,245 @@ export default function Explorer({
     setTheme(null);
     if (activeArea) setArea(activeArea.town ? `t:${activeArea.town}` : "all");
   };
-  // the same picks anywhere, for the empty state
   const elsewhere = useMemo(() => allSpots.filter(matchesBase).length, [allSpots, matchesBase]);
-  const surpriseOrAdd = () => {
-    if (!allSpots.length) return openAdd();
-    if (requireAuth(SURPRISE_WHY, () => setSurprise(true))) setSurprise(true);
+  const changeMapMode = (v: boolean) => {
+    setMapMode(v);
+    setFocusId(null);
+    top();
   };
 
-  // phones: tuck the browse bar away while scrolling down the list, bring it back on the way up
-  useEffect(() => {
-    const el = scrollRef.current;
-    setTucked(false);
-    if (!el || !isMobile || selectedId || view !== "list") return;
-    let last = el.scrollTop;
-    const onScroll = () => {
-      const y = el.scrollTop;
-      // where the bar sits before it sticks (a stuck bar reports its stuck position, so measure what's above it)
-      const bar = el.querySelector<HTMLElement>(".browse");
-      const above = bar?.previousElementSibling as HTMLElement | null;
-      const home = (above ? above.offsetTop + above.offsetHeight : 0) + (bar?.offsetHeight ?? 0);
-      if (y < home) setTucked(false);
-      else if (y > last + 8) setTucked(true);
-      else if (y < last - 8) setTucked(false);
-      last = y;
-    };
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [isMobile, selectedId, view]);
+  const map =
+    mapOn && showMap ? (
+      <MapView
+        key={city.id}
+        city={city}
+        areas={areas}
+        spots={placed}
+        numbers={numbers}
+        visible={visible}
+        selectedId={selectedId}
+        hoveredId={hoveredId}
+        focusId={isMobile ? focusId : null}
+        frame={frame}
+        area={area}
+        onSelect={select}
+        onHover={setHoveredId}
+        onArea={chooseArea}
+      />
+    ) : (
+      <div className="leaflet-host map-loading" />
+    );
 
-  const goHome = () => {
-    clearFilters();
-    goView("list");
-  };
+  const foot = (
+    <footer className="site-foot">
+      <Newsletter city={city} />
+      <button type="button" className="write-in" onClick={openAdd}>
+        <b>Know a place we&apos;re missing?</b>
+        <span>Add it. We check it&apos;s real and locally owned, then it goes up with your name on it.</span>
+      </button>
+      <nav className="foot-links" aria-label="About">
+        <Link href="/about">How we pick</Link>
+        <Link href="/partners">For restaurants</Link>
+        <Link href="/best">Guides</Link>
+        <Link href="/credits">Credits</Link>
+        <Link href="/terms">Terms</Link>
+        <Link href="/privacy">Privacy</Link>
+        <a href="mailto:emails@theplatenextdoor.com">Contact</a>
+      </nav>
+      <p className="foot-sign">
+        <PlateMark size={20} /> {SIGNOFF} Locally owned places only. © {new Date().getFullYear()} {BRAND}, {city.name}, {apState(city.state)}
+      </p>
+    </footer>
+  );
+
+  const tabs: { id: View | "surprise"; label: string; icon: IconName; on: boolean; go: () => void }[] = [
+    { id: "home", label: "Home", icon: "home", on: (view === "home" || view === "friends") && !selected, go: () => (view === "home" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("home")) },
+    { id: "explore", label: "Explore", icon: "search", on: view === "explore" && !selected, go: () => (view === "explore" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("explore")) },
+    { id: "surprise", label: "Surprise", icon: "spark", on: false, go: () => openSurprise() },
+    { id: "lists", label: "Lists", icon: "lists", on: view === "lists" && !selected, go: () => goView("lists") },
+    { id: "me", label: "You", icon: "user", on: (view === "me" || (view === "member" && !!me && handle === me.handle)) && !selected, go: () => goView("me") },
+  ];
+
+  let body: React.ReactNode;
+  if (selected) body = <SpotDetail key={selected.id} spot={selected} pool={allSpots} areas={areas} onBack={() => goBack(() => select(null))} onSelect={select} />;
+  else if (view === "home" || view === "friends")
+    body = (
+      <div className="with-rail">
+        <div className="col-main">
+          <Home
+            tab={view === "friends" ? "friends" : "foryou"}
+            onTab={(t) => {
+              if (t === "friends") setFriendsTab((x) => x);
+              setView(t === "friends" ? "friends" : "home");
+            }}
+            friendsTab={friendsTab}
+            onFriendsTab={setFriendsTab}
+            spotById={spotById}
+            letter={letter}
+            rows={rows}
+            fresh={fresh}
+            onOpen={select}
+            onSeeAll={seeCollection}
+            onPins={setPins}
+            onSignup={toLetter}
+          />
+        </div>
+        <aside className="rail" aria-label="More">
+          <div className="d-only">
+            <SpinCard onSpin={openSurprise} onLists={() => goView("lists")} />
+            <Shelf title="Award winners" spots={allSpots.filter((s) => COLLECTION_BY_ID.honors?.match(s)).slice(0, 6)} onOpen={select} onSeeAll={() => seeCollection("honors")} />
+          </div>
+          {foot}
+        </aside>
+      </div>
+    );
+  else if (view === "explore")
+    body = (
+      <ExploreView
+        searchRef={searchRef}
+        list={list}
+        ratings={ratings}
+        query={query}
+        setQuery={setQuery}
+        genre={genre}
+        chooseGenre={chooseGenre}
+        genreCounts={genreCounts}
+        drink={drink}
+        setDrink={setDrink}
+        whereLabel={whereLabel}
+        whereOn={area !== "all"}
+        openWhere={() => setPicker({ open: true, first: false })}
+        prices={prices}
+        setPrices={setPrices}
+        savedOnly={savedOnly}
+        setSavedOnly={setSavedOnly}
+        sort={sort}
+        pickSort={pickSort}
+        theme={themeLabel ? { label: themeLabel, onClear: () => setTheme(null) } : null}
+        narrowed={narrowed}
+        clearFilters={clearFilters}
+        countLine={`${list.length} ${savedOnly ? "want-to-try " : ""}${list.length === 1 ? "place" : "places"} ${whereText}`}
+        mapMode={mapMode}
+        setMapMode={changeMapMode}
+        isMobile={isMobile}
+        map={map}
+        sponsoredPick={sponsoredPick}
+        onOpen={select}
+        onHover={setHoveredId}
+        hoveredId={hoveredId}
+        focusId={focusId}
+        onFocus={setFocusId}
+        milesTo={sort === "near" && here ? (s) => distanceKm(here, s.coords) * 0.621 : undefined}
+        empty={
+          <div className="empty">
+            <p className="empty-title">Nothing for that.</p>
+            <p>{area !== "all" && elsewhere > 0 ? `${elsewhere} ${elsewhere === 1 ? "place matches" : "places match"} somewhere else around ${city.name}.` : "Try fewer filters."}</p>
+            <div className="row gap8">
+              {area !== "all" && elsewhere > 0 && (
+                <button className="btn btn-ink" onClick={() => pickArea("all")}>
+                  Look anywhere
+                </button>
+              )}
+              <button className="btn btn-line" onClick={clearFilters}>
+                Clear filters
+              </button>
+            </div>
+          </div>
+        }
+        foot={foot}
+      />
+    );
+  else if (view === "lists") body = <ListsView spots={allSpots} areas={areas} onOpen={select} onSpin={(from) => openSurprise(from)} />;
+  else if (view === "member" && handle)
+    body = (
+      <div className="col-narrow">
+        <MemberPage
+          key={handle}
+          handle={handle}
+          spotById={spotById}
+          onOpen={select}
+          onPins={setPins}
+          onBack={() => goBack(() => goView(returnView === "member" ? "home" : returnView))}
+          onHandle={setHandle}
+        />
+      </div>
+    );
+  else
+    body = (
+      <div className="col-narrow">
+        <You
+          spots={allSpots}
+          spotById={spotById}
+          areas={areas}
+          city={city.name}
+          admin={admin}
+          refreshKey={profileKey}
+          onOpen={select}
+          onAdd={openAdd}
+          onStampMany={openStamps}
+          onMember={openMember}
+          onLists={() => goView("lists")}
+        />
+      </div>
+    );
 
   return (
-    <div className={`app v-${view}${selected ? " has-sel" : ""}`}>
-      <header className="masthead">
-        <div className="mast-row">
-          <button className="brand" onClick={goHome} title="Home">
-            <Logo sub={`${city.name}, ${apState(city.state)}`} />
+    <div className={`app v-${view}${selected ? " has-sel" : ""}${showMap ? " map-on" : ""}`}>
+      <header className="topbar">
+        <div className="topbar-in">
+          <button className="brand" onClick={() => goView("home")} aria-label={`${BRAND}, home`}>
+            <PlateMark size={30} />
+            <span className="brand-name">{BRAND}</span>
           </button>
-          <nav className="mast-nav">
-            <button className="navlink" onClick={openAdd}>
-              Add a place
-            </button>
-            <button className={`navlink ${view === "friends" ? "on" : ""}`} onClick={() => openFriends()}>
-              Friends
+          <nav className="tnav" aria-label="Sections">
+            {tabs
+              .filter((t) => t.id !== "surprise")
+              .map((t) => (
+                <button key={t.id} className={t.on ? "on" : ""} onClick={t.go} aria-current={t.on ? "page" : undefined}>
+                  {t.label}
+                </button>
+              ))}
+          </nav>
+          <div className="tright">
+            <button className="icon-btn search-jump" onClick={() => (toExplore(), setTimeout(() => searchRef.current?.focus(), 80))} aria-label="Search">
+              <Icon name="search" size={20} />
             </button>
             {user && (
-              <button className="navlink bell" onClick={() => openFriends("activity")} aria-label={unread ? `${unread} new notifications` : "Notifications"}>
-                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
-                  <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15l1.5-2ZM10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-                </svg>
+              <button className="icon-btn bell" onClick={() => openFriends("activity")} aria-label={unread ? `${unread} new notifications` : "Notifications"}>
+                <Icon name="bell" size={20} />
                 {unread > 0 && <span className="bell-n">{unread > 9 ? "9+" : unread}</span>}
               </button>
             )}
-            <Link className="navlink hide-md" href="/about">
-              How we pick
-            </Link>
-            <Link className="navlink hide-md" href="/partners">
-              For restaurants
-            </Link>
+            <button className="btn btn-red btn-surprise" onClick={() => openSurprise()}>
+              <Icon name="spark" size={17} /> Surprise me
+            </button>
             {user ? (
               <div className="user-wrap">
-                <button className="navlink" onClick={() => setUserMenu((v) => !v)} aria-expanded={userMenu}>
-                  {user.name.split(" ")[0]} ▾
+                <button className="av-btn" onClick={() => setUserMenu((v) => !v)} aria-expanded={userMenu} aria-label="Your account">
+                  <Avatar m={{ id: user.id, name: user.name }} size={32} />
                 </button>
                 <AnimatePresence>
                   {userMenu && (
-                    <motion.div className="user-menu" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}>
+                    <motion.div className="user-menu" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} onMouseLeave={() => setUserMenu(false)}>
                       <span className="um-name">{user.name}</span>
                       <span className="um-mail">{user.email}</span>
                       <button className="menu-item" onClick={() => (goView("me"), setUserMenu(false))}>
-                        Your passport
+                        You &amp; your passport
                       </button>
                       {me && (
                         <button className="menu-item" onClick={() => (openMember(me.handle), setUserMenu(false))}>
                           Your page (@{me.handle})
                         </button>
                       )}
+                      <button className="menu-item" onClick={() => (openAdd(), setUserMenu(false))}>
+                        Add a place
+                      </button>
                       <button className="menu-item" onClick={() => (setMine(true), setUserMenu(false))}>
                         Places you&apos;ve added
                       </button>
+                      <Link className="menu-item" href="/partners">
+                        For restaurants
+                      </Link>
                       {admin && (
                         <Link className="menu-item" href="/admin">
                           Verification desk
@@ -812,365 +905,28 @@ export default function Explorer({
                 </AnimatePresence>
               </div>
             ) : (
-              <button className="navlink" onClick={() => openAuth()}>
+              <button className="btn btn-line btn-sm signin" onClick={() => openAuth()}>
                 Sign in
               </button>
             )}
-            <button className="btn-surprise" onClick={surpriseOrAdd}>
-              Surprise me
-            </button>
-          </nav>
-        </div>
-        <div className="dateline">
-          <span>{today}</span>
-          <span className="dl-mid">{city.id === DEFAULT_CITY ? "Birmingham · Homewood · Mountain Brook · Vestavia Hills" : `${city.name}, ${stateName(city.state)}`}</span>
-          <span>{SIGNOFF}</span>
+          </div>
         </div>
       </header>
 
-      <main className="main">
-        <aside className="sidebar">
-          <div className="sidebar-scroll" ref={scrollRef}>
-            <AnimatePresence mode="wait" initial={false}>
-              {selected ? (
-                <SpotDetail key={selected.id} spot={selected} number={numbers[selected.id]} pool={allSpots} onBack={() => goBack(() => select(null))} onSelect={select} />
-              ) : view === "me" ? (
-                <motion.div key="me" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  {!isMobile && (
-                    <div className="detail-bar">
-                      <button className="textbtn" onClick={() => goBack(() => goView("list"))}>
-                        ← Back to the list
-                      </button>
-                    </div>
-                  )}
-                  {/* the passport is members-only; signed out, Profile below shows the way in */}
-                  {user && <Passport spots={allSpots} areas={areas} city={city.name} onOpen={(id) => select(id)} onStampMany={openStamps} />}
-                  <Profile spotById={spotById} onOpen={(id) => select(id)} onAdd={openAdd} admin={admin} refreshKey={profileKey} />
-                </motion.div>
-              ) : view === "friends" ? (
-                <motion.div key="friends" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <Friends spotById={spotById} onOpen={(id) => select(id)} onPins={setPins} tab={friendsTab} onTab={setFriendsTab} />
-                </motion.div>
-              ) : view === "member" && handle ? (
-                <motion.div key={`member-${handle}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <MemberPage
-                    handle={handle}
-                    spotById={spotById}
-                    onOpen={(id) => select(id)}
-                    onPins={setPins}
-                    onBack={() => goBack(() => goView(returnView === "member" ? "list" : returnView))}
-                    onHandle={setHandle}
-                  />
-                </motion.div>
-              ) : (
-                <motion.div key="browse" className="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-                  <WhereBar city={city} onOpen={() => setCityPicker(true)} onGoHome={goCity} />
-                  <section className="hello">
-                    <p className="hello-hi">{now ? greeting(now) : "\u00a0"}</p>
-                    {/* each sentence stays whole when the line has to break */}
-                    <h1>
-                      {MANTRA.split(". ").map((t, i, all) => (
-                        <span key={t}>
-                          {i > 0 && " "}
-                          <span>{i < all.length - 1 ? `${t}.` : t}</span>
-                        </span>
-                      ))}
-                    </h1>
-                    {allSpots.length > 0 && <p>{allSpots.length} locally owned restaurants, coffee shops and bars. No chains, no fast food.</p>}
-                    <p className="trust-line">
-                      <span>Every place checked by a person</span>
-                      <span>Nobody pays to rank</span>
-                      <Link href="/about">How we pick</Link>
-                    </p>
-                  </section>
-
-                  {founding && (
-                    <section className="notice">
-                      <h3>{allSpots.length === 0 ? `Nothing in ${city.name} yet.` : `${allSpots.length} place${allSpots.length === 1 ? "" : "s"} in ${city.name} so far.`}</h3>
-                      <p>
-                        We&apos;re building this one with the people who live here. Add the places you actually go. Somebody on our end checks each one is real, open and
-                        locally owned, then it goes up with your name on it.
-                      </p>
-                      <button className="btn btn-green" onClick={openAdd}>
-                        Add a place in {city.name}
-                      </button>
-                    </section>
-                  )}
-
-                  <BrowseBar
-                    searchRef={searchRef}
-                    query={query}
-                    setQuery={setQuery}
-                    genre={genre}
-                    chooseGenre={chooseGenre}
-                    genreCounts={genreCounts}
-                    drink={drink}
-                    setDrink={setDrink}
-                    whereLabel={whereLabel}
-                    whereOn={area !== "all"}
-                    openWhere={() => setPicker({ open: true, first: false })}
-                    prices={prices}
-                    setPrices={setPrices}
-                    savedOnly={savedOnly}
-                    setSavedOnly={setSavedOnly}
-                    savedCount={saved.length}
-                    tucked={tucked}
-                    theme={themeLabel ? { label: themeLabel, onClear: () => setTheme(null) } : null}
-                  />
-
-                  {showFront && (
-                    <div className="front">
-                      <WeekPicks letter={letter} onOpen={select} onSignup={toLetter} />
-                      <PassportCard total={allSpots.length} count={stampedCount} onStampMany={openStamps} onOpen={openPassport} />
-                      {rows.map((r, i) => (
-                        <CollectionRow
-                          key={r.id}
-                          id={r.id}
-                          title={r.title}
-                          line={r.line}
-                          spots={r.spots}
-                          now={r.now && i === 0}
-                          onOpen={select}
-                          onHover={setHoveredId}
-                          onSeeAll={seeCollection}
-                        />
-                      ))}
-                      {trail && (
-                        <TrailCard
-                          id={trail.t.id}
-                          title={trail.t.title}
-                          line={trail.t.line}
-                          spots={trail.p.list}
-                          have={trail.p.have}
-                          goal={trail.p.goal}
-                          daysLeft={trail.p.daysLeft}
-                          onSee={seeTrail}
-                        />
-                      )}
-                      <h2 className="front-all">Every place</h2>
-                    </div>
-                  )}
-
-                  <div className="results-head">
-                    <p className="rh-count">
-                      <strong>{list.length}</strong> {savedOnly ? "want-to-try " : ""}
-                      {list.length === 1 ? "place" : "places"} {whereText}
-                    </p>
-                    {narrowed && (
-                      <button className="textbtn rh-clear" onClick={clearFilters}>
-                        Clear all
-                      </button>
-                    )}
-                    <label className="sort">
-                      <span>Sort</span>
-                      <select
-                        value={sort}
-                        onChange={(e) => {
-                          const v = e.target.value as Sort;
-                          if (v === "near" && !here) askNear();
-                          else setSort(v);
-                        }}
-                        aria-label="Sort by"
-                      >
-                        <option value="popular">Most loved</option>
-                        <option value="near">Nearest to me</option>
-                        <option value="rating">Top rated</option>
-                        <option value="az">A to Z</option>
-                      </select>
-                    </label>
-                  </div>
-
-                  {/* a paid spot is one labeled card for a kind of food or a part of town, kept apart
-                      from the list; it never changes anyone's place in the list itself */}
-                  {sponsoredPick && (
-                    <aside className="sponsored-slot" aria-label="Sponsored">
-                      <span className="paid">Sponsored</span>
-                      <PlaceCard spot={sponsoredPick} onOpen={select} onHover={setHoveredId} sizes="(max-width: 900px) 90vw, 360px" />
-                    </aside>
-                  )}
-
-                  <ol className="bill">
-                    {list.slice(0, shown).map((s, i) => (
-                      <SpotRow
-                        key={s.id}
-                        spot={s}
-                        n={i + 1}
-                        rating={ratings[s.id]}
-                        hot={hoveredId === s.id}
-                        saved={saved.includes(s.id)}
-                        onHover={setHoveredId}
-                        onOpen={select}
-                        ad={i === 4 && list.length > 6}
-                        miles={sort === "near" && here ? distanceKm(here, s.coords) * 0.621 : undefined}
-                        been={!!been[s.id]}
-                      />
-                    ))}
-                  </ol>
-                  {list.length > shown && <MoreRows onMore={moreRows} left={list.length - shown} root={scrollRef} />}
-
-                  {list.length === 0 && !(founding && allSpots.length === 0) && (
-                    <div className="empty">
-                      <p className="empty-title">Nothing on the plate for that.</p>
-                      <p>{area !== "all" && elsewhere > 0 ? `${elsewhere} ${elsewhere === 1 ? "place matches" : "places match"} somewhere else around ${city.name}.` : "Try fewer filters."}</p>
-                      <div className="empty-btns">
-                        {area !== "all" && elsewhere > 0 && (
-                          <button className="btn btn-green" onClick={() => pickArea("all")}>
-                            Look anywhere
-                          </button>
-                        )}
-                        <button className="btn btn-line" onClick={clearFilters}>
-                          Clear all
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <button className="write-in" onClick={openAdd}>
-                    <span className="wi-title">Know a plate we&apos;re missing?</span>
-                    <span>Write it in. We check that it&apos;s real and locally owned, then it goes up with your name on it.</span>
-                  </button>
-
-                  <Newsletter city={city} />
-                  <footer className="side-foot">
-                    <p className="foot-sign">
-                      <PlateMark size={22} /> {SIGNOFF}
-                    </p>
-                    <p>Locally owned places only. If it has a drive-thru or a corporate office out of state, it isn&apos;t on here.</p>
-                    <p>
-                      {google || PINS_EXACT ? "" : "Map pins are close, not exact. "}Something closed or wrong? <Link href="/partners#contact">Let us know</Link>.{" "}
-                      <Link href="/about">How we pick</Link>. <Link href="/partners">For restaurants</Link>. <Link href="/credits">Photo credits</Link>.{" "}
-                      <Link href="/terms">Terms</Link>. <Link href="/privacy">Privacy</Link>. <a href="mailto:emails@theplatenextdoor.com">Contact us</a>.
-                    </p>
-                    <p>
-                      © {new Date().getFullYear()} {BRAND}, {city.name}, {apState(city.state)}
-                    </p>
-                  </footer>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </aside>
-
-        <section className="mapwrap">
-          <div className="map-plate">
-            {mapOn ? (
-              <MapView
-                key={city.id}
-                city={city}
-                areas={areas}
-                spots={placed}
-                numbers={numbers}
-                visible={visible}
-                selectedId={selectedId}
-                hoveredId={hoveredId}
-                focusId={isMobile && view === "map" ? focusId : null}
-                frame={frame}
-                topPad={isMobile && view === "map" && !selected ? 92 : undefined}
-                area={area}
-                onSelect={select}
-                onHover={setHoveredId}
-                onArea={chooseArea}
-              />
-            ) : (
-              <div className="leaflet-host map-loading" />
-            )}
-            <div className="map-caption" aria-live="polite">
-              <span className="cap-kicker">
-                {selected
-                  ? numbers[selected.id]
-                    ? `No. ${numbers[selected.id]}`
-                    : areaLabelOf(selected)
-                  : activeArea
-                    ? activeArea.town
-                      ? TOWN_BY_ID[activeArea.town].label
-                      : "Neighborhood"
-                    : activeTown
-                      ? `${city.name} area`
-                      : (city.nickname ?? stateName(city.state))}
-              </span>
-              <h2 className="cap-title">{mapTitle}</h2>
-              <span className="cap-sub">{mapSub}</span>
-            </div>
-            {isMobile && view === "map" && !selected && (
-              <MapCards list={list} focusId={focusId} onFocus={setFocusId} onOpen={(id) => select(id)} />
-            )}
-            {isMobile && selected && (
-              <div className="m-float">
-                <button className="m-round" onClick={() => goBack(() => select(null))} aria-label="Back">
-                  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
-                    <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-                <span className="m-float-r">
-                  <button
-                    className={`m-round ${saved.includes(selected.id) ? "on" : ""}`}
-                    onClick={() => toggleSaved(selected.id)}
-                    aria-pressed={saved.includes(selected.id)}
-                    aria-label={saved.includes(selected.id) ? "On your want-to-try list. Tap to remove" : "Want to try"}
-                  >
-                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
-                      <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" fill={saved.includes(selected.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                  <button
-                    className="m-round"
-                    aria-label="Share"
-                    onClick={async () => {
-                      const how = await shareLink({ title: selected.name, text: `${selected.name}: ${selected.knownFor}. Found on ${BRAND}.`, url: `${location.origin}/spot/${selected.id}` });
-                      if (how === "copied") toast("Link copied");
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
-                      <path d="M12 15V4M8 8l4-4 4 4M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                </span>
-              </div>
-            )}
-            <p className="map-key">
-              <i className="k-on" /> numbers match the list <i className="k-off" /> not in your picks
-            </p>
-          </div>
-        </section>
+      <main className="page" id="main">
+        {body}
       </main>
 
-      {/* four calm tabs; adding a place lives on your page and at the end of the list */}
       <nav className="tabbar" aria-label="Sections">
-        <button
-          className={view === "list" && !selected ? "on" : ""}
-          onClick={() => {
-            // already here: back to the top, browse bar showing
-            if (view === "list" && !selected) scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-            goView("list");
-          }}
-          aria-current={view === "list" && !selected ? "page" : undefined}
-        >
-          <TabGlyph k="menu" />
-          Explore
-        </button>
-        <button className={view === "map" && !selected ? "on" : ""} onClick={() => goView("map")} aria-current={view === "map" && !selected ? "page" : undefined}>
-          <TabGlyph k="map" />
-          Map
-        </button>
-        <button className="tab-surprise" onClick={surpriseOrAdd}>
-          <TabGlyph k="spark" />
-          Surprise
-        </button>
-        <button
-          className={(view === "friends" || view === "member") && !selected ? "on" : ""}
-          onClick={() => openFriends()}
-          aria-current={view === "friends" && !selected ? "page" : undefined}
-        >
-          <span className="tab-ico">
-            <TabGlyph k="friends" />
-            {unread > 0 && <span className="tab-dot" aria-label={`${unread} new`} />}
-          </span>
-          Friends
-        </button>
-        <button className={view === "me" && !selected ? "on" : ""} onClick={openPassport} aria-current={view === "me" && !selected ? "page" : undefined}>
-          <TabGlyph k="stamp" />
-          Passport
-        </button>
+        {tabs.map((t) => (
+          <button key={t.id} className={`${t.on ? "on" : ""} ${t.id === "surprise" ? "tab-spin" : ""}`} onClick={t.go} aria-current={t.on ? "page" : undefined}>
+            <span className="tab-ico">
+              <Icon name={t.icon} size={t.id === "surprise" ? 22 : 23} fill={false} stroke={t.on ? 2.1 : 1.7} />
+              {t.id === "home" && user && unread > 0 && <span className="tab-dot" aria-label={`${unread} new`} />}
+            </span>
+            <span className="tab-l">{t.label}</span>
+          </button>
+        ))}
       </nav>
 
       <WherePicker
@@ -1189,31 +945,27 @@ export default function Explorer({
         }}
       />
       <CityPicker open={cityPicker} city={city} onPick={goCity} onClose={() => setCityPicker(false)} />
-
       <StampPicker open={stampPicker} onClose={() => setStampPicker(false)} spots={allSpots} areas={areas} />
-
       <Surprise
-        open={surprise && allSpots.length > 0}
-        defaultScoped={narrowed && list.length > 0}
-        onClose={() => setSurprise(false)}
+        open={surprise.open && allSpots.length > 0}
+        from={surprise.from}
+        narrowed={narrowed && view === "explore"}
+        onClose={() => setSurprise({ open: false, from: null })}
         all={allSpots}
         filtered={list}
         onGo={(id) => {
-          setSurprise(false);
+          setSurprise({ open: false, from: null });
           const s = spotById[id];
           if (s && !inScope(s)) setArea("all");
           select(id);
         }}
+        onNewList={() => {
+          setSurprise({ open: false, from: null });
+          setNewList(cleanList({ id: newListId(), title: "", rules: {}, spotIds: [], isPublic: true }));
+        }}
       />
-
-      <SubmitSpot
-        open={adding}
-        onClose={() => setAdding(false)}
-        onDone={() => setProfileKey((k) => k + 1)}
-        city={city}
-        areas={areas}
-        spots={allSpots}
-      />
+      <ListEditor list={newList} spots={allSpots} areas={areas} onClose={() => setNewList(null)} onDeleted={() => setNewList(null)} onDelete={async () => {}} />
+      <SubmitSpot open={adding} onClose={() => setAdding(false)} onDone={() => setProfileKey((k) => k + 1)} city={city} areas={areas} spots={allSpots} />
       <MySubmissions
         open={mine}
         onClose={() => setMine(false)}
@@ -1231,101 +983,32 @@ export default function Explorer({
   );
 }
 
-/** Small pen-drawn marks for the phone tab bar (no icon set). */
-function TabGlyph({ k }: { k: "menu" | "map" | "me" | "spark" | "stamp" | "friends" }) {
-  const d = {
-    menu: "M4 6h16M4 12h11M4 18h14",
-    spark: "M12 3.5c.6 3.9 1.9 5.9 5.6 6.6-3.7.8-5 2.8-5.6 6.7-.6-3.9-1.9-5.9-5.6-6.7 3.7-.7 5-2.7 5.6-6.6ZM18.5 15.5c.3 1.6.8 2.4 2.2 2.7-1.4.3-1.9 1.1-2.2 2.7-.3-1.6-.8-2.4-2.2-2.7 1.4-.3 1.9-1.1 2.2-2.7Z",
-    map: "M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14",
-    me: "M12 12a4 4 0 1 0-.1 0M4.5 20c1.5-4 4.4-5.5 7.5-5.5s6 1.5 7.5 5.5",
-    stamp: "M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17ZM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10ZM9.8 12.1l1.5 1.5 3-3.2",
-    friends: "M9 11a3.5 3.5 0 1 0-.1 0M2.5 19.5c1-3.3 3.4-4.8 6.5-4.8s5.5 1.5 6.5 4.8M16 11.2a3 3 0 1 0-.6-5.9M17.2 14.8c2.2.4 3.6 1.9 4.3 4.4",
-  }[k];
+/** the desktop rail: Surprise me and your lists, always a click away */
+function SpinCard({ onSpin, onLists }: { onSpin: (from?: string | null) => void; onLists: () => void }) {
+  const { lists, user } = useApp();
+  const [hi, setHi] = useState("");
+  useEffect(() => setHi(greeting(new Date())), []);
   return (
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>
-      <path d={d} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-// a row only redraws when its own props change (hovering one row shouldn't redraw every row)
-const SpotRow = memo(function SpotRow({
-  spot,
-  n,
-  rating,
-  hot,
-  saved,
-  onHover,
-  onOpen,
-  ad,
-  miles,
-  been,
-}: {
-  spot: Spot;
-  n: number;
-  rating?: { avg: number; count: number; goBack?: number | null };
-  hot: boolean;
-  saved: boolean;
-  onHover: (id: string | null) => void;
-  onOpen: (id: string) => void;
-  ad: boolean;
-  miles?: number;
-  been?: boolean;
-}) {
-  return (
-    <>
-      <li className={`item ${hot ? "hot" : ""}`} onMouseEnter={() => onHover(spot.id)} onMouseLeave={() => onHover(null)}>
-        <button onClick={() => onOpen(spot.id)} className="item-btn">
-          <span className="item-no">{n}</span>
-          <span className="item-body">
-            <span className="item-line">
-              <span className="item-name">{spot.name}</span>
-              <span className="leader" aria-hidden />
-              <span className="item-price">{priceLabel(spot.price)}</span>
-            </span>
-            <span className="item-known">{spot.knownFor}</span>
-            <span className="item-meta">
-              {miles !== undefined ? `${miles < 0.1 ? "0.1" : miles.toFixed(1)} mi · ` : ""}
-              {spot.genres.map((g) => GENRE_BY_ID[g].short).join(", ")} · {areaLabelOf(spot)}
-              {rating
-                ? rating.count >= AVG_MIN
-                  ? ` · ${rating.avg.toFixed(1)} ${wordFor(rating.avg).toLowerCase()} (${rating.count})${rating.goBack != null ? ` · ${rating.goBack}% go back` : ""}`
-                  : ` · ${rating.count} ${rating.count === 1 ? "review" : "reviews"}`
-                : ""}
-              {been ? " · been" : saved ? " · want to try" : ""}
-              {spot.sponsored && <span className="paid">Sponsored</span>}
-            </span>
-          </span>
-          <Thumb spot={spot} />
-        </button>
-      </li>
-      {ad && (
-        <li className="classified">
-          <Link href="/partners">
-            <span className="cl-label">Restaurants</span>
-            <strong>Own a place like these?</strong>
-            <span>Your listing is free. Claim it to add photos, specials and your side of the story.</span>
-          </Link>
-        </li>
+    <section className="spin-card">
+      <p className="eyebrow">{hi || " "}</p>
+      <h2 className="spin-h">Can&apos;t decide?</h2>
+      <p className="spin-p">Let us pick. Spin from everywhere, or from one of your lists.</p>
+      <button type="button" className="btn btn-red btn-block" onClick={() => onSpin()}>
+        <Icon name="spark" size={18} /> Surprise me
+      </button>
+      {user && lists.length > 0 && (
+        <div className="spin-lists">
+          {lists.slice(0, 5).map((l) => (
+            <button key={l.id} type="button" className="chip" onClick={() => onSpin(l.id)}>
+              {l.title}
+            </button>
+          ))}
+        </div>
       )}
-    </>
-  );
-});
-
-/** Draws the next rows when it scrolls into view; a button too, for keyboards and old browsers. */
-function MoreRows({ onMore, left, root }: { onMore: () => void; left: number; root: React.RefObject<HTMLElement> }) {
-  const ref = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver((e) => e.some((x) => x.isIntersecting) && onMore(), { root: root.current, rootMargin: "800px 0px" });
-    io.observe(el);
-    return () => io.disconnect();
-  }, [onMore, root, left]);
-  return (
-    <button ref={ref} className="textbtn more-rows" onClick={onMore}>
-      Show {left} more
-    </button>
+      <button type="button" className="link-btn" onClick={onLists}>
+        {user && lists.length ? "Your lists" : "Make a list to spin from"} <Icon name="right" size={14} />
+      </button>
+    </section>
   );
 }
 
@@ -1348,14 +1031,14 @@ function Newsletter({ city }: { city: City }) {
         }
       }}
     >
-      <h2>{NEWSLETTER}</h2>
-      <p>Three places every Thursday morning: one fine dining, one casual, one wildcard. Plus what&apos;s new on the map around {city.name}. Short, and you can stop it any time.</p>
+      <h2 className="nl-h">{NEWSLETTER}</h2>
+      <p>Three places every Thursday morning: one fine dining, one casual, one wildcard.</p>
       {done ? (
         <p className="nl-done">You&apos;re on the list. See you Thursday.</p>
       ) : (
         <div className="nl-row">
-          <input type="email" required placeholder="your email" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email" />
-          <button className="btn btn-green">Sign up</button>
+          <input type="email" required placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email" />
+          <button className="btn btn-ink">Sign up</button>
         </div>
       )}
     </form>

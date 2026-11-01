@@ -1712,4 +1712,26 @@ create policy "staff edit letters" on public.letters for update using (public.is
 -- the email service's daily limit finishes the next day)
 alter table public.subscribers add column if not exists last_letter date;
 
+-- Lists: a member's own shelves of places (rules like "$-$$ in Vestavia", places picked by hand,
+-- or both). Surprise me spins from them. Public lists show on the member's page; private ones
+-- only to their owner. Adding this table changes nothing that was already stored.
+create table if not exists public.user_lists (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  title text not null check (char_length(title) between 1 and 40),
+  rules jsonb not null default '{}'::jsonb check (pg_column_size(rules) < 4000),
+  spot_ids text[] not null default '{}' check (coalesce(array_length(spot_ids, 1), 0) <= 100),
+  is_public boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists user_lists_user_idx on public.user_lists (user_id, created_at);
+alter table public.user_lists enable row level security;
+drop policy if exists "members manage their lists" on public.user_lists;
+create policy "members manage their lists" on public.user_lists
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "public lists are readable" on public.user_lists;
+create policy "public lists are readable" on public.user_lists
+  for select using (is_public and public.can_view(user_id));
+
 commit;

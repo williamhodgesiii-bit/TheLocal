@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
 import { GENRE_BY_ID, areaLabelOf, priceLabel, type Spot } from "@/lib/data";
-import { BRAND } from "@/lib/brand";
+import { placesIn } from "@/lib/lists";
+import { feel } from "@/lib/native";
+import { useApp } from "./Providers";
+import { Cover } from "./Cover";
+import { Icon } from "./Icons";
+import Sheet from "./Sheet";
+
+const FROM_KEY = "tl.spinFrom";
 
 function weightedPick(pool: Spot[], avoid?: string) {
   const list = pool.length > 1 && avoid ? pool.filter((s) => s.id !== avoid) : pool;
   // well-loved places come up a little more often; nobody can pay to come up more
-  const weights = list.map((s) => Math.pow(s.pop / 100, 2));
+  const weights = list.map((s) => Math.pow(Math.max(5, s.pop) / 100, 2));
   let r = Math.random() * weights.reduce((a, b) => a + b, 0);
   for (let i = 0; i < list.length; i++) {
     r -= weights[i];
@@ -18,130 +24,169 @@ function weightedPick(pool: Spot[], avoid?: string) {
   return list[list.length - 1];
 }
 
-/** "Surprise me": the kitchen printer spits out a ticket with somewhere to go. */
+/**
+ * Surprise me: pick where to spin from (everywhere, your filters, Want to try, or one of your
+ * lists), then the covers flip like a Rolodex and land on somewhere to go.
+ */
 export default function Surprise({
   open,
   onClose,
   all,
   filtered,
+  narrowed,
+  from: asked,
   onGo,
-  defaultScoped = false,
+  onNewList,
 }: {
-  defaultScoped?: boolean;
   open: boolean;
   onClose: () => void;
   all: Spot[];
   filtered: Spot[];
+  narrowed: boolean;
+  /** open on this source ("saved", "been", "filters" or a list id) */
+  from?: string | null;
   onGo: (id: string) => void;
+  onNewList: () => void;
 }) {
-  const [scoped, setScoped] = useState(false);
-  const [ticket, setTicket] = useState(0);
+  const { lists, saved, been } = useApp();
+  const [from, setFrom] = useState("all");
   const [pick, setPick] = useState<Spot | null>(null);
-  const [printed, setPrinted] = useState(false);
-  function print(inPicks = scoped) {
-    const pool = inPicks && filtered.length ? filtered : all;
-    setPrinted(false);
-    setPick((w) => weightedPick(pool, w?.id));
-    setTicket((n) => n + 1);
-    track("surprise_spin", { scoped: inPicks });
-  }
+  const [face, setFace] = useState<Spot | null>(null);
+  const [spinning, setSpinning] = useState(false);
+  const [flip, setFlip] = useState(0);
+  const timer = useRef<number>();
 
-  // opening with something picked keeps the surprise inside your picks
+  const sources = useMemo(() => {
+    const ctx = { been, saved };
+    const out: { id: string; label: string; pool: Spot[] }[] = [{ id: "all", label: "Anywhere", pool: all }];
+    if (narrowed && filtered.length) out.push({ id: "filters", label: "My filters", pool: filtered });
+    const sv = all.filter((s) => saved.includes(s.id));
+    if (sv.length) out.push({ id: "saved", label: "Want to try", pool: sv });
+    lists.forEach((l) => out.push({ id: l.id, label: l.title, pool: placesIn(l, all, ctx) }));
+    const bn = all.filter((s) => been[s.id]?.verdict === "loved");
+    if (bn.length >= 3) out.push({ id: "been", label: "Old favorites", pool: bn });
+    return out;
+  }, [all, filtered, narrowed, saved, been, lists]);
+  const source = sources.find((s) => s.id === from) ?? sources[0];
+
+  const spin = useCallback(
+    (pool: Spot[], avoid?: string) => {
+      window.clearTimeout(timer.current);
+      if (!pool.length) {
+        setPick(null);
+        setFace(null);
+        return;
+      }
+      const target = weightedPick(pool, avoid);
+      setPick(target);
+      track("surprise_spin", { from: source.id === "all" || source.id === "filters" || source.id === "saved" || source.id === "been" ? source.id : "list", size: pool.length });
+      const still = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (still || pool.length < 2) {
+        setFace(target);
+        setSpinning(false);
+        return;
+      }
+      setSpinning(true);
+      // the Rolodex: quick flips that slow down, then the pick
+      const steps = Math.min(12, 5 + pool.length);
+      let i = 0;
+      const tick = () => {
+        i++;
+        if (i >= steps) {
+          setFace(target);
+          setFlip((n) => n + 1);
+          setSpinning(false);
+          feel("done");
+          return;
+        }
+        setFace(pool[Math.floor(Math.random() * pool.length)]);
+        setFlip((n) => n + 1);
+        timer.current = window.setTimeout(tick, 40 + i * i * 1.2);
+      };
+      tick();
+    },
+    [source.id]
+  );
+
+  // opening: the source asked for, else the one used last, else your filters when you have some
   useEffect(() => {
-    if (open) {
-      setScoped(defaultScoped);
-      print(defaultScoped);
-    } else setPick(null);
+    if (!open) {
+      window.clearTimeout(timer.current);
+      setPick(null);
+      setFace(null);
+      return;
+    }
+    let last: string | null = null;
+    try {
+      last = localStorage.getItem(FROM_KEY);
+    } catch {
+      /* ignore */
+    }
+    const want = asked ?? (narrowed && filtered.length ? "filters" : last) ?? "all";
+    const s = sources.find((x) => x.id === want) ?? sources[0];
+    setFrom(s.id);
+    spin(s.pool);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "Enter" && pick && printed) onGo(pick.id);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
+  const choose = (id: string) => {
+    setFrom(id);
+    try {
+      localStorage.setItem(FROM_KEY, id);
+    } catch {
+      /* ignore */
+    }
+    const s = sources.find((x) => x.id === id);
+    if (s) spin(s.pool);
+  };
 
-  const now = new Date();
-  const time = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-
+  const shown = face ?? pick;
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div className="overlay center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={onClose}>
-          <motion.div
-            className="printer"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Surprise me"
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -20, opacity: 0 }}
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <div className="printer-slot">
-              <span>Order up</span>
-              <button className="printer-x" onClick={onClose} aria-label="Close">
-                ×
-              </button>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title="Surprise me"
+      foot={
+        <div className="sz-foot">
+          <button type="button" className="btn btn-line" onClick={() => spin(source.pool, pick?.id)} disabled={spinning || source.pool.length < 2}>
+            <Icon name="dice" size={18} /> Again
+          </button>
+          <button type="button" className="btn btn-red" disabled={spinning || !pick} onClick={() => pick && onGo(pick.id)}>
+            Let&apos;s go
+          </button>
+        </div>
+      }
+    >
+      <div className="sz-from" role="group" aria-label="Spin from">
+        {sources.map((s) => (
+          <button key={s.id} type="button" className={`chip ${from === s.id ? "on" : ""}`} aria-pressed={from === s.id} onClick={() => choose(s.id)} disabled={!s.pool.length}>
+            {s.label}
+            <span className="n">{s.pool.length}</span>
+          </button>
+        ))}
+        <button type="button" className="chip chip-dash" onClick={onNewList}>
+          <Icon name="plus" size={14} /> New list
+        </button>
+      </div>
+      <div className="sz-stage" aria-live="polite" aria-busy={spinning}>
+        {shown ? (
+          <>
+            <div key={flip} className={`sz-card ${spinning ? "spinning" : "landed"}`}>
+              <Cover spot={shown} sizes="(max-width: 640px) 60vw, 240px" widths={[500, 800]} eager />
             </div>
-            <div className="ticket-well">
-              <AnimatePresence mode="wait">
-                {pick && (
-                  <motion.div
-                    key={ticket}
-                    className="ticket"
-                    initial={{ y: "-100%" }}
-                    animate={{ y: 0 }}
-                    exit={{ y: "120%", rotate: 4, opacity: 0, transition: { duration: 0.25 } }}
-                    transition={{ duration: 1.1, ease: [0.3, 0.1, 0.3, 1] }}
-                    onAnimationComplete={() => setPrinted(true)}
-                    aria-live="polite"
-                  >
-                    <p className="t-brand">{BRAND}</p>
-                    <div className="t-row t-head">
-                      <span>Ticket {String(100 + ((ticket * 37) % 900))}</span>
-                      <span>{time}</span>
-                    </div>
-                    <div className="t-rule" />
-                    <p className="t-label">Go to</p>
-                    <p className="t-name">{pick.name}</p>
-                    <p className="t-line">{pick.address}</p>
-                    <p className="t-line">
-                      {areaLabelOf(pick)} · {priceLabel(pick.price)}
-                    </p>
-                    <div className="t-rule" />
-                    <p className="t-label">Get</p>
-                    <p className="t-order">{pick.knownFor}</p>
-                    <div className="t-rule" />
-                    <div className="t-row">
-                      <span>{pick.genres.map((g) => GENRE_BY_ID[g].short).join(", ")}</span>
-                      <span>thanks, neighbor</span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            <div className={`sz-info ${spinning ? "dim" : ""}`}>
+              <p className="sz-name">{shown.name}</p>
+              <p className="sz-meta">
+                {GENRE_BY_ID[shown.genres[0]]?.label} · {areaLabelOf(shown)} · {priceLabel(shown.price)}
+              </p>
+              {!spinning && <p className="sz-order">Get the {shown.knownFor.charAt(0).toLowerCase() + shown.knownFor.slice(1)}.</p>}
             </div>
-            <div className="printer-foot">
-              <label className="check">
-                <input type="checkbox" checked={scoped} onChange={(e) => setScoped(e.target.checked)} />
-                Only from what I&apos;ve picked{scoped && filtered.length > 0 ? ` (${filtered.length})` : ""}
-              </label>
-              <div className="row gap8">
-                <button className="btn btn-line" onClick={() => print()}>
-                  Another
-                </button>
-                <button className="btn btn-red" disabled={!printed || !pick} onClick={() => pick && onGo(pick.id)}>
-                  Show me
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </>
+        ) : (
+          <p className="empty-line">Nothing in &ldquo;{source.label}&rdquo; yet.</p>
+        )}
+      </div>
+    </Sheet>
   );
 }

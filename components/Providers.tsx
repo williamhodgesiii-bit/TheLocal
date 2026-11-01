@@ -9,6 +9,7 @@ import { HOME_KEY } from "@/lib/regions";
 import { canonicalSpotId } from "@/lib/data";
 import type { Me } from "@/lib/social";
 import type { MemberCover } from "@/lib/photos";
+import type { SpinList } from "@/lib/lists";
 import AuthModal, { type AuthStep } from "./AuthModal";
 import SignInNudge from "./SignInNudge";
 
@@ -51,7 +52,14 @@ type Ctx = {
   /** per place, the member photo that stands for it (lib/photos → frontFor) */
   covers: Record<string, MemberCover>;
   refreshCovers: () => void;
+  /** exact pins, closures and photos from Google, once a key is set on the server (app/api/pins) */
+  google: Google | null;
+  /** your lists (lib/lists.ts); [] when signed out */
+  lists: SpinList[];
+  saveList: (l: SpinList) => Promise<SpinList | null>;
+  deleteList: (id: string) => Promise<void>;
 };
+export type Google = { pins: Record<string, [number, number]>; closed: string[]; photos: Record<string, { name: string; author: string }> };
 export type Nav = { member: (handle: string) => void; spot: (id: string) => void; friends: (tab?: "following" | "everyone" | "activity") => void };
 
 const AppCtx = createContext<Ctx | null>(null);
@@ -135,6 +143,13 @@ export default function Providers({ children }: { children: ReactNode }) {
     backend.covers().then(setCovers).catch(() => {});
   }, [backend]);
   useEffect(refreshCovers, [refreshCovers]);
+  const [google, setGoogle] = useState<Google | null>(null);
+  useEffect(() => {
+    fetch("/api/pins")
+      .then((r) => r.json())
+      .then((j) => j.enabled && setGoogle({ pins: j.pins ?? {}, closed: j.closed ?? [], photos: j.photos ?? {} }))
+      .catch(() => {});
+  }, []);
 
   const applyUser = useCallback((u: User | null) => {
     userRef.current = u;
@@ -465,12 +480,52 @@ export default function Providers({ children }: { children: ReactNode }) {
     []
   );
 
+  // your lists, kept in the account (or on this device until the database has them)
+  const [lists, setLists] = useState<SpinList[]>([]);
+  useEffect(() => {
+    if (!user) return setLists([]);
+    let live = true;
+    backend
+      .myLists()
+      .then((l) => live && setLists(l))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [user?.id, backend]); // eslint-disable-line react-hooks/exhaustive-deps
+  const saveList = useCallback(
+    async (l: SpinList) => {
+      try {
+        const saved = await backend.saveList(l);
+        setLists((cur) => (cur.some((x) => x.id === saved.id) ? cur.map((x) => (x.id === saved.id ? saved : x)) : [...cur, saved]));
+        return saved;
+      } catch (e) {
+        toast(e instanceof Error ? e.message : "Couldn't save that list. Try again?", "err");
+        return null;
+      }
+    },
+    [backend, toast]
+  );
+  const deleteList = useCallback(
+    async (id: string) => {
+      const before = lists;
+      setLists((cur) => cur.filter((x) => x.id !== id));
+      try {
+        await backend.deleteList(id);
+      } catch {
+        setLists(before);
+        toast("Couldn't delete that list. Try again?", "err");
+      }
+    },
+    [backend, toast, lists]
+  );
+
   const value = useMemo(
     () => ({
       backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome, saveSpot, me, setMe, unread,
-      refreshUnread, nav, registerNav, covers, refreshCovers,
+      refreshUnread, nav, registerNav, covers, refreshCovers, google, lists, saveList, deleteList,
     }),
-    [backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome, saveSpot, me, unread, refreshUnread, nav, registerNav, covers, refreshCovers]
+    [backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome, saveSpot, me, unread, refreshUnread, nav, registerNav, covers, refreshCovers, google, lists, saveList, deleteList]
   );
 
   return (

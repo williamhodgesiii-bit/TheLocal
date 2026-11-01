@@ -27,6 +27,7 @@ import {
   type Reaction,
 } from "./social";
 import { SUPABASE_KEY, SUPABASE_URL, hasSupabase } from "./supabase-env";
+import { cleanList, type SpinList } from "./lists";
 
 export type User = {
   id: string;
@@ -181,6 +182,13 @@ export interface Backend {
   putSaved(spotId: string, on: boolean): Promise<void>;
   putStamp(spotId: string, stamp: Stamp | null): Promise<void>;
   pushLists(saved: string[], been: BeenMap): Promise<void>;
+
+  /* your own lists (lib/lists.ts): Surprise me spins from them */
+  myLists(): Promise<SpinList[]>;
+  saveList(list: SpinList): Promise<SpinList>;
+  deleteList(id: string): Promise<void>;
+  /** someone's public lists, for their page */
+  memberLists(userId: string): Promise<SpinList[]>;
 
   /** a place's reviews; pass every id it has gone by (see spotIdsOf) */
   listReviews(spotIds: string | string[]): Promise<Review[]>;
@@ -972,6 +980,54 @@ function supabaseBackend(sb: SupabaseClient): Backend {
         if (error) throw error;
       }
     },
+    async myLists() {
+      const { data: auth } = await sb.auth.getSession();
+      const uid = auth.session?.user.id;
+      if (!uid) return [];
+      const { data, error } = await sb.from("user_lists").select("id, title, rules, spot_ids, is_public, created_at, updated_at").eq("user_id", uid).order("created_at");
+      if (noTable(error)) return deviceLists(uid);
+      if (error) throw friendly(error);
+      const rows = (data ?? []).map(listFromRow);
+      // lists made on this device before the table existed move into the account
+      const waiting = deviceLists(uid).filter((l) => !rows.some((r) => r.id === l.id));
+      if (waiting.length) {
+        const up = await sb.from("user_lists").upsert(
+          waiting.map((l) => ({ id: l.id, user_id: uid, title: l.title, rules: l.rules, spot_ids: l.spotIds, is_public: l.isPublic, created_at: l.createdAt, updated_at: l.updatedAt })),
+          { onConflict: "id" }
+        );
+        if (!up.error) {
+          write(listKey(uid), []);
+          return [...rows, ...waiting];
+        }
+        return [...rows, ...waiting];
+      }
+      return rows;
+    },
+    async saveList(list) {
+      const uid = await sessionUserId();
+      const l = cleanList({ ...list, updatedAt: new Date().toISOString() });
+      if (!l.title.trim()) throw new Error("Give the list a name first.");
+      const { error } = await sb
+        .from("user_lists")
+        .upsert({ id: l.id, user_id: uid, title: l.title, rules: l.rules, spot_ids: l.spotIds, is_public: l.isPublic, created_at: l.createdAt, updated_at: l.updatedAt }, { onConflict: "id" });
+      if (noTable(error)) {
+        putDeviceList(uid, l);
+        return l;
+      }
+      if (error) throw friendly(error);
+      return l;
+    },
+    async deleteList(id) {
+      const uid = await sessionUserId();
+      dropDeviceList(uid, id);
+      const { error } = await sb.from("user_lists").delete().eq("id", id).eq("user_id", uid);
+      if (error && !noTable(error)) throw friendly(error);
+    },
+    async memberLists(userId) {
+      const { data, error } = await sb.from("user_lists").select("id, title, rules, spot_ids, is_public, created_at, updated_at").eq("user_id", userId).eq("is_public", true).order("created_at");
+      if (error) return [];
+      return (data ?? []).map(listFromRow);
+    },
     async listReviews(spotIds) {
       const ids = Array.isArray(spotIds) ? spotIds : [spotIds];
       const { data, error } = await sb.from("reviews").select("*").in("spot_id", ids).order("created_at", { ascending: false });
@@ -1126,6 +1182,17 @@ function blobToDataUrl(b: Blob) {
     r.readAsDataURL(b);
   });
 }
+
+/* Lists live in the account; until the database has the table (or in preview mode) they're kept on
+   this device, per member, and move into the account the first time the table is there. */
+const listKey = (uid: string) => `tl.lists.${uid}`;
+const deviceLists = (uid: string) => read<SpinList[]>(listKey(uid), []).map(cleanList);
+const putDeviceList = (uid: string, l: SpinList) => write(listKey(uid), [...deviceLists(uid).filter((x) => x.id !== l.id), l]);
+const dropDeviceList = (uid: string, id: string) => write(listKey(uid), deviceLists(uid).filter((x) => x.id !== id));
+/** the database doesn't have the lists table yet (its update hasn't gone in) */
+const noTable = (e: { code?: string; message?: string } | null) => !!e && (e.code === "42P01" || e.code === "PGRST205" || /user_lists/.test(e.message ?? ""));
+const listFromRow = (r: any): SpinList =>
+  cleanList({ id: r.id, title: r.title, rules: r.rules ?? {}, spotIds: r.spot_ids ?? [], isPublic: r.is_public, createdAt: r.created_at, updatedAt: r.updated_at });
 
 function localBackend(): Backend {
   const listeners = new Set<(u: User | null) => void>();
@@ -1709,6 +1776,25 @@ function localBackend(): Backend {
     async putSaved() {},
     async putStamp() {},
     async pushLists() {},
+    async myLists() {
+      const u = current();
+      return u ? deviceLists(u.id) : [];
+    },
+    async saveList(list) {
+      const u = current();
+      if (!u) throw new Error("Sign in to keep lists.");
+      const l = cleanList({ ...list, updatedAt: new Date().toISOString() });
+      if (!l.title.trim()) throw new Error("Give the list a name first.");
+      putDeviceList(u.id, l);
+      return l;
+    },
+    async deleteList(id) {
+      const u = current();
+      if (u) dropDeviceList(u.id, id);
+    },
+    async memberLists(userId) {
+      return deviceLists(userId).filter((l) => l.isPublic);
+    },
     async listReviews(spotIds) {
       const ids = new Set(Array.isArray(spotIds) ? spotIds : [spotIds]);
       return decorateLocal(read<Review[]>(K.reviews, []).filter((r) => ids.has(r.spotId)).sort((a, b) => b.createdAt.localeCompare(a.createdAt)));

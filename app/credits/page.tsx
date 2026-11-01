@@ -25,7 +25,7 @@ export default function Credits() {
     <main className="credits">
       <header className="partners-top">
         <Link href="/" className="textbtn">
-          ← Back to the map
+          ← Back
         </Link>
         <Link href="/" className="brand" aria-label={`${BRAND}, home`}>
           <Logo size={36} />
