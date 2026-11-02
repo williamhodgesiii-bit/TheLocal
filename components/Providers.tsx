@@ -63,6 +63,13 @@ export type Google = { pins: Record<string, [number, number]>; closed: string[];
 export type Nav = { member: (handle: string) => void; spot: (id: string) => void; friends: (tab?: "following" | "everyone" | "activity") => void };
 
 const AppCtx = createContext<Ctx | null>(null);
+/**
+ * Covers and Google photos on their own: every cover on the page reads these, and they change
+ * almost never, so saving a place or a new notification doesn't redraw every picture.
+ */
+type Media = { covers: Record<string, MemberCover>; google: Google | null };
+const MediaCtx = createContext<Media>({ covers: {}, google: null });
+export const useMedia = () => useContext(MediaCtx);
 export const useApp = () => {
   const c = useContext(AppCtx);
   if (!c) throw new Error("useApp outside Providers");
@@ -528,9 +535,10 @@ export default function Providers({ children }: { children: ReactNode }) {
     [backend, user, authReady, requireAuth, openAuth, toast, saved, toggleSaved, been, markBeen, home, setHome, saveSpot, me, unread, refreshUnread, nav, registerNav, covers, refreshCovers, google, lists, saveList, deleteList]
   );
 
+  const media = useMemo(() => ({ covers, google }), [covers, google]);
   return (
     <AppCtx.Provider value={value}>
-      {children}
+      <MediaCtx.Provider value={media}>{children}</MediaCtx.Provider>
       <AuthModal open={auth.open} reason={auth.reason} step={auth.step} onSignedIn={applyUser} onClose={closeAuth} />
       <SignInNudge authOpen={auth.open} />
       <div className="toasts" aria-live="polite">

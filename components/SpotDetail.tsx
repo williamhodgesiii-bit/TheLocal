@@ -221,7 +221,7 @@ export default function SpotDetail({
   );
 
   return (
-    <motion.article key={spot.id} className="pl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+    <article key={spot.id} className="pl">
       <div className="pl-hero">
         <button type="button" className={`pl-hero-img ${hero.kind === "svg" ? "is-mx" : ""}`} onClick={() => slides.length && setLightbox(0)} aria-label={slides.length ? "See photos" : spot.name}>
           {hero.kind === "svg" ? (
@@ -394,7 +394,7 @@ export default function SpotDetail({
       <AddToList spot={spot} open={listing} onClose={() => setListing(false)} onNew={setNewList} />
       <ListEditor list={newList} spots={pool} areas={areas} onClose={() => setNewList(null)} onDeleted={() => setNewList(null)} onDelete={async () => {}} />
       <AnimatePresence>{lightbox !== null && slides.length > 0 && <Lightbox slides={slides} index={lightbox} spot={spot} onIndex={setLightbox} onClose={() => setLightbox(null)} />}</AnimatePresence>
-    </motion.article>
+    </article>
   );
 }
 

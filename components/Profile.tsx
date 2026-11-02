@@ -22,8 +22,11 @@ export default function Profile({
   onAdd,
   admin,
   refreshKey = 0,
+  section,
 }: {
   refreshKey?: number;
+  /** the You page shows the parts in tabs: what you've posted, or your settings */
+  section?: "activity" | "settings";
   spotById: Record<string, Spot>;
   onOpen: (id: string) => void;
   onAdd: () => void;
@@ -133,8 +136,8 @@ export default function Profile({
   }
 
   return (
-    <div className="profile">
-      <header className="profile-head">
+    <div className={`profile${section ? ` s-${section}` : ""}`}>
+      {section !== "activity" && <header className="profile-head">
         <span className="cap-kicker">Member</span>
         {editing ? (
           <form className="name-edit" onSubmit={saveName}>
@@ -203,8 +206,9 @@ export default function Profile({
         <button className="btn btn-line profile-add" onClick={onAdd}>
           + Add a place you love
         </button>
-      </header>
+      </header>}
 
+      {section !== "settings" && (<>
       <nav className="profile-tabs" aria-label="Your things">
         {(
           [
@@ -299,7 +303,9 @@ export default function Profile({
           ))}
 
       </motion.section>
+      </>)}
 
+      {section !== "activity" && (<>
       <section className="acct" aria-label="Sign-in and privacy">
         <h2 className="acct-head">Sign-in &amp; privacy</h2>
         <p className="acct-row">
@@ -365,6 +371,7 @@ export default function Profile({
           Sign out
         </button>
       </footer>
+      </>)}
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { track } from "@/lib/analytics";
 import {
@@ -34,21 +34,11 @@ import { cleanList, newListId, type SpinList } from "@/lib/lists";
 import { CITY_BY_ID, DEFAULT_CITY, HERE_KEY, HOME_KEY, HOME_TOWN_KEY, apState, cityPath, type City } from "@/lib/regions";
 import { canLocate, currentPosition } from "@/lib/native";
 import { hash } from "@/lib/images";
-import WherePicker from "./WherePicker";
-import CityPicker from "./CityPicker";
-import SubmitSpot from "./SubmitSpot";
-import MySubmissions from "./MySubmissions";
 import { useApp } from "./Providers";
-import SpotDetail from "./SpotDetail";
-import Surprise from "./Surprise";
 import { PlateMark } from "./Brand";
-import StampPicker from "./StampPicker";
 import type { FriendsTab, Pins } from "./Friends";
-import MemberPage from "./MemberPage";
 import Home, { Shelf } from "./Home";
 import ExploreView, { type Sort } from "./ExploreView";
-import ListsView, { ListEditor } from "./ListsView";
-import You from "./You";
 import { Icon, type IconName } from "./Icons";
 import { Avatar } from "./People";
 
@@ -69,6 +59,28 @@ function useIsMobile() {
 }
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false, loading: () => <div className="leaflet-host map-loading" /> });
+// Each screen and sheet is its own download, so the first page carries only what it shows.
+// Screens still render on the server (a shared place link arrives with its page already drawn).
+const SpotDetail = dynamic(() => import("./SpotDetail"), { loading: () => <div className="pl-loading" aria-hidden /> });
+const ListsView = dynamic(() => import("./ListsView"));
+const You = dynamic(() => import("./You"));
+const MemberPage = dynamic(() => import("./MemberPage"));
+const ListEditor = dynamic(() => import("./ListsView").then((m) => m.ListEditor), { ssr: false });
+const Surprise = dynamic(() => import("./Surprise"), { ssr: false });
+const WherePicker = dynamic(() => import("./WherePicker"), { ssr: false });
+const CityPicker = dynamic(() => import("./CityPicker"), { ssr: false });
+const StampPicker = dynamic(() => import("./StampPicker"), { ssr: false });
+const SubmitSpot = dynamic(() => import("./SubmitSpot"), { ssr: false });
+const MySubmissions = dynamic(() => import("./MySubmissions"), { ssr: false });
+/** a sheet's code loads the first time it opens, and it stays mounted after (so it can animate closed) */
+function useOpened(open: boolean) {
+  const [ever, setEver] = useState(open);
+  useEffect(() => {
+    if (open) setEver(true);
+  }, [open]);
+  return ever || open;
+}
+const noHover = () => {};
 
 /* exploring is open to everyone; these belong to an account (stamps and saves are gated in Providers) */
 const SURPRISE_WHY = "Sign in to spin Surprise me. It takes a few seconds, no password.";
@@ -334,9 +346,15 @@ export default function Explorer({
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
+  const hadPlace = useRef(false);
   useEffect(() => {
+    if (selectedId) {
+      hadPlace.current = true;
+      return;
+    }
     backend.ratings().then(setRatings).catch(() => {});
-  }, [backend, selectedId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [backend, !selectedId]);
 
   /* ---------- filtering ---------- */
   const matchesRest = useCallback(
@@ -395,6 +413,8 @@ export default function Explorer({
     return out;
   }, [placed, matchesBase, inScope, sort, ratings, here]);
 
+  // the grid catches up a beat after a filter tap, so the tap itself never waits on it
+  const gridList = useDeferredValue(list);
   const pinsOn = !!pins && (view === "friends" || view === "member");
   const visible = useMemo(() => new Set(pinsOn ? pins!.ids : list.map((s) => s.id)), [list, pins, pinsOn]);
   const genreCounts = useMemo(() => {
@@ -427,22 +447,31 @@ export default function Explorer({
   const select = useCallback(
     (id: string | null, opts?: { replace?: boolean }) => {
       if (!opts?.replace && id !== selectedId) push.current = true;
-      if (id && !selectedId) setReturnView(view);
-      setSelectedId(id);
-      setHoveredId(null);
-      setFocusId(null);
+      // the tap answers at once; the new screen draws without freezing the old one
+      startTransition(() => {
+        if (id && !selectedId) setReturnView(view);
+        setSelectedId(id);
+        setHoveredId(null);
+        setFocusId(null);
+      });
       top();
     },
     [selectedId, view]
   );
+  /** the tab you tapped lights up right away, while its screen draws */
+  const [navTo, setNavTo] = useState<View | null>(null);
   const goView = useCallback((v: View) => {
     push.current = true;
-    if (v === "me") setProfileKey((k) => k + 1);
-    setSelectedId(null);
-    setFocusId(null);
-    setView(v);
+    setNavTo(v);
+    startTransition(() => {
+      if (v === "me") setProfileKey((k) => k + 1);
+      setSelectedId(null);
+      setFocusId(null);
+      setView(v);
+    });
     top();
   }, []);
+  useEffect(() => setNavTo(null), [view, selectedId]);
   const openFriends = useCallback(
     (tab?: FriendsTab) => {
       if (tab) setFriendsTab(tab);
@@ -653,6 +682,14 @@ export default function Explorer({
     top();
   };
 
+  const wherePicked = useOpened(picker.open);
+  const cityPicked = useOpened(cityPicker);
+  const stampPicked = useOpened(stampPicker);
+  const surprisePicked = useOpened(surprise.open);
+  const listPicked = useOpened(!!newList);
+  const addPicked = useOpened(adding);
+  const minePicked = useOpened(mine);
+
   const map =
     mapOn && showMap ? (
       <MapView
@@ -698,11 +735,11 @@ export default function Explorer({
   );
 
   const tabs: { id: View | "surprise"; label: string; icon: IconName; on: boolean; go: () => void }[] = [
-    { id: "home", label: "Home", icon: "home", on: (view === "home" || view === "friends") && !selected, go: () => (view === "home" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("home")) },
-    { id: "explore", label: "Explore", icon: "search", on: view === "explore" && !selected, go: () => (view === "explore" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("explore")) },
+    { id: "home", label: "Home", icon: "home", on: navTo ? navTo === "home" || navTo === "friends" : (view === "home" || view === "friends") && !selected, go: () => (view === "home" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("home")) },
+    { id: "explore", label: "Explore", icon: "search", on: navTo ? navTo === "explore" : view === "explore" && !selected, go: () => (view === "explore" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("explore")) },
     { id: "surprise", label: "Surprise", icon: "spark", on: false, go: () => openSurprise() },
-    { id: "lists", label: "Lists", icon: "lists", on: view === "lists" && !selected, go: () => goView("lists") },
-    { id: "me", label: "You", icon: "user", on: (view === "me" || (view === "member" && !!me && handle === me.handle)) && !selected, go: () => goView("me") },
+    { id: "lists", label: "Lists", icon: "lists", on: navTo ? navTo === "lists" : view === "lists" && !selected, go: () => goView("lists") },
+    { id: "me", label: "You", icon: "user", on: navTo ? navTo === "me" : (view === "me" || (view === "member" && !!me && handle === me.handle)) && !selected, go: () => goView("me") },
   ];
 
   let body: React.ReactNode;
@@ -742,7 +779,7 @@ export default function Explorer({
     body = (
       <ExploreView
         searchRef={searchRef}
-        list={list}
+        list={gridList}
         ratings={ratings}
         query={query}
         setQuery={setQuery}
@@ -763,14 +800,14 @@ export default function Explorer({
         theme={themeLabel ? { label: themeLabel, onClear: () => setTheme(null) } : null}
         narrowed={narrowed}
         clearFilters={clearFilters}
-        countLine={`${list.length} ${savedOnly ? "want-to-try " : ""}${list.length === 1 ? "place" : "places"} ${whereText}`}
+        countLine={`${gridList.length} ${savedOnly ? "want-to-try " : ""}${gridList.length === 1 ? "place" : "places"} ${whereText}`}
         mapMode={mapMode}
         setMapMode={changeMapMode}
         isMobile={isMobile}
         map={map}
         sponsoredPick={sponsoredPick}
         onOpen={select}
-        onHover={setHoveredId}
+        onHover={mapMode && !isMobile ? setHoveredId : noHover}
         hoveredId={hoveredId}
         focusId={focusId}
         onFocus={setFocusId}
@@ -929,7 +966,7 @@ export default function Explorer({
         ))}
       </nav>
 
-      <WherePicker
+      {wherePicked && <WherePicker
         open={picker.open}
         firstRun={picker.first}
         city={city}
@@ -943,10 +980,10 @@ export default function Explorer({
           closePicker();
           setCityPicker(true);
         }}
-      />
-      <CityPicker open={cityPicker} city={city} onPick={goCity} onClose={() => setCityPicker(false)} />
-      <StampPicker open={stampPicker} onClose={() => setStampPicker(false)} spots={allSpots} areas={areas} />
-      <Surprise
+      />}
+      {cityPicked && <CityPicker open={cityPicker} city={city} onPick={goCity} onClose={() => setCityPicker(false)} />}
+      {stampPicked && <StampPicker open={stampPicker} onClose={() => setStampPicker(false)} spots={allSpots} areas={areas} />}
+      {surprisePicked && <Surprise
         open={surprise.open && allSpots.length > 0}
         from={surprise.from}
         narrowed={narrowed && view === "explore"}
@@ -963,10 +1000,10 @@ export default function Explorer({
           setSurprise({ open: false, from: null });
           setNewList(cleanList({ id: newListId(), title: "", rules: {}, spotIds: [], isPublic: true }));
         }}
-      />
-      <ListEditor list={newList} spots={allSpots} areas={areas} onClose={() => setNewList(null)} onDeleted={() => setNewList(null)} onDelete={async () => {}} />
-      <SubmitSpot open={adding} onClose={() => setAdding(false)} onDone={() => setProfileKey((k) => k + 1)} city={city} areas={areas} spots={allSpots} />
-      <MySubmissions
+      />}
+      {listPicked && <ListEditor list={newList} spots={allSpots} areas={areas} onClose={() => setNewList(null)} onDeleted={() => setNewList(null)} onDelete={async () => {}} />}
+      {addPicked && <SubmitSpot open={adding} onClose={() => setAdding(false)} onDone={() => setProfileKey((k) => k + 1)} city={city} areas={areas} spots={allSpots} />}
+      {minePicked && <MySubmissions
         open={mine}
         onClose={() => setMine(false)}
         onAdd={() => (setMine(false), openAdd())}
@@ -978,7 +1015,7 @@ export default function Explorer({
             select(sub.spotId!);
           }
         }}
-      />
+      />}
     </div>
   );
 }

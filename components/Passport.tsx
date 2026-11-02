@@ -14,9 +14,10 @@ const VERDICT_LABEL = { loved: "Loved it", liked: "It was good", meh: "Not for m
  * Your Plate Passport: every local place you've eaten at, stamped. Members only: it lives in the
  * account, so it follows you to every device (Explorer shows the way in to anyone signed out).
  */
-export default function Passport({ spots, areas, city, onOpen, onStampMany }: { spots: Spot[]; areas: Area[]; city: string; onOpen: (id: string) => void; onStampMany: () => void }) {
+export default function Passport({ spots, areas, city, onOpen, onStampMany, compact }: { spots: Spot[]; areas: Area[]; city: string; onOpen: (id: string) => void; onStampMany: () => void; /** on the You page: no Been / Want to try lists (they live in Lists), neighborhoods folded */ compact?: boolean }) {
   const { been, saved, toast } = useApp();
   const [list, setList] = useState<"been" | "want">("been");
+  const [allHoods, setAllHoods] = useState(false);
   const [sharing, setSharing] = useState(false);
   const ids = new Set(spots.map((s) => s.id));
   const stamped = spots.filter((s) => been[s.id]);
@@ -92,7 +93,7 @@ export default function Passport({ spots, areas, city, onOpen, onStampMany }: { 
 
       <h3 className="pp-h">Stamps by neighborhood</h3>
       <ul className="pp-hoods">
-        {hoods.map(({ area, total: t, got }) => (
+        {(compact && !allHoods ? [...hoods].sort((a, b) => b.got - a.got || b.total - a.total).slice(0, 8) : hoods).map(({ area, total: t, got }) => (
           <li key={area.id} className={`pp-hood ${got === t ? "full" : got ? "some" : ""}`}>
             <span className="pp-hood-stamp" aria-hidden>
               {got}
@@ -104,6 +105,11 @@ export default function Passport({ spots, areas, city, onOpen, onStampMany }: { 
           </li>
         ))}
       </ul>
+      {compact && hoods.length > 8 && (
+        <button type="button" className="link-btn pp-more" onClick={() => setAllHoods((v) => !v)}>
+          {allHoods ? "Fewer neighborhoods" : `All ${hoods.length} neighborhoods`}
+        </button>
+      )}
 
       {trails.length > 0 && (
         <>
@@ -134,6 +140,7 @@ export default function Passport({ spots, areas, city, onOpen, onStampMany }: { 
         </>
       )}
 
+      {!compact && (<>
       <nav className="profile-tabs pp-tabs" aria-label="Your lists">
         <button className={list === "been" ? "on" : ""} aria-pressed={list === "been"} onClick={() => setList("been")}>
           Been <span>{count}</span>
@@ -153,6 +160,7 @@ export default function Passport({ spots, areas, city, onOpen, onStampMany }: { 
       ) : (
         <p className="p-empty">Tap the heart on any place to save it for later.</p>
       )}
+      </>)}
     </section>
   );
 }

@@ -14,8 +14,14 @@ export async function passportCard({ count, total, city, stamped }: { count: num
   c.height = H;
   const x = c.getContext("2d");
   if (!x) return null;
+  // the site's own fonts, by the names next/font gave them (app/layout.tsx)
+  const css = getComputedStyle(document.documentElement);
+  const fam = (v: string, fb: string) => css.getPropertyValue(v).trim() || fb;
+  const SCRIPT = fam("--font-script", "cursive");
+  const SERIF = fam("--font-display", "Georgia, serif");
+  const SANS = fam("--font-sans", "sans-serif");
   try {
-    await Promise.all([document.fonts.load('80px "Yellowtail"'), document.fonts.load('60px "Young Serif"'), document.fonts.load('600 30px "Libre Franklin Variable"')]);
+    await Promise.all([document.fonts.load(`80px ${SCRIPT}`), document.fonts.load(`60px ${SERIF}`), document.fonts.load(`600 30px ${SANS}`)]);
   } catch {
     /* system fonts are fine */
   }
@@ -72,15 +78,15 @@ export async function passportCard({ count, total, city, stamped }: { count: num
 
   x.textAlign = "center";
   x.fillStyle = red;
-  x.font = '76px "Yellowtail", cursive';
+  x.font = `76px ${SCRIPT}`;
   x.fillText(BRAND, W / 2, 400);
   x.fillStyle = ink;
-  x.font = '600 30px "Libre Franklin Variable", sans-serif';
+  x.font = `600 30px ${SANS}`;
   x.fillText("MY PLATE PASSPORT", W / 2, 462);
 
-  x.font = '190px "Young Serif", Georgia, serif';
+  x.font = `500 190px ${SERIF}`;
   x.fillText(String(count), W / 2, 680);
-  x.font = '40px "Young Serif", Georgia, serif';
+  x.font = `40px ${SERIF}`;
   x.fillText(`of ${total} locally owned plates`, W / 2, 750);
   x.fillText(`around ${city}`, W / 2, 800);
 
@@ -105,7 +111,7 @@ export async function passportCard({ count, total, city, stamped }: { count: num
   });
 
   x.fillStyle = ink;
-  x.font = '600 30px "Libre Franklin Variable", sans-serif';
+  x.font = `600 30px ${SANS}`;
   x.fillText(MANTRA.toUpperCase(), W / 2, H - 112);
   return new Promise((res) => c.toBlob((b) => res(b), "image/png"));
 }

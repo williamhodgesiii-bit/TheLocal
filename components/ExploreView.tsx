@@ -62,8 +62,9 @@ export default function ExploreView(p: {
   foot: ReactNode;
 }) {
   const [sheet, setSheet] = useState<null | "food" | "price" | "sort">(null);
-  const [shown, setShown] = useState(30);
-  useEffect(() => setShown(30), [p.list]);
+  // the first screenful draws at once, the rest a frame later as you scroll (phones stay quick)
+  const [shown, setShown] = useState(12);
+  useEffect(() => setShown(12), [p.list]);
   const genreLabel = p.genre === "all" ? "Cuisine" : p.genre === "drinks" && p.drink !== "all" ? DRINK_KINDS.find((d) => d.id === p.drink)!.label : GENRE_BY_ID[p.genre].short;
   const priceText = p.prices.length ? [...p.prices].sort().map((x) => priceLabel(x)).join(", ") : "Price";
   const sortText = SORTS.find((s) => s.id === p.sort)!.label;
@@ -256,7 +257,7 @@ export default function ExploreView(p: {
             ))}
           </ul>
         )}
-        {p.list.length > shown && <More onMore={() => setShown((n) => n + 30)} left={p.list.length - shown} />}
+        {p.list.length > shown && <More onMore={() => setShown((n) => n + 24)} left={p.list.length - shown} />}
         {p.list.length === 0 && p.empty}
         {!p.mapMode && p.foot}
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useMemo, useRef } from "react";
 import Link from "next/link";
 import { GENRE_BY_ID, areaLabelOf, priceLabel, type Spot } from "@/lib/data";
 import { NEWSLETTER } from "@/lib/brand";
@@ -8,10 +8,16 @@ import { SLOTS, weekLabel, type Letter } from "@/lib/letter";
 import { featuredPost, thursdaySponsor } from "@/lib/sponsors";
 import type { Collection } from "@/lib/collections";
 import { useApp } from "./Providers";
-import Friends, { FeedReviewCard, useFeed, type FriendsTab, type Pins } from "./Friends";
+import dynamic from "next/dynamic";
+import type { FriendsTab, Pins } from "./Friends";
+import { FeedReviewCard, useFeed } from "./Feed";
 import { Cover, Poster } from "./Cover";
 import { Icon } from "./Icons";
 import Photo from "./Photo";
+import ScrollCue, { useSwipeHint } from "./ScrollCue";
+
+/* the Friends tab is its own download */
+const Friends = dynamic(() => import("./Friends"), { ssr: false, loading: () => <div className="skeleton-feed" aria-hidden><span /></div> });
 
 export type HomeTab = "foryou" | "friends";
 type Row = Collection & { spots: Spot[]; now: boolean };
@@ -116,6 +122,7 @@ function ForYou({
 
   return (
     <div className="foryou">
+      <ScrollCue />
       <ThursdayThree letter={letter} onOpen={onOpen} onSignup={onSignup} />
       {feed.items === null ? (
         <div className="skeleton-feed" aria-hidden>
@@ -150,6 +157,8 @@ function ForYou({
 export const ThursdayThree = memo(function ThursdayThree({ letter, onOpen, onSignup }: { letter: Letter; onOpen: (id: string) => void; onSignup: () => void }) {
   const picks = SLOTS.flatMap((slot) => (letter.picks[slot.id] ? [{ slot, spot: letter.picks[slot.id]!, note: letter.notes[slot.id] }] : []));
   const sponsor = thursdaySponsor();
+  const row = useRef<HTMLOListElement>(null);
+  useSwipeHint(row, "t3");
   if (!picks.length) return null;
   return (
     <section className="t3" aria-label={`${NEWSLETTER}: this week's three`}>
@@ -164,7 +173,7 @@ export const ThursdayThree = memo(function ThursdayThree({ letter, onOpen, onSig
           Get it by email
         </button>
       </header>
-      <ol className="t3-row">
+      <ol className="t3-row" ref={row}>
         {picks.map(({ slot, spot, note }) => (
           <li key={slot.id}>
             <button className="t3-card" onClick={() => onOpen(spot.id)}>

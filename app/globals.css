@@ -106,12 +106,6 @@ select {
 .gap8 {
   gap: 8px;
 }
-.small-head {
-  font-family: var(--f-serif);
-  font-weight: 400;
-  font-size: 18px;
-  margin: 0 0 8px;
-}
 .pen {
   font-family: var(--f-pen);
   color: var(--pen);
@@ -202,20 +196,6 @@ select {
   font-size: 15px;
   white-space: nowrap;
 }
-.dateline {
-  margin-top: 8px;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 4px 0 3px;
-  border-top: 1px solid var(--ink);
-  border-bottom: 3px double var(--ink);
-  font-size: 13.5px;
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.05em;
-  color: var(--ink-2);
-  min-height: 27px;
-}
 .main {
   display: grid;
   grid-template-columns: minmax(390px, 32%) minmax(0, 1fr);
@@ -223,27 +203,12 @@ select {
   padding: 14px 22px 22px;
 }
 /* ---------------------------------------------------------------- the menu card */
-.sidebar {
-  min-height: 0;
-  background: var(--card);
-  border: 1px solid var(--ink);
-  box-shadow: inset 0 0 0 5px var(--card), inset 0 0 0 6px var(--ink);
-  padding: 6px;
-}
 .menu {
   padding-bottom: 6px;
 }
 /* hello: the line under the name, and what this is */
 /* short laptop screens: the list matters more than the second line */
 /* the browse bar: search, the plates, then where / price / saved. It stays put while the list scrolls. */
-.browse {
-  position: sticky;
-  top: 0;
-  z-index: 6;
-  padding: 14px 22px 14px;
-  background: var(--card);
-  border-bottom: 1px solid var(--line);
-}
 .b-search {
   display: flex;
   align-items: center;
@@ -279,63 +244,7 @@ select {
 .b-search input::-webkit-search-cancel-button {
   display: none;
 }
-.b-search-x {
-  width: 34px;
-  height: 34px;
-  border: 0;
-  border-radius: 50%;
-  background: none;
-  color: var(--muted);
-  font-size: 22px;
-  line-height: 1;
-}
-.b-search-x:hover {
-  background: var(--paper);
-  color: var(--ink);
-}
 /* the plates: every kind of food on a little diner plate */
-.b-plates-wrap {
-  position: relative;
-  margin: 12px -22px 0;
-}
-.b-plates {
-  position: relative;
-  display: flex;
-  gap: 2px;
-  overflow-x: auto;
-  padding: 2px 18px 2px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-}
-.b-plates::-webkit-scrollbar {
-  display: none;
-}
-.b-plates-wrap.more-r .b-plates {
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
-  mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
-}
-.b-plates-wrap.more-l .b-plates {
-  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 48px), transparent);
-  mask-image: linear-gradient(to left, #000 calc(100% - 48px), transparent);
-}
-.b-plates-wrap.more-l.more-r .b-plates {
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent);
-  mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent);
-}
-.b-plate {
-  flex: none;
-  min-width: 62px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 4px 7px;
-  border: 0;
-  background: none;
-  color: var(--ink-2);
-  position: relative;
-}
 .plate {
   width: 48px;
   height: 48px;
@@ -348,86 +257,7 @@ select {
   box-shadow: inset 0 0 0 1px var(--line-2), inset 0 0 0 4.5px var(--card), inset 0 0 0 5.5px rgba(34, 32, 28, 0.16), 0 1px 2px rgba(34, 32, 28, 0.08);
   transition: transform 0.15s, box-shadow 0.15s, color 0.15s;
 }
-.b-plate-label {
-  font-size: 12.5px;
-  font-weight: 500;
-  line-height: 1.15;
-  white-space: nowrap;
-}
-.b-plate:hover .plate {
-  transform: translateY(-2px);
-  color: var(--ink);
-  box-shadow: inset 0 0 0 1px var(--ink), inset 0 0 0 4.5px var(--card), inset 0 0 0 5.5px rgba(34, 32, 28, 0.3), 0 4px 8px rgba(34, 32, 28, 0.1);
-}
-.b-plate.on .plate {
-  background: #fff;
-  color: var(--red);
-  box-shadow: inset 0 0 0 1.5px var(--ink), inset 0 0 0 4.5px #fff, inset 0 0 0 6.5px var(--red), 0 3px 8px rgba(178, 58, 36, 0.18);
-}
-.b-plate.on .b-plate-label {
-  color: var(--ink);
-  font-weight: 700;
-}
-.b-plate.on::after {
-  content: "";
-  position: absolute;
-  left: 22%;
-  right: 22%;
-  bottom: 0;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--red);
-}
-.b-plate.zero .plate {
-  opacity: 0.45;
-}
-.b-plate.zero .b-plate-label {
-  color: var(--muted);
-}
-.b-arrow {
-  display: none;
-  position: absolute;
-  top: 16px;
-  z-index: 2;
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--line-2);
-  border-radius: 50%;
-  background: #fff;
-  color: var(--ink);
-  place-items: center;
-  box-shadow: 0 2px 6px rgba(34, 32, 28, 0.14);
-}
-.b-arrow:hover {
-  border-color: var(--ink);
-}
-.b-arrow-l {
-  left: 8px;
-}
-.b-arrow-r {
-  right: 8px;
-}
-@media (hover: hover) and (pointer: fine) {
-.b-plates-wrap.more-l .b-arrow-l,
-.b-plates-wrap.more-r .b-arrow-r {
-    display: grid;
-  }
-}
 /* chips: where, price, saved; and the kinds of drinks */
-.b-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.b-row::-webkit-scrollbar {
-  display: none;
-}
-.b-sub {
-  margin-top: 8px;
-}
 .b-chip {
   flex: none;
   display: inline-flex;
@@ -460,15 +290,6 @@ select {
 }
 .b-chip.zero {
   opacity: 0.5;
-}
-.b-pick-v {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 170px;
-}
-.b-caret {
-  flex: none;
-  opacity: 0.7;
 }
 .b-n {
   font-size: 12px;
@@ -532,9 +353,6 @@ select {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.item.hot .item-no {
-  background: var(--ink);
-}
 .item-known {
   font-style: italic;
   font-size: 14px;
@@ -543,25 +361,6 @@ select {
 .item-meta {
   font-size: 12.5px;
   color: var(--muted);
-}
-.notice {
-  margin: 18px 22px 0;
-  padding: 16px 18px;
-  background: var(--note);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08), 0 8px 16px -8px rgba(0, 0, 0, 0.25);
-  transform: rotate(-0.6deg);
-}
-.notice h3 {
-  font-family: var(--f-pen);
-  font-weight: 400;
-  font-size: 28px;
-  line-height: 1;
-  color: var(--pen);
-  margin: 0 0 6px;
-}
-.notice p {
-  margin: 0 0 12px;
-  font-size: 14px;
 }
 /* ---------------------------------------------------------------- guest check */
 .detail {
@@ -586,34 +385,6 @@ select {
   color: var(--green);
 }
 /* a place with more than one location */
-.locs {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 6px;
-}
-.locs li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: 10px;
-  line-height: 1.3;
-}
-.locs li b {
-  grid-column: 1;
-  font-weight: 600;
-}
-.locs li > span {
-  grid-column: 1;
-  color: var(--ink);
-}
-.locs li a {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
-  font-size: 13px;
-  white-space: nowrap;
-}
 .snap {
   position: relative;
   margin: 0;
@@ -678,11 +449,6 @@ select {
   color: var(--muted);
   text-align: center;
   padding: 0 6px;
-}
-.tags {
-  margin: 8px 0 14px;
-  font-size: 12.5px;
-  color: var(--muted);
 }
 .stars {
   display: inline-flex;
@@ -1012,21 +778,6 @@ button.rv-chip {
 .rv-act .textbtn {
   font-size: 12.5px;
   color: var(--muted);
-}
-.rv-helpful {
-  padding: 3px 10px;
-  border: 1px solid var(--line-2);
-  border-radius: 999px;
-  background: none;
-  font: inherit;
-  font-size: 12.5px;
-  color: var(--ink-2);
-  cursor: pointer;
-}
-.rv-helpful.on {
-  border-color: var(--green);
-  color: var(--green);
-  font-weight: 600;
 }
 .rv-report-form {
   display: flex;
@@ -1727,79 +1478,6 @@ label.check input {
   flex: none;
 }
 /* a small panel under its chip (price); a sheet from the bottom on phones */
-.pop-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-}
-.pop {
-  position: fixed;
-  width: 300px;
-  background: var(--card);
-  border: 1px solid var(--ink);
-  border-radius: 12px;
-  padding: 14px 16px 14px;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.2);
-}
-.pop-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-.pop-head h3 {
-  margin: 0;
-  font-family: var(--f-serif);
-  font-weight: 400;
-  font-size: 19px;
-}
-.pop-head .modal-x {
-  position: static;
-  font-size: 26px;
-}
-.pop-prices {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.pop-price {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
-  padding: 9px 12px;
-  border: 1px solid var(--line-2);
-  border-radius: 10px;
-  background: #fff;
-  text-align: left;
-}
-.pop-price b {
-  font-size: 15px;
-  letter-spacing: 0.04em;
-}
-.pop-price span {
-  font-size: 12.5px;
-  color: var(--muted);
-}
-.pop-price:hover {
-  border-color: var(--ink);
-}
-.pop-price.on {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--card);
-}
-.pop-price.on span {
-  color: rgba(251, 248, 239, 0.75);
-}
-.pop-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
 /* where are you eating? */
 .modal.where {
   width: min(500px, 100%);
@@ -2365,79 +2043,8 @@ label.check input {
   padding: 14px 0 8px;
   border-bottom: 3px double var(--ink);
 }
-.partners-hero {
-  padding: 36px 0 12px;
-}
-.partners-hero h1 {
-  font-family: var(--f-serif);
-  font-weight: 400;
-  font-size: clamp(30px, 4.4vw, 50px);
-  line-height: 1.08;
-  margin: 6px 0 14px;
-  max-width: 780px;
-}
-.partners-hero p {
-  font-size: 17px;
-  max-width: 640px;
-  margin: 0;
-}
 .rates {
   margin-top: 28px;
-}
-.rate-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-}
-.rate {
-  display: flex;
-  flex-direction: column;
-  padding: 18px 20px 20px;
-  border: 1px solid var(--ink);
-  background: var(--card);
-}
-.rate + .rate {
-  border-left: 0;
-}
-.rate h3 {
-  font-family: var(--f-serif);
-  font-weight: 400;
-  font-size: 22px;
-  margin: 0;
-}
-.rate-price {
-  margin: 6px 0 2px;
-  color: var(--ink-2);
-}
-.rate-price strong {
-  font-family: var(--f-serif);
-  font-weight: 400;
-  font-size: 36px;
-  color: var(--ink);
-}
-.rate-pitch {
-  margin: 0;
-  font-style: italic;
-  color: var(--ink-2);
-}
-.rate ul {
-  list-style: none;
-  padding: 0;
-  margin: 12px 0 18px;
-  flex: 1;
-}
-.rate li {
-  padding: 6px 0;
-  border-bottom: 1px dotted var(--line-2);
-  font-size: 14px;
-}
-.principles {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  padding-top: 34px;
-}
-.principles p {
-  margin: 0;
 }
 .contact {
   margin-top: 36px;
@@ -2863,7 +2470,6 @@ html,
 body {
     overscroll-behavior: none;
   }
-.dateline,
 .map-key {
     display: none;
   }
@@ -2873,13 +2479,6 @@ body {
     padding: 0;
     overflow: hidden;
   }
-.sidebar {
-    position: absolute;
-    inset: 0;
-    padding: 0;
-    border: 0;
-    box-shadow: none;
-  }
 .map-plate {
     border: 0;
     box-shadow: none;
@@ -2887,17 +2486,7 @@ body {
 .leaflet-host {
     inset: 0;
   }
-.v-map .sidebar {
-    display: none;
-  }
 /* a place is open: the map becomes a strip on top, the check below it */
-.has-sel .sidebar {
-    display: block;
-    top: max(30vh, 190px);
-  }
-.has-sel .map-caption {
-    display: none;
-  }
 .map-caption {
     left: 12px;
     top: 12px;
@@ -2954,10 +2543,6 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-.notice {
-    margin-left: 16px;
-    margin-right: 16px;
-  }
 /* place page */
 .detail-bar {
     padding: 6px 16px;
@@ -3007,14 +2592,8 @@ body {
     bottom: calc(80px + env(safe-area-inset-bottom));
   }
 .rc-grid,
-.principles,
-.form-grid,
-.rate-grid {
+.form-grid {
     grid-template-columns: 1fr;
-  }
-.rate + .rate {
-    border-left: 1px solid var(--ink);
-    border-top: 0;
   }
 .partners,
 .admin {
@@ -3035,32 +2614,6 @@ body {
   opacity: 0;
   transition: opacity 0.35s ease;
 }
-.ph-in {
-  opacity: 1;
-}
-.snap-img,
-.thumb,
-.lb-frame {
-  background-color: #e3dcc8;
-  background-image: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
-  background-size: 250% 100%;
-  animation: develop 1.6s linear infinite;
-}
-.snap-img:has(.ph-in),
-.thumb:has(.ph-in),
-.thumb:has(> svg),
-.lb-frame:has(.ph-in) {
-  animation: none;
-  background-image: none;
-}
-@keyframes develop {
-  from {
-    background-position: 120% 0;
-  }
-  to {
-    background-position: -120% 0;
-  }
-}
 /* images fill their box absolutely so a tall original can never stretch an aspect-ratio frame */
 .snap-img {
   display: block;
@@ -3070,10 +2623,6 @@ body {
 .lb-frame > img {
   position: absolute;
   inset: 0;
-}
-.snap-img > img {
-  /* food reads best slightly warm, like a print */
-  filter: saturate(1.04) contrast(1.02);
 }
 /* menu line thumbnails */
 .thumb {
@@ -3086,12 +2635,6 @@ body {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 8px -4px rgba(0, 0, 0, 0.3);
   transform: rotate(2deg);
   transition: transform 0.2s;
-}
-.item:nth-child(even) .thumb {
-  transform: rotate(-1.5deg);
-}
-.item.hot .thumb {
-  transform: rotate(0) scale(1.04);
 }
 .thumb img {
   display: block;
@@ -3310,52 +2853,10 @@ body {
 }
 @media (max-width: 900px) {
 /* --- the browse bar slides away while you scroll down, and back when you scroll up */
-.browse {
-    padding: 12px 16px;
-    transition: transform 0.22s ease;
-  }
-.browse.tucked {
-    transform: translateY(-100%);
-  }
-.b-plates-wrap {
-    margin: 10px -16px 0;
-  }
-.b-plates {
-    padding: 2px 10px;
-  }
-.b-row {
-    margin: 10px -16px 0;
-    padding: 0 16px;
-  }
-.b-sub {
-    margin-top: 6px;
-  }
 .sort > span {
     display: none; /* "Most loved ▾" says it on a phone */
   }
 /* --- panels become sheets from the bottom */
-.pop-layer {
-    background: rgba(34, 32, 28, 0.5);
-  }
-.pop {
-    top: auto !important;
-    left: 0 !important;
-    right: 0;
-    bottom: 0;
-    width: auto;
-    border-radius: 18px 18px 0 0;
-    border-width: 1px 0 0;
-    padding: 18px 20px max(16px, env(safe-area-inset-bottom));
-  }
-.pop-price {
-    min-height: 56px;
-  }
-.pop-foot .btn {
-    min-height: 46px;
-    padding: 0 26px;
-    border-radius: 10px;
-    font-size: 15px;
-  }
 .modal.where {
     max-height: 88dvh;
     padding: 0;
@@ -3387,12 +2888,6 @@ body {
 .recenter span {
     display: none;
   }
-.has-sel .recenter {
-    top: auto;
-    bottom: 10px;
-    left: 12px;
-    right: auto;
-  }
 /* --- list rows: photo, name, one hook, one line of facts */
 .item-no {
     position: absolute;
@@ -3418,10 +2913,6 @@ body {
     font-size: 13.5px;
   }
 /* --- the in-list ad and the end of the list, with room to breathe */
-.notice {
-    margin-left: 20px;
-    margin-right: 20px;
-  }
 /* --- map tab: a slim caption, no legend */
 .map-caption {
     padding: 8px 12px 9px;
@@ -3463,9 +2954,6 @@ body {
     margin-top: 28px;
   }
 /* --- an open place: a shorter map strip with Back / Save / Share floating on it */
-.has-sel .sidebar {
-    top: max(24vh, 160px);
-  }
 .detail > .detail-bar {
     display: none;
   }
@@ -3526,68 +3014,6 @@ body {
   padding: 20px 0 6px;
 }
 /* a photo card */
-.pcard {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  text-align: left;
-  color: inherit;
-}
-.pcard-img {
-  position: relative;
-  display: block;
-  aspect-ratio: 4 / 3;
-  margin-bottom: 6px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #e9e2cf;
-}
-.pcard-img img,
-.pcard-img .img-fallback {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.35s ease;
-}
-.pcard:hover .pcard-img img {
-  transform: scale(1.04);
-}
-.pcard-name {
-  font-family: var(--f-serif);
-  font-size: 16.5px;
-  line-height: 1.2;
-}
-.pcard-known {
-  font-style: italic;
-  font-size: 13.5px;
-  color: var(--ink-2);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.pcard-meta {
-  font-size: 12.5px;
-  color: var(--muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.pcard-heart {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(251, 248, 239, 0.94) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z' fill='%23b23a24'/%3E%3C/svg%3E") center / 15px no-repeat;
-}
 /* the passport stamp: a rubber stamp, a little crooked */
 .stamp {
   position: absolute;
@@ -3603,55 +3029,7 @@ body {
   transform: rotate(-9deg);
   box-shadow: 0 0 0 1px rgba(251, 248, 239, 0.8);
 }
-.stamp-sm {
-  top: 10px;
-  left: 8px;
-  font-size: 11px;
-}
 /* occasion rows */
-.crow-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 0 22px;
-}
-.crow-head h2 {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 10px;
-  margin: 0;
-  font-family: var(--f-serif);
-  font-weight: 400;
-  font-size: 20px;
-  line-height: 1.2;
-}
-.crow-now {
-  font-family: var(--f-sans);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--green);
-}
-.crow-head .textbtn {
-  flex: none;
-}
-.crow-line {
-  margin: 2px 22px 10px;
-  font-size: 13.5px;
-  color: var(--ink-2);
-}
-.crow-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px 14px;
-  margin: 0 22px;
-}
-.crow-cards .pcard:nth-child(n + 5) {
-  display: none; /* computers: the best four; "See all" for the rest */
-}
 /* The Thursday Plate on the front page: this week's three, a small picture of the front beside each */
 .week {
   margin: 0 22px;
@@ -3660,155 +3038,9 @@ body {
   background: #fff;
   box-shadow: 0 1px 2px rgba(34, 32, 28, 0.08), 0 12px 28px -14px rgba(34, 32, 28, 0.35);
 }
-.week-kicker {
-  margin: 0 2px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--red);
-}
-.week-kicker span {
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  color: var(--muted);
-}
-.w3 {
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.w3 li + li {
-  border-top: 1px solid var(--line);
-}
-.w3-row {
-  display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-  width: 100%;
-  padding: 10px 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.w3-img {
-  position: relative;
-  display: block;
-  width: 84px;
-  height: 84px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #e9e2cf;
-}
-.w3-img img,
-.w3-img .img-fallback {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.w3-body {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.w3-slot {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--green);
-}
-.w3-name {
-  margin-top: 1px;
-  font-family: var(--f-serif);
-  font-size: 20px;
-  line-height: 1.12;
-}
-.w3-row:hover .w3-name {
-  color: var(--red);
-}
-.w3-meta {
-  margin-top: 2px;
-  font-size: 13px;
-  color: var(--muted);
-}
-.w3-order {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0 8px;
-  margin-top: 5px;
-}
-.w3-order .pen {
-  font-size: 18px;
-  line-height: 1.05;
-}
-.w3-note {
-  margin-top: 5px;
-  font-size: 14px;
-  line-height: 1.4;
-  color: var(--ink-2);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.w3-foot {
-  margin: 2px 2px 0;
-  padding-top: 8px;
-  border-top: 1px solid var(--line);
-  font-size: 13px;
-  color: var(--muted);
-}
-.w3-foot .textbtn {
-  font-size: 13px;
-}
 /* Want to try / I've been, then how it went */
 .been {
   margin-top: 14px;
-}
-.been-row {
-  display: flex;
-  gap: 8px;
-}
-.been-btn {
-  flex: 1 1 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1.5px solid var(--line-2);
-  border-radius: 12px;
-  background: #fff;
-  color: var(--ink);
-  font-weight: 600;
-  font-size: 14.5px;
-  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
-}
-.been-btn:hover {
-  border-color: var(--ink);
-}
-.been-btn:active {
-  transform: scale(0.97);
-}
-.been-btn.on {
-  border-color: var(--red);
-  color: var(--red);
-  background: #fff6f3;
-}
-.been-stamp.on {
-  background: var(--red);
-  color: #fff;
-  animation: stamped 0.35s ease;
 }
 @keyframes stamped {
   0% {
@@ -3820,11 +3052,6 @@ body {
   100% {
     transform: none;
   }
-}
-.verdict-opts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
 }
 /* awards: small, dated, and they link to where they were announced */
 .honors {
@@ -3877,16 +3104,6 @@ body {
   text-decoration: underline;
 }
 /* your passport, on the front page */
-.pp-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin: 0 22px;
-  padding: 16px 18px;
-  border: 1.5px dashed var(--line-2);
-  border-radius: 16px;
-  background: var(--card);
-}
 .pp-ring {
   --p: 0;
   flex: none;
@@ -3924,17 +3141,6 @@ body {
 .pp-ring-lg span {
   font-size: 34px;
 }
-.pp-text h2 {
-  margin: 0;
-  font-family: var(--f-serif);
-  font-weight: 400;
-  font-size: 19px;
-}
-.pp-text p {
-  margin: 3px 0 0;
-  font-size: 14px;
-  color: var(--ink-2);
-}
 .pp-actions {
   display: flex;
   flex-wrap: wrap;
@@ -3957,54 +3163,6 @@ body {
 }
 .trail:hover {
   background: var(--green-2);
-}
-.trail-top {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  opacity: 0.85;
-}
-.trail-title {
-  font-family: var(--f-serif);
-  font-size: 22px;
-  line-height: 1.15;
-}
-.trail-line {
-  font-size: 13.5px;
-  opacity: 0.9;
-}
-.trail-dots {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
-}
-.trail-dot {
-  position: relative;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  overflow: hidden;
-  box-shadow: 0 0 0 2px rgba(251, 248, 239, 0.4);
-  filter: grayscale(1) opacity(0.6);
-}
-.trail-dot.on {
-  filter: none;
-  box-shadow: 0 0 0 2.5px var(--mustard);
-}
-.trail-dot img,
-.trail-dot .img-fallback {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.b-theme span {
-  margin-left: 2px;
-  font-size: 17px;
-  line-height: 1;
-  opacity: 0.8;
 }
 /* the place page */
 /* ---------------------------------------------------------------- the passport (You tab) */
@@ -4311,39 +3469,11 @@ body {
     padding-top: 16px;
   }
 .week,
-.pp-card,
 .trail {
     margin-left: 16px;
     margin-right: 16px;
   }
-.crow-head,
-.crow-line {
-    margin-left: 20px;
-    margin-right: 20px;
-  }
 /* phones: swipe a row of photo cards, with the next one peeking in */
-.crow-cards {
-    display: flex;
-    gap: 12px;
-    margin: 0;
-    padding: 0 20px 4px;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-    scroll-padding: 0 20px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-.crow-cards::-webkit-scrollbar {
-    display: none;
-  }
-.crow-cards .pcard {
-    width: 62vw;
-    max-width: 240px;
-    scroll-snap-align: start;
-  }
-.crow-cards .pcard:nth-child(n + 5) {
-    display: flex;
-  }
 /* reviews right under the name, before the stamp, photos and the rest */
 .detail > .rv {
     order: 1;
@@ -4377,21 +3507,8 @@ body {
     font-size: 30px;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-.pcard:hover .pcard-img img {
-    transform: none;
-  }
-}
 /* the one sponsored card: labeled, bordered, apart from the list */
 /* the rest of the list: drawn as you scroll, and skipped by the browser until it's near the screen */
-.bill .item,
-.front .crow {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 112px;
-}
-.front .crow {
-  contain-intrinsic-size: auto 300px;
-}
 /* ---------------------------------------------------------------- where are you? / home
    Home is where the map opens every visit (picked when you join). "Where are you?" is just
    this visit: a night in another city doesn't change home. */
@@ -4913,10 +4030,6 @@ body {
   white-space: nowrap;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
-.rx-chip.rv-helpful {
-  padding: 0 9px;
-  font-size: 12.5px;
-}
 .rx-chip:hover {
   border-color: var(--ink);
 }
@@ -5007,9 +4120,6 @@ body {
 .cm {
   display: flex;
   gap: 10px;
-}
-.cm-off {
-  opacity: 0.6;
 }
 .cm-gone {
   margin: 0;
@@ -5347,13 +4457,6 @@ body {
 .fd-review.plain .fd-card {
   margin-top: 0;
 }
-.rv-body.clamp {
-  display: -webkit-box;
-  -webkit-line-clamp: 5;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  cursor: pointer;
-}
 .fr-more {
   display: block;
   margin: 16px auto 0;
@@ -5406,9 +4509,6 @@ body {
 }
 .note {
   border-bottom: 1px solid var(--line);
-}
-.note.unread {
-  background: linear-gradient(90deg, var(--note), transparent 70%);
 }
 .note-hit {
   display: flex;

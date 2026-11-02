@@ -4,7 +4,7 @@ import { memo } from "react";
 import { GENRE_BY_ID, areaLabelOf, type Spot } from "@/lib/data";
 import { frontFor } from "@/lib/photos";
 import { hash } from "@/lib/images";
-import { useApp } from "./Providers";
+import { useMedia } from "./Providers";
 import Photo from "./Photo";
 
 /*
@@ -81,7 +81,7 @@ export const Matchbook = memo(function Matchbook({ spot, small }: { spot: Spot; 
  * looks the same before and after you tap it (lib/photos → frontFor). The parent sets the box.
  */
 export function Cover({ spot, sizes, widths = [330, 640], eager, alt, small }: { spot: Spot; sizes: string; widths?: number[]; eager?: boolean; alt?: string; small?: boolean }) {
-  const { covers, google } = useApp();
+  const { covers, google } = useMedia();
   const f = frontFor(spot, covers[spot.id], google?.photos[spot.id]);
   if (f.kind === "sketch") return <Matchbook spot={spot} small={small} />;
   return (
