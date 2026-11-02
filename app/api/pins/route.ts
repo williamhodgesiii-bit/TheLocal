@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import { SPOTS, distanceKm } from "@/lib/data";
+import { takeGoogle } from "@/lib/googleBudget";
 
 /**
  * Exact pin locations, closures and each place's first photo from Google, once
@@ -29,6 +30,7 @@ async function lookUp(key: string): Promise<Body> {
     Array.from({ length: 6 }, async () => {
       for (let s = queue.shift(); s; s = queue.shift()) {
         try {
+          if (!(await takeGoogle("search"))) return; // this month's allowance is used up
           const r = await fetch("https://places.googleapis.com/v1/places:searchText", {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-Goog-Api-Key": key, "X-Goog-FieldMask": "places.location,places.businessStatus,places.photos" },

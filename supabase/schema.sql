@@ -1734,4 +1734,31 @@ drop policy if exists "public lists are readable" on public.user_lists;
 create policy "public lists are readable" on public.user_lists
   for select using (is_public and public.can_view(user_id));
 
+-- A hard monthly cap on Google Places calls (lib/googleBudget.ts). The server takes one before
+-- every call; past the limit it returns false and the call isn't made. Only the server's secret
+-- key can touch these (no policies, function not granted to anyone else).
+create table if not exists public.google_calls (
+  month text not null,
+  kind text not null check (kind in ('search', 'photo')),
+  n integer not null default 0,
+  primary key (month, kind)
+);
+alter table public.google_calls enable row level security;
+create or replace function public.google_take(k text, lim int) returns boolean
+  language plpgsql security definer set search_path = public
+as $$
+declare
+  took boolean;
+begin
+  if lim < 1 then
+    return false;
+  end if;
+  insert into public.google_calls (month, kind, n)
+  values (to_char(now() at time zone 'America/Los_Angeles', 'YYYY-MM'), k, 1)
+  on conflict (month, kind) do update set n = public.google_calls.n + 1 where public.google_calls.n < lim
+  returning true into took;
+  return coalesce(took, false);
+end $$;
+revoke all on function public.google_take(text, int) from public, anon, authenticated;
+
 commit;

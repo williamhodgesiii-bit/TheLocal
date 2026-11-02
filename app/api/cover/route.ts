@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
+import { takeGoogle } from "@/lib/googleBudget";
 
 /**
  * A place's Google photo: /api/cover?n=places/…/photos/… (a name /api/pins or /api/places handed
@@ -14,6 +15,7 @@ const WEEK = 604800;
 
 const photoUri = unstable_cache(
   async (name: string, key: string) => {
+    if (!(await takeGoogle("photo"))) throw new Error("monthly allowance used up");
     const r = await fetch(`https://places.googleapis.com/v1/${name}/media?maxWidthPx=800&skipHttpRedirect=true&key=${key}`, { cache: "no-store", signal: AbortSignal.timeout(8000) });
     const m = (await r.json().catch(() => ({}))) as { photoUri?: string };
     if (!r.ok || !m.photoUri) throw new Error("no photo"); // not cached; tried again later

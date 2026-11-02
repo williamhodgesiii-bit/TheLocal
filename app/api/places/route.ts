@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { SPOT_BY_ID } from "@/lib/data";
 import { CITY_BY_ID } from "@/lib/regions";
 import { rateLimited } from "@/lib/ratelimit";
+import { takeGoogle } from "@/lib/googleBudget";
 
 /**
  * Google photos for a place that /api/pins doesn't cover (places members added). Asks for the
@@ -16,6 +17,7 @@ type Found = { photos: { name: string; author: string; authorUri: string | null 
 
 const lookUp = unstable_cache(
   async (query: string, key: string): Promise<Found> => {
+    if (!(await takeGoogle("search"))) throw new Error("monthly allowance used up");
     const r = await fetch("https://places.googleapis.com/v1/places:searchText", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Goog-Api-Key": key, "X-Goog-FieldMask": "places.photos" },

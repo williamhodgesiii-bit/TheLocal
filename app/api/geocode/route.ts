@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { CITY_BY_ID, stateName, type City } from "@/lib/regions";
 import { distanceKm } from "@/lib/data";
 import { rateLimited } from "@/lib/ratelimit";
+import { takeGoogle } from "@/lib/googleBudget";
 
 // Address/place lookup for the "Add a spot" form and the moderation queue.
 // Google Places (New) when GOOGLE_PLACES_API_KEY is set — it also reports businessStatus,
@@ -30,7 +31,8 @@ export async function GET(req: Request) {
   const key = process.env.GOOGLE_PLACES_API_KEY;
 
   try {
-    if (key) return NextResponse.json({ results: await google(q, city, key) });
+    // Google when there's a key and this month's allowance isn't used up; free lookups otherwise
+    if (key && (await takeGoogle("search"))) return NextResponse.json({ results: await google(q, city, key) });
     const near = (r: Result) => distanceKm([r.lat, r.lng], city.center) <= RADIUS_KM;
     const byDistance = (a: Result, b: Result) => distanceKm([a.lat, a.lng], city.center) - distanceKm([b.lat, b.lng], city.center);
     if (/^\d/.test(address)) {
