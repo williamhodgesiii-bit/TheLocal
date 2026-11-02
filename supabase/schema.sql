@@ -1761,4 +1761,13 @@ begin
 end $$;
 revoke all on function public.google_take(text, int) from public, anon, authenticated;
 
+-- What we keep from Google (the weekly pins and photos lookup, app/api/pins/refresh), so
+-- visitors read it from here and never trigger a lookup themselves. Server key only.
+create table if not exists public.google_cache (
+  key text primary key,
+  body jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.google_cache enable row level security;
+
 commit;
