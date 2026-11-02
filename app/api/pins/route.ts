@@ -1,19 +1,16 @@
 import { NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { SPOTS, distanceKm } from "@/lib/data";
-import { rateLimited } from "@/lib/ratelimit";
 
 /**
- * Exact pin locations from Google, with no script to run: once GOOGLE_PLACES_API_KEY
- * is set on Vercel, this looks every curated place up and Vercel's CDN keeps the answer
- * for a week (until the next deploy), so it costs roughly 80 lookups a week. A bad run
- * (key not switched on yet, Google down) is only cached for five minutes.
+ * Exact pin locations, closures and each place's first photo from Google, once
+ * GOOGLE_PLACES_API_KEY is set on Vercel. One lookup per place a WEEK, kept in Vercel's data
+ * cache, which survives deploys, so redeploying never repeats them (about 600 a month, inside
+ * Google's free 5,000 Text Search Pro calls). The fields asked for (location, businessStatus,
+ * photos) are all Text Search Pro; nothing Enterprise.
  *
- * A Google match only moves a pin if it lands within 3 km of where we already had it,
- * so a wrong match (same name, other town) can't throw a pin across the map.
- *
- * Only Google's "Permanently closed" status takes a place off the list. Being closed
- * for the night (opening hours) is never checked here, and "Temporarily closed"
- * (renovation, a holiday) keeps the place on the map.
+ * A Google match only moves a pin if it lands within 3 km of where we already had it. Only
+ * "Permanently closed" takes a place off; closed-for-the-night or temporarily closed never does.
  */
 export const dynamic = "force-dynamic";
 
@@ -24,34 +21,22 @@ type Hit = { id: string; coords?: [number, number]; closed?: boolean; photo?: { 
 /** photos: each place's first Google photo (its resource name and who took it), for cards; see /api/cover */
 type Body = { enabled: true; pins: Record<string, [number, number]>; closed: string[]; photos: Record<string, { name: string; author: string }> };
 
-// last good answer on this server, so a cache-busting URL can't trigger fresh (paid) lookups
-let memo: { body: Body; at: number } | null = null;
-
-export async function GET(req: Request) {
-  const key = process.env.GOOGLE_PLACES_API_KEY;
-  if (!key) return NextResponse.json({ enabled: false, pins: {}, closed: [], photos: {} });
-  if (memo && Date.now() - memo.at < WEEK * 1000) return NextResponse.json(memo.body, { headers: cacheFor(WEEK) });
-  if (rateLimited(req, "pins", 4)) return NextResponse.json({ enabled: false, pins: {}, closed: [], photos: {} }, { status: 429 });
-
+async function lookUp(key: string): Promise<Body> {
   const results: Hit[] = [];
   const queue = [...SPOTS];
   // a few at a time so one slow lookup doesn't stall the rest
   await Promise.all(
-    Array.from({ length: 8 }, async () => {
+    Array.from({ length: 6 }, async () => {
       for (let s = queue.shift(); s; s = queue.shift()) {
         try {
           const r = await fetch("https://places.googleapis.com/v1/places:searchText", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Goog-Api-Key": key,
-              // photos is in the same (Pro) tier as businessStatus, so asking for it costs nothing more
-              "X-Goog-FieldMask": "places.location,places.businessStatus,places.photos",
-            },
+            headers: { "Content-Type": "application/json", "X-Goog-Api-Key": key, "X-Goog-FieldMask": "places.location,places.businessStatus,places.photos" },
             body: JSON.stringify({ textQuery: `${s.name}, ${s.address}, Birmingham area, AL`, maxResultCount: 1 }),
             cache: "no-store",
             signal: AbortSignal.timeout(8000),
           });
+          if (!r.ok) continue; // over the daily cap, or Google is down: leave this pin as it was
           const p = (await r.json()).places?.[0];
           if (!p?.location) continue;
           const at: [number, number] = [+p.location.latitude.toFixed(5), +p.location.longitude.toFixed(5)];
@@ -60,7 +45,7 @@ export async function GET(req: Request) {
           results.push({
             id: s.id,
             coords: at,
-            closed: p.businessStatus === "CLOSED_PERMANENTLY" /* not hours, not temporary */,
+            closed: p.businessStatus === "CLOSED_PERMANENTLY",
             ...(ph?.name ? { photo: { name: ph.name as string, author: (ph.authorAttributions?.[0]?.displayName as string) || "Google user" } } : {}),
           });
         } catch {
@@ -69,16 +54,25 @@ export async function GET(req: Request) {
       }
     })
   );
-
-  const body: Body = {
+  // a bad run (key not switched on, the daily cap reached) isn't kept: it throws, so nothing is cached
+  if (results.length < SPOTS.length / 2) throw new Error(`only ${results.length} places found`);
+  return {
     enabled: true,
     pins: Object.fromEntries(results.filter((x) => x.coords).map((x) => [x.id, x.coords!])),
     closed: results.filter((x) => x.closed).map((x) => x.id),
     photos: Object.fromEntries(results.filter((x) => x.photo).map((x) => [x.id, x.photo!])),
   };
-  const good = results.length >= SPOTS.length / 2;
-  if (good) memo = { body, at: Date.now() };
-  return NextResponse.json(body, { headers: cacheFor(good ? WEEK : 300) });
 }
 
-const cacheFor = (s: number) => ({ "Cache-Control": `public, s-maxage=${s}, stale-while-revalidate=${s}` });
+const weekly = unstable_cache((key: string) => lookUp(key), ["google-pins-v2"], { revalidate: WEEK });
+
+export async function GET() {
+  const key = process.env.GOOGLE_PLACES_API_KEY;
+  if (!key) return NextResponse.json({ enabled: false, pins: {}, closed: [], photos: {} });
+  try {
+    return NextResponse.json(await weekly(key), { headers: { "Cache-Control": `public, s-maxage=${WEEK}, stale-while-revalidate=${WEEK}` } });
+  } catch {
+    // try again in an hour, not on every visit
+    return NextResponse.json({ enabled: false, pins: {}, closed: [], photos: {} }, { headers: { "Cache-Control": "public, s-maxage=3600" } });
+  }
+}

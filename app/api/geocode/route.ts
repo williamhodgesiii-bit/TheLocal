@@ -49,7 +49,8 @@ async function google(q: string, city: City, key: string): Promise<Result[]> {
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": key,
-      "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.location,places.businessStatus,places.googleMapsUri,places.websiteUri",
+      // Text Search Pro fields only (websiteUri would bill every lookup at the pricier Enterprise rate)
+      "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.location,places.businessStatus,places.googleMapsUri",
     },
     body: JSON.stringify({
       textQuery: `${q}, ${city.name}, ${city.state}`,
@@ -67,7 +68,7 @@ async function google(q: string, city: City, key: string): Promise<Result[]> {
     source: "google",
     status: p.businessStatus,
     mapsUri: p.googleMapsUri,
-    website: p.websiteUri,
+    website: undefined,
   }));
 }
 

@@ -319,6 +319,9 @@ export const licenseUrl = (l: StockPhoto["license"]) => LICENSE_URL[l];
 
 export type Cover = { alt: string; real: boolean; src: (width: number) => string; srcSet: (widths: number[]) => string };
 
+/** a Google photo, through our own route (one size, so each photo is fetched from Google once) */
+export const googleSrc = (name: string) => `/api/cover?n=${encodeURIComponent(name)}`;
+
 /** a member's photo that can stand for a place: the one the team featured, or the newest of the front */
 export type MemberCover = { url: string; by: string; featured: boolean };
 
@@ -356,7 +359,7 @@ export function frontFor(spot: Spot, member?: MemberCover | null, google?: { nam
   if (cc) return { kind: "img", src: () => cc.url, alt: `${spot.name} from the street`, label: "Out front", credit: cc.credit, link: cc.link };
   // Google's first photo of the place, once GOOGLE_PLACES_API_KEY is set (app/api/pins, app/api/cover)
   if (google)
-    return { kind: "img", src: (w) => `/api/cover?n=${encodeURIComponent(google.name)}&w=${Math.min(1200, Math.max(400, w))}`, alt: `${spot.name}`, label: "Photo", credit: `Google · ${google.author}` };
+    return { kind: "img", src: () => googleSrc(google.name), alt: `${spot.name}`, label: "Photo", credit: `Google · ${google.author}` };
   return { kind: "sketch", alt: `Drawing of the front of ${spot.name}`, label: "Our sketch of the front" };
 }
 

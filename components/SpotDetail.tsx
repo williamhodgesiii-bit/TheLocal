@@ -6,7 +6,7 @@ import Link from "next/link";
 import { track } from "@/lib/analytics";
 import { GENRE_BY_ID, areaLabelOf, distanceKm, locationsOf, mapsUrl, priceLabel, type Area, type Spot } from "@/lib/data";
 import { BRAND, CHECKED } from "@/lib/brand";
-import { HOUSE_PHOTOS, PLACE_PHOTOS, commonsPage, commonsSrc, commonsSrcSet, frontFor, houseSrcSet, type HousePhoto } from "@/lib/photos";
+import { HOUSE_PHOTOS, PLACE_PHOTOS, commonsPage, commonsSrc, commonsSrcSet, frontFor, googleSrc, houseSrcSet, type HousePhoto } from "@/lib/photos";
 import type { Photo as MemberPhoto, PhotoKind } from "@/lib/backend";
 import type { SpinList } from "@/lib/lists";
 import { giftFor } from "@/lib/gifts";
@@ -23,8 +23,8 @@ import LocatorMap from "./LocatorMap";
 import { AddToList, ListEditor } from "./ListsView";
 import { Shelf } from "./Home";
 
-type GPhoto = { url: string; author: string; authorUri: string | null };
-type Places = { enabled: boolean; photos: GPhoto[]; rating?: number | null; ratingCount?: number | null; website?: string | null };
+type GPhoto = { name: string; author: string; authorUri: string | null };
+type Places = { enabled: boolean; photos: GPhoto[] };
 
 const NONE: (typeof PLACE_PHOTOS)[string] = [];
 const NO_HOUSE: HousePhoto[] = [];
@@ -68,17 +68,21 @@ export default function SpotDetail({
     setPhotos([]);
     setPlaces(null);
     backend.listPhotos(spot.id).then((p) => live && setPhotos(p)).catch(() => {});
-    const q = new URLSearchParams({ spot: spot.id, name: spot.name, address: spot.address, city: spot.city });
-    fetch(`/api/places?${q}`)
-      .then((r) => r.json())
-      .then((j) => live && setPlaces(j))
-      .catch(() => {});
+    // Google's photos, only for places the weekly pins lookup doesn't already cover (and only once
+    // a key is set): keeps Google's bill at zero
+    if (google && !google.photos[spot.id]) {
+      const q = new URLSearchParams({ spot: spot.id, name: spot.name, address: spot.address, city: spot.city });
+      fetch(`/api/places?${q}`)
+        .then((r) => r.json())
+        .then((j) => live && setPlaces(j))
+        .catch(() => {});
+    }
     track("spot_view", { id: spot.id });
     return () => {
       live = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spot.id, backend]);
+  }, [spot.id, backend, !!google]);
 
   // The cover is the same picture as its card everywhere else (lib/photos → frontFor). Only real
   // photos of this place go in the gallery: no stock pictures of dishes from somewhere else.
@@ -88,11 +92,11 @@ export default function SpotDetail({
     const b = photos.find((p) => p.kind === "building");
     const f = frontFor(spot, covers[spot.id] ?? (b ? { url: b.url, by: b.userName, featured: false } : null), google?.photos[spot.id]);
     const gp = places?.photos?.[0];
-    if (f.kind === "img" && !(gp && f.credit?.startsWith("Google"))) {
+    if (f.kind === "img") {
       const url = f.src(1200);
       return { key: url, kind: "img", url, file: f.file, srcSet: f.file ? undefined : f.srcSet?.([500, 960, 1280]), label: f.label, alt: f.alt, credit: f.credit, link: f.link };
     }
-    if (gp) return { key: gp.url, kind: "img", url: gp.url, label: "Photo", alt: `${spot.name}`, credit: `Google · ${gp.author}`, link: gp.authorUri ?? undefined };
+    if (gp) return { key: gp.name, kind: "img", url: googleSrc(gp.name), label: "Photo", alt: `${spot.name}`, credit: `Google · ${gp.author}`, link: gp.authorUri ?? undefined };
     return { key: "svg", kind: "svg", label: "", alt: spot.name };
   }, [photos, places, spot, covers, google]);
 
@@ -111,8 +115,8 @@ export default function SpotDetail({
       .filter((r) => r.file !== hero.file)
       .forEach((r) => out.push({ key: r.file, kind: "img", url: commonsSrc(r.file, 960), file: r.file, label: r.caption, alt: `${spot.name}: ${r.caption.toLowerCase()}`, credit: `${r.author}, ${r.license}`, link: commonsPage(r.file) }));
     places?.photos
-      ?.filter((p) => p.url !== hero.url)
-      .forEach((p) => out.push({ key: p.url, kind: "img", url: p.url, label: "Photo", alt: `${spot.name}`, credit: `Google · ${p.author}`, link: p.authorUri ?? undefined }));
+      ?.filter((p) => googleSrc(p.name) !== hero.url)
+      .forEach((p) => out.push({ key: p.name, kind: "img", url: googleSrc(p.name), label: "Photo", alt: `${spot.name}`, credit: `Google · ${p.author}`, link: p.authorUri ?? undefined }));
     return out;
   }, [photos, places, hero, spot, real, house]);
   const slides = useMemo(() => (hero.kind === "svg" ? gallery : [hero, ...gallery]), [hero, gallery]);
@@ -164,7 +168,7 @@ export default function SpotDetail({
 
   const stamp = been[spot.id];
   const want = saved.includes(spot.id);
-  const website = places?.website || safeUrl(spot.website);
+  const website = safeUrl(spot.website);
   const locs = locationsOf(spot);
   const gift = giftFor(spot);
 
@@ -259,7 +263,6 @@ export default function SpotDetail({
             <h1 className="pl-name">{spot.name}</h1>
             <p className="pl-meta">
               {spot.genres.map((g) => GENRE_BY_ID[g].short).join(" · ")} <i>/</i> {areaLabelOf(spot)} <i>/</i> {priceLabel(spot.price)}
-              {places?.rating ? <span className="g-rate"> · Google {places.rating.toFixed(1)}</span> : null}
               {spot.sponsored && <span className="paid">Sponsored</span>}
             </p>
             <Honors id={spot.id} />
