@@ -1,0 +1,73 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Pop quiz: Birmingham, local edition</title><style>
+@font-face { font-family: Sign; src: url(../../node_modules/@fontsource-variable/big-shoulders-display/files/big-shoulders-display-latin-wght-normal.woff2) format("woff2"); font-weight: 100 900; }
+@font-face { font-family: News; src: url(../../node_modules/@fontsource-variable/newsreader/files/newsreader-latin-wght-normal.woff2) format("woff2"); font-weight: 200 800; }
+@font-face { font-family: News; font-style: italic; src: url(../../node_modules/@fontsource-variable/newsreader/files/newsreader-latin-wght-italic.woff2) format("woff2"); font-weight: 200 800; }
+@font-face { font-family: Sans; src: url(../../node_modules/@fontsource-variable/libre-franklin/files/libre-franklin-latin-wght-normal.woff2) format("woff2"); font-weight: 100 900; }
+@font-face { font-family: Script; src: url(../../node_modules/@fontsource/yellowtail/files/yellowtail-latin-400-normal.woff2) format("woff2"); }
+@page { size: 8.5in 11in; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { width: 8.5in; height: 11in; background: #fff; color: #1f1d19; font-family: Sans, Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.sheet { position: relative; width: 8.5in; height: 11in; padding: 0.42in 0.48in; overflow: hidden; display: flex; flex-direction: column; }
+.top { display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #1f1d19; padding-bottom: 0.08in; }
+.brand { display: flex; align-items: center; gap: 0.1in; }
+.brand b { font-family: Script, cursive; font-weight: 400; font-size: 25pt; color: #b23a24; line-height: 1; padding-bottom: 3pt; }
+.top small { font-weight: 700; font-size: 8pt; letter-spacing: 0.18em; text-transform: uppercase; }
+.red { color: #b23a24; }
+.qr svg { display: block; width: 100%; height: 100%; }
+.url { font-family: Sans; font-weight: 700; font-size: 10.5pt; letter-spacing: 0.01em; }
+.founding { display: flex; align-items: center; justify-content: space-between; gap: 0.2in; margin-top: auto; padding-top: 0.1in; border-top: 1.5px solid #1f1d19; font-size: 9.5pt; }
+.founding b { font-weight: 800; }
+.stamp { display: inline-block; padding: 2pt 7pt; border: 1.5px solid #b23a24; color: #b23a24; border-radius: 3pt; font-weight: 800; font-size: 7.5pt; letter-spacing: 0.14em; text-transform: uppercase; transform: rotate(-3deg); }
+
+  .margin { position: absolute; top: 0; bottom: 0; left: 0.9in; width: 1.5px; background: #e7a3a3; z-index: 2; }
+  .holes i { position: absolute; left: 0.3in; width: 0.22in; height: 0.22in; border-radius: 50%; background: #ececec; box-shadow: inset 0 1px 2px rgba(0,0,0,0.25); z-index: 2; }
+  .sheet { padding-left: 1.08in; }
+  .fields { display: flex; gap: 0.3in; margin-top: 0.16in; font-size: 10pt; font-weight: 600; }
+  .fields span { flex: 1; border-bottom: 1px solid #1f1d19; padding-bottom: 2pt; }
+  .fields span:nth-child(2) { flex: 0.6; } .fields span:nth-child(3) { flex: 0.4; }
+  .grade { position: absolute; right: 0.6in; top: 1.62in; width: 1.2in; height: 1.2in; display: grid; place-items: center; transform: rotate(-10deg); }
+  .grade svg { position: absolute; inset: 0; }
+  .grade b { font-family: Script, cursive; font-weight: 400; font-size: 34pt; color: #b23a24; }
+  .hed { margin: 0.22in 0 0; font-family: Sign; font-weight: 900; text-transform: uppercase; font-size: 112pt; line-height: 0.82; letter-spacing: -0.01em; }
+  .sub { margin: 0.17in 0 0; font-family: News; font-size: 15pt; line-height: 1.25; }
+  .sub i { color: #b23a24; }
+  .ruled { position: relative; z-index: 0; flex: 1; margin-top: 0.06in; }
+  .ruled::before { content: ""; position: absolute; z-index: -1; top: 0; left: -1.08in; right: -0.48in; bottom: -0.42in; background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(0.3in - 1px), #c3d1ea calc(0.3in - 1px), #c3d1ea 0.3in); }
+  .ruled > * { margin: 0; }
+  .gap { height: 0.3in; }
+  .ruled p, .opts, .note { line-height: 0.3in; }
+  ol.q { padding: 0; list-style: none; counter-reset: q; }
+  ol.q > li { counter-increment: q; margin-bottom: 0.3in; }
+  ol.q > li p { margin: 0; font-family: News; font-size: 14pt; }
+  ol.q > li p::before { content: counter(q) ". "; font-family: Sign; font-weight: 900; font-size: 17pt; color: #b23a24; }
+  .opts { display: flex; gap: 0.32in; font-size: 11.5pt; font-weight: 600; }
+  .opts span { display: inline-flex; align-items: center; gap: 5pt; }
+  .opts span::before { content: ""; width: 10.5pt; height: 10.5pt; border: 1.3px solid #1f1d19; border-radius: 50%; }
+  .bonus p { font-family: News; font-size: 14pt; }
+  .bonus p b { font-family: Sign; font-weight: 900; font-size: 17pt; color: #b23a24; }
+  .lines { height: calc(0.3in * 2); margin-bottom: 0.3in; }
+  .key { display: grid; grid-template-columns: 1fr 1.45in; gap: 0.3in; align-items: start; height: calc(0.3in * 5); }
+  .key .qr { width: 1.45in; height: 1.45in; padding: 0.07in; background: #fff; box-sizing: content-box; margin: -0.07in 0 0 -0.07in; }
+  .key .scr { display: block; height: calc(0.3in * 2); line-height: calc(0.3in * 2); font-family: Script, cursive; font-weight: 400; font-size: 32pt; color: #b23a24; }
+  .key .scr small { font-size: 17pt; }
+  .note { font-family: News; font-size: 13pt; }
+  .key .url { display: block; line-height: 0.3in; }
+  .ruled .founding { border-top: 0; margin-top: 0; padding-top: 0; line-height: 0.3in; }
+  </style></head><body><div class="sheet">
+  <div class="margin"></div><div class="holes"><i style="top:1.6in"></i><i style="top:5.4in"></i><i style="top:9.2in"></i></div>
+  <div class="grade"><svg viewBox="0 0 120 120" aria-hidden="true"><path d="M62 10c30 2 50 24 48 52-2 28-26 48-54 46S8 84 12 56C16 28 40 8 70 12" fill="none" stroke="#b23a24" stroke-width="3" stroke-linecap="round"/></svg><b>?/4</b></div>
+  <div class="top"><span class="brand"><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="22.6" fill="#fff" stroke="#1f1d19" stroke-width="1.6"/><circle cx="24" cy="24" r="18.4" fill="none" stroke="#b23a24" stroke-width="2.4"/><circle cx="24" cy="24" r="14.6" fill="none" stroke="#1f1d19" stroke-opacity=".22"/><path d="M17.2 33.4V22.6a6.8 6.8 0 0 1 13.6 0v10.8" fill="none" stroke="#1f1d19" stroke-width="1.3"/><path d="M19.2 33.4V22.8a4.8 4.8 0 0 1 9.6 0v10.6Z" fill="#b23a24"/><path d="M20.6 22.6a3.4 3.4 0 0 1 6.8 0Z" fill="#fff"/><circle cx="26.4" cy="28.6" r="1" fill="#fff"/><path d="M15.4 33.8h17.2" stroke="#1f1d19" stroke-width="1.6" stroke-linecap="round"/></svg><b>The Plate Next Door</b></span><small>Locally owned · Birmingham, Ala.</small></div>
+  <div class="fields"><span>Name</span><span>Date</span><span>Period</span></div>
+  <h1 class="hed">Pop quiz</h1>
+  <p class="sub">Birmingham, local edition. Pencils out. <i>No chains allowed in your answers.</i></p>
+  <div class="ruled">
+    <ol class="q"><li><p>Golden Rule in Irondale has been cooking barbecue since…</p><div class="opts"><span>a) 1958</span><span>b) 1891</span><span>c) 1947</span><span>d) 2005</span></div></li><li><p>Gus's Hot Dogs downtown has been open since…</p><div class="opts"><span>a) 1982</span><span>b) 1923</span><span>c) 1947</span><span>d) 2011</span></div></li><li><p>How many Birmingham places made Michelin's first American South guide?</p><div class="opts"><span>a) 0</span><span>b) 3</span><span>c) 11</span><span>d) 40</span></div></li><li><p>J&amp;J Grocery &amp; Deli, home of the double bacon cheeseburger, used to be a…</p><div class="opts"><span>a) bank</span><span>b) gas station</span><span>c) church</span><span>d) barbershop</span></div></li></ol>
+    <div class="bonus"><p><b>Bonus.</b> Name five locally owned places you'd send a friend to.</p><div class="lines"></div></div>
+    <div class="key">
+      <div><span class="scr">Answer key <small>(no peeking)</small> →</span><div class="note">Scan to check your answers. Then stamp every local place<br>you've actually been and see how your friends stack up.</div><span class="url">theplatenextdoor.com/quiz</span></div>
+      <div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" shape-rendering="crispEdges"><path stroke="#1f1d19" d="M0 0.5h7m1 0h1m4 0h1m4 0h2m1 0h3m2 0h7M0 1.5h1m5 0h1m4 0h2m3 0h2m4 0h2m2 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m1 0h1m1 0h2m1 0h2m2 0h1m1 0h2m1 0h2m2 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h1m2 0h3m2 0h2m3 0h1m1 0h2m1 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m3 0h1m2 0h4m2 0h1m1 0h1m1 0h1m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m1 0h3m1 0h4m2 0h1m1 0h2m2 0h1m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h6m2 0h8M1 8.5h1m1 0h1m1 0h5m1 0h6m2 0h1m1 0h1m3 0h3m1 0h2m1 0h1M1 9.5h2m1 0h2m2 0h3m2 0h1m4 0h1m1 0h1m3 0h4m3 0h2M1 10.5h3m2 0h1m1 0h2m2 0h6m1 0h1m1 0h2m1 0h1m2 0h2m1 0h1m1 0h1M0 11.5h1m6 0h1m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1m3 0h2m3 0h2m1 0h2M0 12.5h1m3 0h1m1 0h1m1 0h2m4 0h2m7 0h4m2 0h1m1 0h2M0 13.5h2m6 0h2m1 0h1m2 0h2m1 0h1m3 0h2m1 0h1m1 0h1m1 0h1m1 0h3M2 14.5h5m2 0h1m1 0h3m1 0h1m2 0h1m1 0h1m2 0h1m1 0h3m3 0h1M0 15.5h5m4 0h1m9 0h1m1 0h4m1 0h2m3 0h1M0 16.5h1m3 0h1m1 0h1m1 0h2m1 0h3m2 0h2m1 0h4m1 0h1m1 0h1m1 0h1m2 0h1M4 17.5h1m3 0h2m3 0h1m3 0h1m3 0h3m3 0h1m1 0h1m1 0h1M1 18.5h1m1 0h1m2 0h2m1 0h2m2 0h5m2 0h1m1 0h1m2 0h1m4 0h3M0 19.5h1m1 0h3m2 0h1m2 0h2m2 0h1m1 0h2m2 0h2m2 0h2m1 0h1M1 20.5h2m2 0h2m4 0h4m1 0h1m5 0h2m7 0h1M2 21.5h1m1 0h2m4 0h1m2 0h10m1 0h3m3 0h3M0 22.5h4m1 0h4m3 0h4m1 0h2m1 0h1m5 0h1m1 0h2m2 0h1M1 23.5h1m1 0h3m1 0h2m1 0h1m1 0h5m1 0h1m2 0h1m6 0h2m2 0h1M0 24.5h1m4 0h2m2 0h1m1 0h1m1 0h1m1 0h1m2 0h2m1 0h1m2 0h6m1 0h2M8 25.5h1m2 0h1m1 0h2m1 0h5m1 0h1m1 0h1m3 0h2m1 0h2M0 26.5h7m1 0h2m1 0h1m1 0h1m6 0h2m2 0h1m1 0h1m1 0h4M0 27.5h1m5 0h1m1 0h3m2 0h2m1 0h1m2 0h1m4 0h1m3 0h1m2 0h1M0 28.5h1m1 0h3m1 0h1m3 0h1m1 0h4m1 0h1m1 0h1m2 0h1m1 0h6m1 0h1M0 29.5h1m1 0h3m1 0h1m1 0h1m5 0h1m1 0h2m1 0h2m2 0h2m1 0h1m1 0h1m2 0h1M0 30.5h1m1 0h3m1 0h1m2 0h1m1 0h1m1 0h2m2 0h1m5 0h3m2 0h1m3 0h1M0 31.5h1m5 0h1m1 0h1m1 0h1m5 0h3m2 0h2m1 0h3m2 0h1M0 32.5h7m4 0h1m1 0h1m1 0h1m5 0h1m2 0h3m1 0h2m1 0h1"/></svg>
+</div>
+    </div>
+    <div class="founding"><span>Free. No password. Join before <b>March 1</b> and you're a <span class="stamp">Founding member</span> for good.</span></div>
+  </div></div></body></html>

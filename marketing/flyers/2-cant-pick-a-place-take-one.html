@@ -1,0 +1,59 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Can't pick a place? Take one.</title><style>
+@font-face { font-family: Sign; src: url(../../node_modules/@fontsource-variable/big-shoulders-display/files/big-shoulders-display-latin-wght-normal.woff2) format("woff2"); font-weight: 100 900; }
+@font-face { font-family: News; src: url(../../node_modules/@fontsource-variable/newsreader/files/newsreader-latin-wght-normal.woff2) format("woff2"); font-weight: 200 800; }
+@font-face { font-family: News; font-style: italic; src: url(../../node_modules/@fontsource-variable/newsreader/files/newsreader-latin-wght-italic.woff2) format("woff2"); font-weight: 200 800; }
+@font-face { font-family: Sans; src: url(../../node_modules/@fontsource-variable/libre-franklin/files/libre-franklin-latin-wght-normal.woff2) format("woff2"); font-weight: 100 900; }
+@font-face { font-family: Script; src: url(../../node_modules/@fontsource/yellowtail/files/yellowtail-latin-400-normal.woff2) format("woff2"); }
+@page { size: 8.5in 11in; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { width: 8.5in; height: 11in; background: #fff; color: #1f1d19; font-family: Sans, Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.sheet { position: relative; width: 8.5in; height: 11in; padding: 0.42in 0.48in; overflow: hidden; display: flex; flex-direction: column; }
+.top { display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #1f1d19; padding-bottom: 0.08in; }
+.brand { display: flex; align-items: center; gap: 0.1in; }
+.brand b { font-family: Script, cursive; font-weight: 400; font-size: 25pt; color: #b23a24; line-height: 1; padding-bottom: 3pt; }
+.top small { font-weight: 700; font-size: 8pt; letter-spacing: 0.18em; text-transform: uppercase; }
+.red { color: #b23a24; }
+.qr svg { display: block; width: 100%; height: 100%; }
+.url { font-family: Sans; font-weight: 700; font-size: 10.5pt; letter-spacing: 0.01em; }
+.founding { display: flex; align-items: center; justify-content: space-between; gap: 0.2in; margin-top: auto; padding-top: 0.1in; border-top: 1.5px solid #1f1d19; font-size: 9.5pt; }
+.founding b { font-weight: 800; }
+.stamp { display: inline-block; padding: 2pt 7pt; border: 1.5px solid #b23a24; color: #b23a24; border-radius: 3pt; font-weight: 800; font-size: 7.5pt; letter-spacing: 0.14em; text-transform: uppercase; transform: rotate(-3deg); }
+
+  .hed { margin: 0.2in 0 0; font-family: Sign; font-weight: 900; text-transform: uppercase; font-size: 96pt; line-height: 0.82; letter-spacing: -0.01em; }
+  .hed span { display: block; }
+  .take { display: flex; align-items: flex-end; gap: 0.12in; margin: 0.02in 0 0 0.04in; }
+  .take b { font-family: Script, cursive; font-weight: 400; font-size: 60pt; line-height: 1; color: #b23a24; transform: rotate(-4deg); transform-origin: left bottom; }
+  .take svg { margin-bottom: -0.12in; }
+  .dek { margin: 0.1in 0 0; font-family: News; font-size: 15pt; line-height: 1.28; max-width: 5.9in; }
+  .mid { display: grid; grid-template-columns: 1.3in 1fr; gap: 0.24in; align-items: center; margin: 0.18in 0 0; padding: 0.14in 0.2in; border: 1.5px solid #1f1d19; border-radius: 6pt; }
+  .mid .qr { width: 1.3in; height: 1.3in; }
+  .mid h3 { margin: 0 0 3pt; font-family: Sign; font-weight: 900; font-size: 25pt; text-transform: uppercase; line-height: 0.95; }
+  .mid p { margin: 0 0 6pt; font-family: News; font-size: 12.5pt; line-height: 1.3; }
+  .founding { margin-top: 0.16in; }
+  .cut { position: relative; margin: auto -0.48in 0; border-top: 1.5px dashed #1f1d19; }
+  .cut span { position: absolute; left: 0.48in; top: -7pt; padding: 0 4pt; background: #fff; font-size: 7.5pt; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(10, 1fr); height: 3.65in; margin: 0 -0.48in -0.42in; padding: 0 0.48in; }
+  .tab { display: flex; align-items: center; justify-content: center; border-left: 1.5px dashed #1f1d19; overflow: hidden; }
+  .tab:last-child { border-right: 1.5px dashed #1f1d19; }
+  .tab .in { writing-mode: vertical-rl; transform: rotate(180deg); height: 3.65in; padding: 0.16in 0 0.2in; display: flex; flex-direction: column; justify-content: flex-start; gap: 2.5pt; }
+  .tab b { font-family: Sign; font-weight: 900; font-size: 16pt; line-height: 1; text-transform: uppercase; }
+  .tab em { font-family: News; font-style: italic; font-size: 10pt; line-height: 1.15; }
+  .tab small { font-size: 6.3pt; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.2; }
+  .tab small span { color: #b23a24; }
+  </style></head><body><div class="sheet"><div class="top"><span class="brand"><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><circle cx="24" cy="24" r="22.6" fill="#fff" stroke="#1f1d19" stroke-width="1.6"/><circle cx="24" cy="24" r="18.4" fill="none" stroke="#b23a24" stroke-width="2.4"/><circle cx="24" cy="24" r="14.6" fill="none" stroke="#1f1d19" stroke-opacity=".22"/><path d="M17.2 33.4V22.6a6.8 6.8 0 0 1 13.6 0v10.8" fill="none" stroke="#1f1d19" stroke-width="1.3"/><path d="M19.2 33.4V22.8a4.8 4.8 0 0 1 9.6 0v10.6Z" fill="#b23a24"/><path d="M20.6 22.6a3.4 3.4 0 0 1 6.8 0Z" fill="#fff"/><circle cx="26.4" cy="28.6" r="1" fill="#fff"/><path d="M15.4 33.8h17.2" stroke="#1f1d19" stroke-width="1.6" stroke-linecap="round"/></svg><b>The Plate Next Door</b></span><small>Locally owned · Birmingham, Ala.</small></div>
+  <h1 class="hed"><span>Can't pick</span><span>a place?</span></h1>
+  <div class="take"><b>Take one.</b><svg width="0.9in" height="0.75in" viewBox="0 0 90 75" aria-hidden="true"><path d="M6 8c22 2 44 12 52 30 6 12 6 22 4 30" fill="none" stroke="#b23a24" stroke-width="3.2" stroke-linecap="round"/><path d="M50 58l12 12 10-15" fill="none" stroke="#b23a24" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <p class="dek">Every tab down there is a locally owned Birmingham spot and the thing to order there. Tear one off. Go tonight.</p>
+  <div class="mid">
+    <div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" shape-rendering="crispEdges"><path stroke="#1f1d19" d="M0 0.5h7m2 0h2m3 0h3m1 0h3m2 0h1m2 0h7M0 1.5h1m5 0h1m1 0h1m1 0h3m1 0h2m1 0h1m2 0h2m1 0h1m2 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h1m3 0h1m1 0h1m3 0h1m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m2 0h1m3 0h2m3 0h2m1 0h1m2 0h1m1 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m3 0h3m1 0h2m1 0h2m2 0h1m2 0h1m1 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m4 0h1m1 0h1m2 0h1m1 0h1m3 0h1m1 0h1m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M12 7.5h3m2 0h3M1 8.5h3m1 0h2m2 0h1m4 0h5m2 0h1m2 0h1m5 0h2M2 9.5h1m1 0h1m2 0h6m4 0h1m1 0h2m2 0h1m2 0h2m1 0h2m1 0h1M0 10.5h4m2 0h3m2 0h1m1 0h4m1 0h1m2 0h3m1 0h1m1 0h3m1 0h2M0 11.5h1m1 0h3m2 0h5m5 0h1m1 0h6m1 0h2m1 0h1m1 0h1M1 12.5h6m1 0h1m4 0h2m1 0h1m3 0h6m1 0h3m1 0h1M0 13.5h1m3 0h2m1 0h2m6 0h3m2 0h1m3 0h1m2 0h1m2 0h2M0 14.5h3m1 0h1m1 0h1m2 0h1m1 0h1m5 0h1m1 0h2m3 0h1m1 0h2m1 0h2M4 15.5h2m1 0h1m1 0h1m1 0h1m1 0h1m3 0h2m2 0h2m1 0h4m1 0h2M1 16.5h2m1 0h3m1 0h2m1 0h1m3 0h2m1 0h1m1 0h3m2 0h2m1 0h3M2 17.5h2m5 0h2m2 0h5m2 0h1m2 0h1m2 0h1m1 0h2m1 0h2M0 18.5h1m1 0h1m2 0h6m2 0h2m2 0h2m2 0h1m3 0h4m1 0h2M1 19.5h1m2 0h2m1 0h5m1 0h1m1 0h1m6 0h1m1 0h3m1 0h1m3 0h1M2 20.5h2m2 0h2m4 0h2m2 0h1m2 0h1m2 0h1m2 0h1m3 0h2M0 21.5h1m3 0h2m2 0h1m1 0h2m3 0h2m1 0h1m1 0h4m2 0h1m2 0h1m2 0h1M2 22.5h1m3 0h2m6 0h3m2 0h2m2 0h1m1 0h2m1 0h1m1 0h3M1 23.5h1m3 0h1m3 0h1m2 0h2m1 0h1m2 0h1m1 0h1m1 0h1m3 0h2m1 0h1M0 24.5h1m1 0h5m1 0h1m1 0h1m2 0h4m1 0h3m1 0h1m1 0h6m1 0h1M8 25.5h4m3 0h1m2 0h2m1 0h1m2 0h1m3 0h2m1 0h1M0 26.5h7m2 0h1m2 0h2m3 0h5m1 0h2m1 0h1m1 0h1M0 27.5h1m5 0h1m1 0h7m1 0h3m4 0h2m3 0h3M0 28.5h1m1 0h3m1 0h1m2 0h1m1 0h1m1 0h1m1 0h3m4 0h7m1 0h1M0 29.5h1m1 0h3m1 0h1m1 0h2m2 0h1m1 0h1m2 0h1m1 0h1m1 0h4m2 0h1m3 0h2M0 30.5h1m1 0h3m1 0h1m1 0h1m1 0h4m1 0h3m2 0h8M0 31.5h1m5 0h1m1 0h2m4 0h2m1 0h2m1 0h1m3 0h2m1 0h3m2 0h1M0 32.5h7m4 0h2m2 0h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m1 0h1"/></svg>
+</div>
+    <div>
+      <h3>Still can't decide?</h3>
+      <p>Scan it and <b>Surprise me</b> picks for you, from anywhere in town or only from lists you make, like &ldquo;cheap,&rdquo; &ldquo;date night&rdquo; or &ldquo;close to campus.&rdquo;</p>
+      <span class="url">theplatenextdoor.com/pick</span>
+    </div>
+  </div>
+  <div class="founding"><span>Free. No password. Join before <b>March 1</b> and you're a <span class="stamp">Founding member</span> for good.</span><span class="url">Only locally owned places.</span></div>
+  <div class="cut"><span>✂ tear one</span></div>
+  <div class="tabs"><div class="tab"><div class="in"><b>Saw's Soul Kitchen</b><em>Get the pork &amp; greens over cheese grits</em><small><span>Avondale</span> · theplatenextdoor.com</small></div></div><div class="tab"><div class="in"><b>Gus's Hot Dogs</b><em>Get a chargrilled dog with onion sauce</em><small><span>Downtown</span> · theplatenextdoor.com</small></div></div><div class="tab"><div class="in"><b>Kool Korner Sandwiches</b><em>Get the Cuban</em><small><span>Highway 31</span> · theplatenextdoor.com</small></div></div><div class="tab"><div class="in"><b>J&amp;J Grocery</b><em>Get the double bacon cheeseburger</em><small><span>Dickey Springs</span> · theplatenextdoor.com</small></div></div><div class="tab"><div class="in"><b>Eugene's Hot Chicken</b><em>Get the hot chicken. Pick your heat.</em><small><span>Downtown</span> · theplatenextdoor.com</small></div></div><div class="tab"><div class="in"><b>Otsuka Ramen</b><em>Get a bowl of ramen</em><small><span>Southside</span> · theplatenextdoor.com</small></div></div><div class="tab"><div class="in"><b>Big Spoon Creamery</b><em>Get an ice cream sandwich</em><small><span>Avondale</span> · theplatenextdoor.com</small></div></div><div class="tab"><div class="in"><b>Taco Morro Loco</b><em>Get the fish tacos</em><small><span>Avondale</span> · theplatenextdoor.com</small></div></div><div class="tab"><div class="in"><b>Johnny's Restaurant</b><em>Get the Greek-and-three</em><small><span>Downtown Homewood</span> · theplatenextdoor.com</small></div></div><div class="tab"><div class="in"><b>Oak Hill Bar &amp; Grill</b><em>Get the fried shrimp po'boy</em><small><span>Downtown Homewood</span> · theplatenextdoor.com</small></div></div></div></div></body></html>

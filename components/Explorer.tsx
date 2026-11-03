@@ -667,6 +667,21 @@ export default function Explorer({
   const openStamps = useCallback(() => {
     if (requireAuth(STAMP_WHY, () => setStampPicker(true))) setStampPicker(true);
   }, [requireAuth]);
+  // links from the printed flyers: ?stamp=1 opens "where have you been", ?surprise=1 spins,
+  // ?join=1 opens sign-in. Once per visit, after the page is up.
+  const deepLinked = useRef(false);
+  useEffect(() => {
+    if (deepLinked.current || !allSpots.length) return;
+    const p = new URLSearchParams(location.search);
+    if (!p.get("stamp") && !p.get("surprise") && !p.get("join")) return;
+    deepLinked.current = true;
+    const t = window.setTimeout(() => {
+      if (p.get("stamp")) openStamps();
+      else if (p.get("surprise")) openSurprise();
+      else if (!user) openAuth("Join The Plate Next Door. It takes a few seconds, no password. Join before March 1, 2027 and you're a Founding member.");
+    }, 600);
+    return () => window.clearTimeout(t);
+  }, [allSpots.length, openStamps, openSurprise, openAuth, user]);
   const pickSort = (v: Sort) => {
     if (v !== "near" || here) return setSort(v);
     if (!canLocate()) return toast("This browser can't share your location.", "err");

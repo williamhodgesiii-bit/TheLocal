@@ -4773,3 +4773,63 @@ h2 {
 .explore.split .ex-top {
   margin-bottom: 0;
 }
+
+/* the pop quiz answer key (/quiz) */
+.quiz-head {
+  padding: 40px 0 24px;
+}
+.quiz-head h1 {
+  margin: 8px 0 0;
+  font-family: var(--f-display);
+  font-weight: 500;
+  font-size: clamp(38px, 9vw, 60px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.quiz-list {
+  max-width: 640px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: q;
+}
+.quiz-list li {
+  position: relative;
+  padding: 22px 0 22px 44px;
+  border-top: 1px solid var(--line);
+  counter-increment: q;
+}
+.quiz-list li::before {
+  content: counter(q);
+  position: absolute;
+  left: 0;
+  top: 22px;
+  color: var(--red);
+  font-family: var(--f-display);
+  font-size: 22px;
+  font-weight: 600;
+}
+.quiz-q {
+  margin: 0;
+  color: var(--ink-2);
+}
+.quiz-a {
+  margin: 4px 0 6px;
+  font-family: var(--f-display);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.1;
+}
+.quiz-why {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+.quiz-cta {
+  max-width: 640px;
+  padding: 36px 0;
+  border-top: 1px solid var(--line);
+}
+.quiz-cta p {
+  color: var(--ink-2);
+}
