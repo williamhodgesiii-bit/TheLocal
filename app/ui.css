@@ -4755,3 +4755,21 @@ h2 {
     font-size: 12.5px;
   }
 }
+.ex-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 4px;
+}
+.ex-title {
+  margin: 0;
+  font-family: var(--f-display);
+  font-weight: 500;
+  font-size: clamp(28px, 7vw, 36px);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+}
+.explore.split .ex-top {
+  margin-bottom: 0;
+}

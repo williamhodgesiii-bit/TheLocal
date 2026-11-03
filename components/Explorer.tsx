@@ -853,6 +853,7 @@ export default function Explorer({
         foot={foot}
         people={peopleHits}
         onMember={openMember}
+        onAdd={openAdd}
       />
     );
   else if (view === "lists") body = <ListsView spots={allSpots} areas={areas} onOpen={select} onSpin={(from) => openSurprise(from)} />;

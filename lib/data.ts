@@ -670,6 +670,13 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
     blurb: "Restaurant and cocktail bar in Forest Park inspired by Victorian gin palaces, so gin runs the menu. Weekend brunch, and one of the best patios in town.",
     tags: ["patio", "brunch", "date night", "cocktails"], pop: 84,
   },
+  {
+    id: "general", name: "General", genres: ["coffee"], area: "avondale",
+    address: "3813 Clairmont Ave S", coords: [33.5148, -86.7736], price: 1,
+    knownFor: "Coffee & a neighborhood general store",
+    blurb: "A neighborhood café and general store in Forest Park, right next door to Juniper. Get a coffee and browse the shelves.",
+    tags: ["coffee"], pop: 74,
+  },
   /* ------------------------------- HOMEWOOD ------------------------------- */
   {
     id: "johnnys", name: "Johnny's Restaurant", genres: ["southern", "mediterranean"], area: "homewood",
@@ -685,6 +692,13 @@ const RAW_SPOTS: Omit<Spot, "city">[] = [
         link: "https://commons.wikimedia.org/wiki/File:Johnny%27s_Greek_And_Three,_Homewood,_AL.jpg",
       },
     ],
+  },
+  {
+    id: "oak-hill", name: "Oak Hill Bar & Grill", genres: ["southern", "burgers"], area: "homewood",
+    address: "2835 18th St S", coords: [33.4797, -86.7917], price: 1,
+    knownFor: "Meat-and-three lunch & fried shrimp po'boys",
+    blurb: "Neighborhood bar and grill on 18th Street with a homemade meat-and-three at lunch: hamburger steak, pork chops, collards, and pie to finish.",
+    tags: ["meat-and-three", "lunch", "cheap eats"], pop: 72,
   },
   {
     id: "little-donkey", name: "Little Donkey", genres: ["latin"], area: "homewood",
