@@ -21,17 +21,23 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 const WHAT: Record<string, string> = {
   neighbor: "Wants to claim their free listing",
-  regular: "Interested in Featured ($39 a month)",
-  institution: "Interested in the front page ($99 a month)",
+  regular: "Interested in Partner ($39 a month)",
+  institution: "Interested in Featured ($99 a month)",
   newsletter: `Interested in sponsoring ${NEWSLETTER}`,
   correction: "A listing is closed or wrong",
+  patron: "A member wants to be a founding Patron",
+  verify: "A member asked to be verified",
+  invites: "Interested in inviting local reviewers (Plate Invites)",
 };
 const SUBJECT: Record<string, string> = {
   neighbor: "Listing claim",
-  regular: "Featured listing interest",
-  institution: "Front page interest",
+  regular: "Partner interest",
+  institution: "Featured interest",
   newsletter: "Sponsor interest",
   correction: "Listing correction",
+  patron: "Patron list",
+  verify: "Verification request",
+  invites: "Plate Invites interest",
 };
 
 export async function POST(req: Request) {

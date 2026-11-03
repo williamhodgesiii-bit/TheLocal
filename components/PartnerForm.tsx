@@ -59,8 +59,9 @@ export default function PartnerForm({ spot, fix }: { spot?: string; fix?: boolea
           <span>I&apos;m interested in</span>
           <select name="tier" defaultValue={fix ? "correction" : known ? "neighbor" : "regular"}>
             <option value="neighbor">Free listing (claim my page)</option>
-            <option value="regular">Featured, $39 a month</option>
-            <option value="institution">Front page, $99 a month</option>
+            <option value="regular">Partner, $39 a month</option>
+            <option value="institution">Featured, $99 a month</option>
+            <option value="invites">Plate Invites (host local reviewers)</option>
             <option value="newsletter">Sponsor {NEWSLETTER}</option>
             <option value="correction">A listing is closed or wrong</option>
           </select>

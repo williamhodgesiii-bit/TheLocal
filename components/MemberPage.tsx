@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { Review } from "@/lib/backend";
+import type { Photo as MemberPhoto, Review } from "@/lib/backend";
 import { AREA_BY_ID, GENRES, GENRE_BY_ID, TOWNS, areaLabelOf, locationsOf, priceLabel, type GenreId, type Spot, type TownId } from "@/lib/data";
 import { giftFor } from "@/lib/gifts";
 import { RATING_WORDS } from "@/lib/reviews";
@@ -16,17 +16,24 @@ import {
   type MemberPlace,
   type Person,
 } from "@/lib/social";
-import { FeedReviewCard } from "./Friends";
+import { FeedReviewCard } from "./Feed";
+import { shareLink } from "@/lib/native";
+import { Poster } from "./Cover";
+import PhotoImg from "./Photo";
+import Lightbox, { type Slide } from "./Lightbox";
+import { Icon } from "./Icons";
 import GiftSheet from "./GiftSheet";
 import { Thumb } from "./Photo";
-import { Avatar, FollowButton, PersonRow } from "./People";
+import { Avatar, Badges, FollowButton, PersonRow, VerifiedMark, useBadges } from "./People";
 import Portal from "./Portal";
 import ProfileSettings from "./ProfileSettings";
 import { useApp } from "./Providers";
 import { Stars } from "./Stars";
 import type { Pins } from "./Friends";
 
-type Tab = "places" | "reviews" | "want";
+type Tab = "places" | "reviews" | "photos" | "want";
+type RvShow = "all" | "5" | "4" | "low" | "photos";
+type RvSort = "newest" | "highest" | "lowest" | "helpful";
 type Show = "all" | "loved" | "reviewed";
 type Sort = "rating" | "recent" | "az";
 
@@ -65,6 +72,12 @@ export default function MemberPage({
   const [editing, setEditing] = useState(false);
   const [menu, setMenu] = useState(false);
   const [reload, setReload] = useState(0);
+  const [rvShow, setRvShow] = useState<RvShow>("all");
+  const [rvSort, setRvSort] = useState<RvSort>("newest");
+  const [rvKind, setRvKind] = useState<GenreId | "all">("all");
+  const [pics, setPics] = useState<MemberPhoto[] | null>(null);
+  const [picKind, setPicKind] = useState<GenreId | "all">("all");
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -96,6 +109,34 @@ export default function MemberPage({
   }, [handle, backend, user?.id, reload]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const mineToo = page && user?.id === page.member.id;
+  const memberId = page?.member.id;
+  const pageVisible = !!page?.visible;
+  useEffect(() => {
+    if (tab !== "photos" || !memberId || !pageVisible || pics) return;
+    backend.memberPhotos(memberId).then(setPics, () => setPics([]));
+  }, [tab, memberId, pageVisible, pics, backend]);
+  useEffect(() => setPics(null), [handle]);
+  const marks = useBadges(page?.member ?? null);
+  const shownReviews = useMemo(() => {
+    const list = (reviews ?? []).filter((r) => {
+      const s = spotById[r.spotId];
+      if (!s) return false;
+      if (rvKind !== "all" && !s.genres.includes(rvKind)) return false;
+      if (rvShow === "5") return r.rating === 5;
+      if (rvShow === "4") return r.rating === 4;
+      if (rvShow === "low") return r.rating <= 3;
+      if (rvShow === "photos") return !!r.photos?.length;
+      return true;
+    });
+    return list.sort((a, b) =>
+      rvSort === "highest" ? b.rating - a.rating || b.createdAt.localeCompare(a.createdAt) : rvSort === "lowest" ? a.rating - b.rating || b.createdAt.localeCompare(a.createdAt) : rvSort === "helpful" ? (b.helpful ?? 0) - (a.helpful ?? 0) : b.createdAt.localeCompare(a.createdAt)
+    );
+  }, [reviews, spotById, rvKind, rvShow, rvSort]);
+  const shownPics = useMemo(() => (pics ?? []).filter((p) => spotById[p.spotId] && (picKind === "all" || spotById[p.spotId].genres.includes(picKind))), [pics, picKind, spotById]);
+  const slides: Slide[] = useMemo(
+    () => shownPics.map((p) => ({ key: p.id, kind: "img", url: p.url, label: spotById[p.spotId]?.name ?? "", alt: `Photo at ${spotById[p.spotId]?.name ?? "a place"}`, credit: `photo by ${p.userName}` })),
+    [shownPics, spotById]
+  );
   const known = useMemo(() => (places ?? []).filter((p) => spotById[p.spotId]), [places, spotById]);
   const rated = useMemo(() => known.filter((p) => p.rating || p.verdict || p.been), [known]);
   const wants = useMemo(() => known.filter((p) => p.saved), [known]);
@@ -201,86 +242,99 @@ export default function MemberPage({
   return (
     <div className="member">
       {onBack && <BackBar onBack={onBack} />}
-      <header className="mb-head">
-        <Avatar m={m} size={68} />
-        <div className="mb-id">
-          <h1 className="mb-name">
+      <header className="mp-head">
+        <Avatar m={m} size={88} />
+        <div className="mp-id">
+          <h1 className="mp-name">
             {m.name}
-            {m.role === "editor" && <span className="editor-tick">Local editor</span>}
+            {m.verified && <VerifiedMark size={20} />}
           </h1>
-          <p className="mb-handle">
+          <p className="mp-handle">
             @{m.handle}
             {m.private && <span className="mb-lock"> · approves followers</span>}
             {friends ? <span className="mb-rel"> · Friends</span> : rel?.followsMe ? <span className="mb-rel"> · Follows you</span> : null}
           </p>
-          {m.bio && <p className="mb-bio">{m.bio}</p>}
-        </div>
-        <div className="mb-actions">
-          {mineToo ? (
-            <button type="button" className="btn btn-line btn-sm" onClick={() => setEditing(true)}>
-              Edit profile
-            </button>
-          ) : rel?.blocked ? (
-            <button type="button" className="btn btn-line btn-sm" onClick={() => act("unblock")}>
-              Unblock
-            </button>
-          ) : (
-            <FollowButton person={{ id: m.id, name: m.name, private: m.private, iFollow: rel?.following ?? "none", followsMe: !!rel?.followsMe }} onChange={() => setReload((n) => n + 1)} />
-          )}
-          <div className="mb-more">
-            <button type="button" className="mb-dots" aria-label="More" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
-              ···
-            </button>
-            <AnimatePresence>
-              {menu && (
-                <motion.div className="user-menu mb-menu" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}>
-                  <button className="menu-item" onClick={() => act("copy")}>
-                    Copy link to this page
-                  </button>
-                  {rel && !rel.blocked && (
-                    <>
-                      {rel.followsMe && (
-                        <button className="menu-item" onClick={() => act("remove")}>
-                          Remove as a follower
-                        </button>
-                      )}
-                      <button className="menu-item" onClick={() => act(rel.muted ? "unmute" : "mute")}>
-                        {rel.muted ? "Unmute" : "Mute (hide from my feed)"}
-                      </button>
-                      <button className="menu-item" onClick={() => act("block")}>
-                        Block
-                      </button>
-                      <p className="menu-label">Report this account</p>
-                      {MEMBER_REPORT_REASONS.map((r) => (
-                        <button key={r.id} className="menu-item sub" onClick={() => act(`report:${r.id}`)}>
-                          {r.label}
-                        </button>
-                      ))}
-                    </>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <Badges list={marks.filter((b) => b.id !== "verified")} />
         </div>
       </header>
-
-      <p className="mb-stats">
-        {page.stats.been !== null && (
-          <span>
-            <b>{page.stats.been}</b> been
-          </span>
+      {m.bio && <p className="mp-bio">{m.bio}</p>}
+      <div className="mp-actions">
+        {mineToo ? (
+          <button type="button" className="btn btn-line btn-sm" onClick={() => setEditing(true)}>
+            Edit profile
+          </button>
+        ) : rel?.blocked ? (
+          <button type="button" className="btn btn-line btn-sm" onClick={() => act("unblock")}>
+            Unblock
+          </button>
+        ) : (
+          <FollowButton person={{ id: m.id, name: m.name, private: m.private, iFollow: rel?.following ?? "none", followsMe: !!rel?.followsMe }} onChange={() => setReload((n) => n + 1)} />
         )}
-        <span>
-          <b>{page.stats.reviews}</b> {page.stats.reviews === 1 ? "review" : "reviews"}
-        </span>
-        <button type="button" onClick={() => page.visible && setNet("following")} disabled={!page.visible}>
-          <b>{page.stats.following}</b> following
+        <button
+          type="button"
+          className="btn btn-line btn-sm"
+          onClick={async () => {
+            const how = await shareLink({ title: `${m.name} on The Plate Next Door`, url: `${location.origin}${profilePath(m.handle)}` });
+            if (how === "copied") toast("Link copied.", "ok");
+          }}
+        >
+          <Icon name="share" size={15} /> Share
+        </button>
+        <div className="mb-more">
+          <button type="button" className="icon-btn mb-dots" aria-label="More" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
+            <Icon name="more" size={20} stroke={2.6} />
+          </button>
+          <AnimatePresence>
+            {menu && (
+              <motion.div className="user-menu mb-menu" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}>
+                <button className="menu-item" onClick={() => act("copy")}>
+                  Copy link to this page
+                </button>
+                {rel && !rel.blocked && (
+                  <>
+                    {rel.followsMe && (
+                      <button className="menu-item" onClick={() => act("remove")}>
+                        Remove as a follower
+                      </button>
+                    )}
+                    <button className="menu-item" onClick={() => act(rel.muted ? "unmute" : "mute")}>
+                      {rel.muted ? "Unmute" : "Mute (hide from my feed)"}
+                    </button>
+                    <button className="menu-item" onClick={() => act("block")}>
+                      Block
+                    </button>
+                    <p className="menu-label">Report this account</p>
+                    {MEMBER_REPORT_REASONS.map((r) => (
+                      <button key={r.id} className="menu-item sub" onClick={() => act(`report:${r.id}`)}>
+                        {r.label}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <dl className="stats stats-4 mp-stats">
+        <button type="button" onClick={() => setTab("reviews")}>
+          <dt>Reviews</dt>
+          <dd>{page.stats.reviews}</dd>
+        </button>
+        <button type="button" onClick={() => setTab(page.stats.been !== null ? "places" : "photos")}>
+          <dt>{page.stats.been !== null ? "Been" : "Photos"}</dt>
+          <dd>{page.stats.been !== null ? page.stats.been : (page.stats.photos ?? 0)}</dd>
         </button>
         <button type="button" onClick={() => page.visible && setNet("followers")} disabled={!page.visible}>
-          <b>{page.stats.followers}</b> {page.stats.followers === 1 ? "follower" : "followers"}
+          <dt>Followers</dt>
+          <dd>{page.stats.followers}</dd>
         </button>
-      </p>
+        <button type="button" onClick={() => page.visible && setNet("following")} disabled={!page.visible}>
+          <dt>Following</dt>
+          <dd>{page.stats.following}</dd>
+        </button>
+      </dl>
       {page.match && page.match.common >= MATCH_MIN && (
         <p className="mb-match">
           You agree on <b>{page.match.agree}</b> of the {page.match.common} places you&apos;ve both been.
@@ -316,17 +370,17 @@ export default function MemberPage({
           )}
 
           {top.ids.length > 0 && (
-            <section className="mb-top" aria-label={top.picked ? "Top 4" : "Highest rated"}>
-              <h2 className="fr-sub">{top.picked ? `${first}'s Top 4` : "Highest rated"}</h2>
-              <div className="mb-shelf">
+            <section className="mp-top" aria-label={top.picked ? "Top 4" : "Highest rated"}>
+              <h2 className="sec-title">{top.picked ? `${first}'s Top 4` : "Highest rated"}</h2>
+              <div className="mp-top-row">
                 {top.ids.map((id) => {
                   const s = spotById[id];
                   const p = known.find((x) => x.spotId === id);
                   return (
-                    <button key={id} type="button" className="mb-fav" onClick={() => onOpen(id)}>
-                      <Thumb spot={s} w={160} />
-                      <b>{s.name}</b>
-                      <span>{p ? <Score p={p} /> : areaLabelOf(s)}</span>
+                    <button key={id} type="button" className="tile" onClick={() => onOpen(id)}>
+                      <Poster spot={s} sizes="(max-width: 640px) 22vw, 150px" />
+                      <span className="tile-name">{s.name}</span>
+                      <span className="tile-meta">{p ? <Score p={p} /> : areaLabelOf(s)}</span>
                     </button>
                   );
                 })}
@@ -339,6 +393,7 @@ export default function MemberPage({
               [
                 ["places", "Places", rated.length],
                 ["reviews", "Reviews", reviews?.length ?? page.stats.reviews],
+                ["photos", "Photos", pics?.length ?? page.stats.photos ?? 0],
                 ["want", "Want to go", wants.length],
               ] as [Tab, string, number][]
             ).map(([k, l, n]) => (
@@ -348,7 +403,62 @@ export default function MemberPage({
             ))}
           </nav>
 
-          {tab !== "reviews" && (
+          {tab === "reviews" && (reviews?.length ?? 0) > 0 && (
+            <div className="mb-filters">
+              <span className="mb-show" role="group" aria-label="Show">
+                {(
+                  [
+                    ["all", "All"],
+                    ["5", "5 ★"],
+                    ["4", "4 ★"],
+                    ["low", "3 ★ and under"],
+                    ["photos", "With photos"],
+                  ] as [RvShow, string][]
+                ).map(([k, l]) => (
+                  <button key={k} type="button" className={`chip chip-xs ${rvShow === k ? "on" : ""}`} aria-pressed={rvShow === k} onClick={() => setRvShow(k)}>
+                    {l}
+                  </button>
+                ))}
+              </span>
+              <label>
+                <span className="sr-only">Kind of place</span>
+                <select value={rvKind} onChange={(e) => setRvKind(e.target.value as GenreId | "all")}>
+                  <option value="all">Any kind</option>
+                  {GENRES.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span className="sr-only">Sort</span>
+                <select value={rvSort} onChange={(e) => setRvSort(e.target.value as RvSort)}>
+                  <option value="newest">Newest</option>
+                  <option value="highest">Highest rated</option>
+                  <option value="lowest">Lowest rated</option>
+                  <option value="helpful">Most helpful</option>
+                </select>
+              </label>
+            </div>
+          )}
+          {tab === "photos" && (pics?.length ?? 0) > 0 && (
+            <div className="mb-filters">
+              <label>
+                <span className="sr-only">Kind of place</span>
+                <select value={picKind} onChange={(e) => setPicKind(e.target.value as GenreId | "all")}>
+                  <option value="all">Any kind</option>
+                  {GENRES.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
+
+          {(tab === "places" || tab === "want") && (
             <div className="mb-filters">
               {tab === "places" && (
                 <span className="mb-show" role="group" aria-label="Show">
@@ -403,18 +513,35 @@ export default function MemberPage({
             </div>
           )}
 
-          {tab === "reviews" ? (
+          {tab === "photos" ? (
+            pics === null ? (
+              <div className="skeleton-list">
+                <span />
+              </div>
+            ) : shownPics.length === 0 ? (
+              <p className="p-empty">{pics.length ? "No photos of that kind." : mineToo ? "Photos you add with reviews and on places show up here." : "No photos yet."}</p>
+            ) : (
+              <div className="mp-photos">
+                {shownPics.map((p, i) => (
+                  <button key={p.id} type="button" className="mp-photo" onClick={() => setLightbox(i)} aria-label={`Photo at ${spotById[p.spotId]?.name}`}>
+                    <PhotoImg src={p.url} alt={`Photo at ${spotById[p.spotId]?.name ?? "a place"}`} />
+                    <span className="mp-photo-cap">{spotById[p.spotId]?.name}</span>
+                  </button>
+                ))}
+              </div>
+            )
+          ) : tab === "reviews" ? (
             reviews === null ? (
               <div className="skeleton-list">
                 <span />
               </div>
             ) : reviews.length === 0 ? (
               <p className="p-empty">No reviews yet.</p>
+            ) : shownReviews.length === 0 ? (
+              <p className="p-empty">No reviews match those filters.</p>
             ) : (
               <ul className="feed">
-                {reviews
-                  .filter((r) => spotById[r.spotId])
-                  .map((r) => (
+                {shownReviews.map((r) => (
                     <FeedReviewCard
                       key={r.id}
                       actor={m}
@@ -473,6 +600,11 @@ export default function MemberPage({
         </>
       )}
 
+      <AnimatePresence>
+        {lightbox !== null && slides[lightbox] && spotById[shownPics[lightbox]?.spotId] && (
+          <Lightbox slides={slides} index={lightbox} spot={spotById[shownPics[lightbox].spotId]} onIndex={setLightbox} onClose={() => setLightbox(null)} />
+        )}
+      </AnimatePresence>
       <NetworkSheet open={!!net} which={net} memberId={m.id} name={first} onClose={() => setNet(null)} />
       <GiftSheet
         open={gift}

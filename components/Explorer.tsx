@@ -37,12 +37,13 @@ import { hash } from "@/lib/images";
 import { useApp } from "./Providers";
 import { PlateMark } from "./Brand";
 import type { FriendsTab, Pins } from "./Friends";
+import type { Person } from "@/lib/social";
 import Home, { Shelf } from "./Home";
 import ExploreView, { type Sort } from "./ExploreView";
 import { Icon, type IconName } from "./Icons";
 import { Avatar } from "./People";
 
-type View = "home" | "friends" | "explore" | "lists" | "me" | "member";
+type View = "home" | "friends" | "explore" | "lists" | "me" | "member" | "people";
 /** what a history entry remembers about the screen */
 type Screen = { view: View; selectedId: string | null; handle: string | null; friendsTab: FriendsTab; returnView: View; mapMode: boolean; depth: number };
 
@@ -63,6 +64,7 @@ const MapView = dynamic(() => import("./MapView"), { ssr: false, loading: () => 
 // Screens still render on the server (a shared place link arrives with its page already drawn).
 const SpotDetail = dynamic(() => import("./SpotDetail"), { loading: () => <div className="pl-loading" aria-hidden /> });
 const ListsView = dynamic(() => import("./ListsView"));
+const PeopleView = dynamic(() => import("./PeopleView"));
 const You = dynamic(() => import("./You"));
 const MemberPage = dynamic(() => import("./MemberPage"));
 const ListEditor = dynamic(() => import("./ListsView").then((m) => m.ListEditor), { ssr: false });
@@ -102,6 +104,7 @@ function viewOfPath(path: string): View {
   if (path === "/me") return "me";
   if (path === "/friends") return "friends";
   if (path === "/lists") return "lists";
+  if (path === "/people") return "people";
   if (path.startsWith("/u/")) return "member";
   return "explore";
 }
@@ -290,7 +293,9 @@ export default function Explorer({
           ? "/friends"
           : view === "lists"
             ? "/lists"
-            : view === "member" && handle
+            : view === "people"
+              ? "/people"
+              : view === "member" && handle
               ? `/u/${handle}`
               : view === "explore"
                 ? explorePath(city)
@@ -310,6 +315,8 @@ export default function Explorer({
         ? `Friends · ${BRAND}`
         : view === "lists"
           ? `Lists · ${BRAND}`
+          : view === "people"
+            ? `People · ${BRAND}`
           : view === "me"
             ? `You · ${BRAND}`
             : view === "member" && handle
@@ -415,6 +422,18 @@ export default function Explorer({
 
   // the grid catches up a beat after a filter tap, so the tap itself never waits on it
   const gridList = useDeferredValue(list);
+  // typing a name in Explore finds people too
+  const [peopleHits, setPeopleHits] = useState<Person[]>([]);
+  useEffect(() => {
+    const t = q.trim();
+    if (view !== "explore" || t.replace(/^@/, "").length < 2) return setPeopleHits([]);
+    let live = true;
+    const h = window.setTimeout(() => backend.searchMembers(t).then((r) => live && setPeopleHits(r.slice(0, 6)), () => {}), 300);
+    return () => {
+      live = false;
+      window.clearTimeout(h);
+    };
+  }, [q, view, backend]);
   const pinsOn = !!pins && (view === "friends" || view === "member");
   const visible = useMemo(() => new Set(pinsOn ? pins!.ids : list.map((s) => s.id)), [list, pins, pinsOn]);
   const genreCounts = useMemo(() => {
@@ -734,11 +753,12 @@ export default function Explorer({
     </footer>
   );
 
-  const tabs: { id: View | "surprise"; label: string; icon: IconName; on: boolean; go: () => void }[] = [
+  const tabs: { id: View | "surprise"; label: string; icon: IconName; on: boolean; go: () => void; desk?: boolean }[] = [
     { id: "home", label: "Home", icon: "home", on: navTo ? navTo === "home" || navTo === "friends" : (view === "home" || view === "friends") && !selected, go: () => (view === "home" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("home")) },
     { id: "explore", label: "Explore", icon: "search", on: navTo ? navTo === "explore" : view === "explore" && !selected, go: () => (view === "explore" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("explore")) },
     { id: "surprise", label: "Surprise", icon: "spark", on: false, go: () => openSurprise() },
     { id: "lists", label: "Lists", icon: "lists", on: navTo ? navTo === "lists" : view === "lists" && !selected, go: () => goView("lists") },
+    { id: "people", label: "People", icon: "people", on: navTo ? navTo === "people" : (view === "people" || (view === "member" && !(me && handle === me.handle))) && !selected, go: () => goView("people"), desk: true },
     { id: "me", label: "You", icon: "user", on: navTo ? navTo === "me" : (view === "me" || (view === "member" && !!me && handle === me.handle)) && !selected, go: () => goView("me") },
   ];
 
@@ -764,6 +784,8 @@ export default function Explorer({
             onSeeAll={seeCollection}
             onPins={setPins}
             onSignup={toLetter}
+            onPeople={() => goView("people")}
+            onPassport={() => goView("me")}
           />
         </div>
         <aside className="rail" aria-label="More">
@@ -829,9 +851,17 @@ export default function Explorer({
           </div>
         }
         foot={foot}
+        people={peopleHits}
+        onMember={openMember}
       />
     );
   else if (view === "lists") body = <ListsView spots={allSpots} areas={areas} onOpen={select} onSpin={(from) => openSurprise(from)} />;
+  else if (view === "people")
+    body = (
+      <div className="col-narrow">
+        <PeopleView onMe={() => (me ? openMember(me.handle) : goView("me"))} />
+      </div>
+    );
   else if (view === "member" && handle)
     body = (
       <div className="col-narrow">
@@ -861,6 +891,7 @@ export default function Explorer({
           onStampMany={openStamps}
           onMember={openMember}
           onLists={() => goView("lists")}
+          onPeople={() => goView("people")}
         />
       </div>
     );
@@ -955,7 +986,7 @@ export default function Explorer({
       </main>
 
       <nav className="tabbar" aria-label="Sections">
-        {tabs.map((t) => (
+        {tabs.filter((t) => !t.desk).map((t) => (
           <button key={t.id} className={`${t.on ? "on" : ""} ${t.id === "surprise" ? "tab-spin" : ""}`} onClick={t.go} aria-current={t.on ? "page" : undefined}>
             <span className="tab-ico">
               <Icon name={t.icon} size={t.id === "surprise" ? 22 : 23} fill={false} stroke={t.on ? 2.1 : 1.7} />

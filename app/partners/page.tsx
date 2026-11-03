@@ -19,7 +19,7 @@ const TIERS = [
     price: "Free",
     per: "always",
     pitch: "Every locally owned place gets one.",
-    perks: ["Claim it and fix anything that's wrong", "Answer reviews as the owner", "Send your own photos: they replace your matchbook cover", "A monthly email: saves, stamps and reviews"],
+    perks: ["Claim it and fix anything that's wrong", "Answer reviews with an Owner mark on your name", "Send your own photos: they replace your matchbook cover", "A monthly email: saves, stamps and reviews"],
     cta: "Claim my listing",
   },
   {
@@ -148,6 +148,11 @@ export default function Partners({ searchParams }: { searchParams: { spot?: stri
             </article>
           ))}
         </div>
+        <p className="biz-more">
+          <b>Plate Invites, coming soon.</b> Host a table of Birmingham&apos;s Trusted reviewers (people other diners already follow for their reviews) for a
+          tasting. Every review from an invited visit says &ldquo;Invited&rdquo; at the top and never counts toward your score, so it&apos;s honest and it&apos;s
+          legal. <a href="#contact">Get on the early list</a>.
+        </p>
         <p className="biz-more">
           <b>Not a restaurant?</b> Local banks, markets and makers can present {NEWSLETTER} (one sponsor at a time, &ldquo;Presented by&rdquo; on the email and the front page) or a seasonal trail.{" "}
           <a href="#contact">Ask us</a>.

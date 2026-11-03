@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { GENRE_BY_ID, areaLabelOf, priceLabel, type Spot } from "@/lib/data";
 import { NEWSLETTER } from "@/lib/brand";
@@ -15,6 +15,9 @@ import { Cover, Poster } from "./Cover";
 import { Icon } from "./Icons";
 import Photo from "./Photo";
 import ScrollCue, { useSwipeHint } from "./ScrollCue";
+import { Avatar, FollowButton, NameLink, useBadges } from "./People";
+import { milestoneName, nextMilestone } from "@/lib/passport";
+import type { Person } from "@/lib/social";
 
 /* the Friends tab is its own download */
 const Friends = dynamic(() => import("./Friends"), { ssr: false, loading: () => <div className="skeleton-feed" aria-hidden><span /></div> });
@@ -39,6 +42,8 @@ export default function Home({
   onSeeAll,
   onPins,
   onSignup,
+  onPeople,
+  onPassport,
 }: {
   tab: HomeTab;
   onTab: (t: HomeTab) => void;
@@ -53,6 +58,10 @@ export default function Home({
   onSeeAll: (collection: string) => void;
   onPins: (p: Pins) => void;
   onSignup: () => void;
+  /** find people to follow */
+  onPeople: () => void;
+  /** your Plate Passport (on the You page) */
+  onPassport: () => void;
 }) {
   const { unread, user } = useApp();
   return (
@@ -69,9 +78,16 @@ export default function Home({
         </div>
       </div>
       {tab === "friends" ? (
-        <Friends spotById={spotById} onOpen={onOpen} onPins={onPins} tab={friendsTab} onTab={onFriendsTab} />
+        <>
+          <button type="button" className="find-bar" onClick={onPeople}>
+            <Icon name="search" size={18} />
+            <span>Find friends and local reviewers</span>
+            <Icon name="right" size={16} />
+          </button>
+          <Friends spotById={spotById} onOpen={onOpen} onPins={onPins} tab={friendsTab} onTab={onFriendsTab} />
+        </>
       ) : (
-        <ForYou spotById={spotById} letter={letter} rows={rows} fresh={fresh} onOpen={onOpen} onSeeAll={onSeeAll} onSignup={onSignup} />
+        <ForYou spotById={spotById} letter={letter} rows={rows} fresh={fresh} onOpen={onOpen} onSeeAll={onSeeAll} onSignup={onSignup} onPeople={onPeople} onPassport={onPassport} />
       )}
     </div>
   );
@@ -85,6 +101,8 @@ function ForYou({
   onOpen,
   onSeeAll,
   onSignup,
+  onPeople,
+  onPassport,
 }: {
   spotById: Record<string, Spot>;
   letter: Letter;
@@ -93,6 +111,8 @@ function ForYou({
   onOpen: (id: string) => void;
   onSeeAll: (collection: string) => void;
   onSignup: () => void;
+  onPeople: () => void;
+  onPassport: () => void;
 }) {
   const feed = useFeed("everyone", true);
   const posts = useMemo(
@@ -106,10 +126,11 @@ function ForYou({
     const m: { at: number; key: string; node: React.ReactNode }[] = [];
     if (feature && spotById[feature.spotId]) m.push({ at: 1, key: "featured", node: <FeaturedCard f={feature} spot={spotById[feature.spotId]} onOpen={onOpen} /> });
     rows.slice(0, 3).forEach((r, i) => m.push({ at: [2, 5, 9][i], key: `row-${r.id}`, node: <Shelf title={r.title} line={r.line} spots={r.spots} now={r.now} onOpen={onOpen} onSeeAll={() => onSeeAll(r.id)} /> }));
+    m.push({ at: 4, key: "people", node: <PeopleShelf onPeople={onPeople} /> });
     if (fresh.length) m.push({ at: 7, key: "fresh", node: <Shelf title="Just added" line="Places members wrote in, checked by us." spots={fresh} onOpen={onOpen} /> });
     m.push({ at: 12, key: "house", node: <HouseAd /> });
     return m.sort((a, b) => a.at - b.at);
-  }, [feature, spotById, rows, fresh, onOpen, onSeeAll]);
+  }, [feature, spotById, rows, fresh, onOpen, onSeeAll, onPeople]);
 
   const blocks: React.ReactNode[] = [];
   let mi = 0;
@@ -124,6 +145,7 @@ function ForYou({
     <div className="foryou">
       <ScrollCue />
       <ThursdayThree letter={letter} onOpen={onOpen} onSignup={onSignup} />
+      <PassportStrip total={Object.keys(spotById).length} onOpen={onPassport} />
       {feed.items === null ? (
         <div className="skeleton-feed" aria-hidden>
           <span />
@@ -286,5 +308,83 @@ function HouseAd() {
       </span>
       <Icon name="right" size={18} />
     </Link>
+  );
+}
+
+/**
+ * The Plate Passport, one line on the front page: how far along you are, a tap away. It's there
+ * so people know it exists, never in the way of the feed.
+ */
+function PassportStrip({ total, onOpen }: { total: number; onOpen: () => void }) {
+  const { user, been, authReady, openAuth } = useApp();
+  if (!authReady || !total) return null;
+  const count = Object.keys(been).length;
+  const { next, left } = nextMilestone(count, total);
+  const pct = Math.min(1, count / total);
+  const go = () => (user ? onOpen() : openAuth("Sign in to start your Plate Passport. It takes a few seconds, no password.", onOpen));
+  return (
+    <button type="button" className="pp-strip" onClick={go}>
+      <span className="pp-mini" style={{ ["--p" as string]: pct }} aria-hidden>
+        <span>{count}</span>
+      </span>
+      <span className="pp-strip-t">
+        <b>Your Plate Passport</b>
+        <span>
+          {!user || count === 0
+            ? "Stamp the local places you've been and watch it fill in."
+            : left > 0
+              ? `${count} of ${total} stamped · ${left} more to "${milestoneName(next, total)}"`
+              : `All ${total}. Legend.`}
+        </span>
+      </span>
+      <Icon name="right" size={18} />
+    </button>
+  );
+}
+
+/** a row of people worth following, between posts */
+function PeopleShelf({ onPeople }: { onPeople: () => void }) {
+  const { backend, user } = useApp();
+  const [people, setPeople] = useState<Person[] | null>(null);
+  useEffect(() => {
+    let live = true;
+    backend
+      .topReviewers(30)
+      .then(async (t) => (t.length >= 3 ? t : [...t, ...(await backend.suggestedMembers().catch(() => [] as Person[])).filter((p) => !t.some((x) => x.id === p.id))]))
+      .then((p) => live && setPeople(p.slice(0, 10)), () => live && setPeople([]));
+    return () => {
+      live = false;
+    };
+  }, [backend, user?.id]);
+  if (!people?.length) return null;
+  return (
+    <section className="shelf">
+      <header className="shelf-head">
+        <div>
+          <h2 className="shelf-title">People to follow</h2>
+          <p className="shelf-line">Local reviewers whose reviews people find useful.</p>
+        </div>
+        <button type="button" className="link-btn" onClick={onPeople}>
+          See all
+        </button>
+      </header>
+      <div className="shelf-row ppl-row">
+        {people.map((p) => (
+          <PersonCard key={p.id} p={p} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PersonCard({ p }: { p: Person }) {
+  const mark = useBadges(p).find((b) => b.id !== "verified" && b.id !== "founding");
+  return (
+    <div className="pcard-p">
+      <Avatar m={p} size={64} />
+      <NameLink m={p} className="pcard-name" />
+      <span className="pcard-sub">{mark ? mark.label : p.reviews ? `${p.reviews} ${p.reviews === 1 ? "review" : "reviews"}` : `@${p.handle}`}</span>
+      <FollowButton person={p} small />
+    </div>
   );
 }

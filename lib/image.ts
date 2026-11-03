@@ -30,3 +30,18 @@ async function loadBitmap(file: File): Promise<ImageBitmap | HTMLImageElement> {
     img.src = URL.createObjectURL(file);
   });
 }
+
+/** A square, center-cropped JPEG (profile pictures). */
+export async function squareImage(file: File, size: number): Promise<Blob> {
+  if (!file.type.startsWith("image/")) throw new Error("That file isn't an image.");
+  if (file.size > 25 * 1024 * 1024) throw new Error("That image is over 25 MB.");
+  const bitmap = await loadBitmap(file);
+  const side = Math.min(bitmap.width, bitmap.height);
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Couldn't process that image.");
+  ctx.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, size, size);
+  return new Promise((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error("Couldn't encode image."))), "image/jpeg", 0.85));
+}

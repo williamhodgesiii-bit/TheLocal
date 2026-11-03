@@ -71,6 +71,15 @@ Letterboxd for local food, built from the research in `reports/` (Oct 2026: Lett
 
 **After deploying**: paste `supabase/schema.sql` into Supabase → SQL Editor → Run (it only adds what's missing). Until then the site works as before; Friends shows "needs its update".
 
+## People & profiles (Nov 2026)
+
+- **People** (`/people`, `components/PeopleView.tsx`): search by name or @name, top reviewers this month (`top_reviewers`), people you might know, invite friends. Also on Home → Friends ("Find friends and local reviewers"), You ("Find friends"), and in Explore (people whose name matches the search).
+- **Profile pictures**: tap your picture on You. Squared and shrunk on the phone, stored in your own folder in `spot-photos`; the database only accepts a picture from your own folder. To take one down, clear `members.avatar_url` in Supabase.
+- **Marks** (`lib/badges.ts`): earned ones (Regular at 5 reviews; Trusted reviewer at 15 reviews and 20 Helpful votes; Top reviewer for the month), plus Verified (staff set `members.verified`), Local editor, Patron (`members.patron_until`) and Founding member (joined before March 1, 2027). Members can't set Verified or Patron on themselves. None of them changes how a review counts.
+- **A member's page**: picture, marks, bio, Follow, Share; Reviews / Been / Followers / Following; Top 4 as covers; Places, Reviews (filter by score, with photos, cuisine; sort newest, highest, lowest, most helpful), Photos (filter by cuisine) and Want to go.
+- **Passport**: You → Passport → Your stamps lets members change how a visit went or take a stamp back. A one-line passport strip sits under This week's three on Home.
+- **Patron and Verified** (You → Settings) and **Plate Invites** (`/partners`) collect interest by email for now. The plan is in `docs/STRATEGY.md`, Part 2.
+
 ## Gift cards
 
 We never sell cards, take payment or hold a balance: selling another business's stored value would make the site a money transmitter in Alabama (license, bond) and Stripe restricts it. Giftly-style "cash with a suggested place" was sued by restaurants it listed without consent. So **Gift card** sends you to the place's own page, labeled "Sold by Rojo through Instagift", and the restaurant keeps every dollar. Details and sources: `reports/Friends feed and gift cards.md`.

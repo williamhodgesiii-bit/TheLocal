@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient, type SupabaseClient, type User as AuthUser } from "@supabase/supabase-js";
-import { resizeImage } from "./image";
+import { resizeImage, squareImage } from "./image";
 import { pickCovers, type MemberCover } from "./photos";
 import { mapLetter } from "./letter";
 import { canonicalSpotId, cleanGenres, slugify, type DrinkKind, type GenreId, type Spot } from "./data";
@@ -13,6 +13,7 @@ import {
   handleFrom,
   handleProblem,
   type Activity,
+  type BadgeFacts,
   type Comment,
   type CommentPolicy,
   type FollowState,
@@ -229,6 +230,15 @@ export interface Backend {
   memberPage(handle: string): Promise<MemberPage | null>;
   memberPlaces(id: string): Promise<MemberPlace[]>;
   memberReviews(id: string): Promise<Review[]>;
+  /** every photo a member posted (newest first), for the Photos tab on their page */
+  memberPhotos(id: string): Promise<Photo[]>;
+  /** your profile picture: squared, shrunk and stored; returns the new picture's address */
+  uploadAvatar(file: File): Promise<string>;
+  removeAvatar(): Promise<void>;
+  /** the facts behind the marks next to these members' names */
+  memberBadges(ids: string[]): Promise<BadgeFacts[]>;
+  /** who's been writing the most useful reviews lately */
+  topReviewers(days?: number): Promise<Person[]>;
   network(id: string, which: "following" | "followers"): Promise<Person[]>;
   follow(id: string, on: boolean): Promise<FollowState>;
   requests(): Promise<(MemberLite & { at: string })[]>;
@@ -538,12 +548,47 @@ function supabaseBackend(sb: SupabaseClient): Backend {
       if (!data) return null;
       const m = data.member;
       return {
-        member: { ...lite(m.id, m.handle, m.name, m.avatar, m.role), bio: m.bio ?? undefined, private: !!m.private, top: m.top ?? [], since: m.since, comments: m.comments },
+        member: { ...lite(m.id, m.handle, m.name, m.avatar, m.role), bio: m.bio ?? undefined, private: !!m.private, top: m.top ?? [], since: m.since, comments: m.comments, verified: !!m.verified, patron: !!m.patron },
         visible: !!data.visible,
-        stats: { following: Number(data.stats.following), followers: Number(data.stats.followers), reviews: Number(data.stats.reviews), been: data.stats.been == null ? null : Number(data.stats.been) },
+        stats: {
+          following: Number(data.stats.following), followers: Number(data.stats.followers), reviews: Number(data.stats.reviews), been: data.stats.been == null ? null : Number(data.stats.been),
+          ...(data.stats.photos != null ? { photos: Number(data.stats.photos) } : {}), ...(data.stats.helpful != null ? { helpful: Number(data.stats.helpful) } : {}),
+        },
         rel: data.rel ? { following: data.rel.following, followsMe: !!data.rel.followsMe, muted: !!data.rel.muted, blocked: !!data.rel.blocked } : null,
         match: data.match ? { common: Number(data.match.common), agree: Number(data.match.agree) } : null,
       };
+    },
+    async memberPhotos(id) {
+      const { data, error } = await sb.from("photos").select("*").eq("user_id", id).order("created_at", { ascending: false }).limit(150);
+      if (error) return [];
+      return (data ?? []).map(mapPhoto);
+    },
+    async uploadAvatar(file) {
+      const uid = await sessionUserId();
+      const blob = await squareImage(file, 400);
+      const path = `${uid}/avatar/${Date.now()}.jpg`;
+      const up = await sb.storage.from("spot-photos").upload(path, blob, { contentType: "image/jpeg" });
+      if (up.error) throw new Error("Couldn't upload that picture. Try another?");
+      const url = sb.storage.from("spot-photos").getPublicUrl(path).data.publicUrl;
+      const { error } = await sb.from("members").update({ avatar_url: url }).eq("id", uid);
+      if (error) throw fail(error);
+      return url;
+    },
+    async removeAvatar() {
+      const uid = await sessionUserId();
+      const { error } = await sb.from("members").update({ avatar_url: null }).eq("id", uid);
+      if (error) throw fail(error);
+    },
+    async memberBadges(ids) {
+      if (!ids.length) return [];
+      const { data, error } = await sb.rpc("member_badges", { ids: Array.from(new Set(ids)).slice(0, 60) });
+      if (error) return [];
+      return (data ?? []).map((r: any) => ({ id: r.id, verified: !!r.verified, patron: !!r.patron, reviews: Number(r.reviews), photos: Number(r.photos), helpful: Number(r.helpful), since: r.since ?? undefined }));
+    },
+    async topReviewers(days = 30) {
+      const { data, error } = await sb.rpc("top_reviewers", { days, lim: 12 });
+      if (error) return [];
+      return (data ?? []).map((r: any) => ({ ...mapPerson(r), verified: !!r.verified, photos: Number(r.photos), helpful: Number(r.helpful), followsMe: false }));
     },
     async memberPlaces(id) {
       const { data, error } = await sb.rpc("member_places", { target: id });
@@ -1375,7 +1420,7 @@ function localBackend(): Backend {
       const ok = !iBlocked && canView(meId, m.id);
       const fs = follows();
       return {
-        member: { ...liteOf(m), bio: m.bio || undefined, private: m.private, top: ok ? m.top : [], since: m.since, comments: m.comments },
+        member: { ...liteOf(m), bio: m.bio || undefined, private: m.private, top: ok ? m.top : [], since: m.since, comments: m.comments, verified: false, patron: false },
         visible: ok,
         stats: {
           following: fs.filter((f) => f.a === m!.id && f.status === "accepted").length,
@@ -1391,6 +1436,40 @@ function localBackend(): Backend {
         },
         match: ok && meId && meId !== m.id ? tasteMatch(meId, m.id) : null,
       };
+    },
+    async memberPhotos(id) {
+      return read<Photo[]>(K.photos, []).filter((p) => p.userId === id).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    },
+    async uploadAvatar(file) {
+      const u = current();
+      if (!u) throw new Error("Sign in first.");
+      const url = await blobToDataUrl(await squareImage(file, 200));
+      write(K.members, members().map((x) => (x.id === u.id ? { ...x, avatar: url } : x)));
+      return url;
+    },
+    async removeAvatar() {
+      const u = current();
+      if (u) write(K.members, members().map((x) => (x.id === u.id ? { ...x, avatar: undefined } : x)));
+    },
+    async memberBadges(ids) {
+      const rv = read<Review[]>(K.reviews, []);
+      const ph = read<Photo[]>(K.photos, []);
+      return ids.map((id) => {
+        const m = memberOf(id);
+        const mine = rv.filter((r) => r.userId === id && r.status !== "held");
+        return { id, verified: false, patron: false, reviews: mine.length, photos: ph.filter((p) => p.userId === id).length, helpful: mine.reduce((a, r) => a + (r.helpful ?? 0), 0), since: m?.since };
+      });
+    },
+    async topReviewers() {
+      const meId = current()?.id ?? null;
+      const rv = read<Review[]>(K.reviews, []);
+      const counts = new Map<string, number>();
+      rv.forEach((r) => r.status !== "held" && counts.set(r.userId, (counts.get(r.userId) ?? 0) + 1));
+      return members()
+        .filter((m) => m.id !== meId && counts.get(m.id) && m.inSearch !== false)
+        .sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0))
+        .slice(0, 12)
+        .map((m) => ({ ...personOf(m, meId), reviews: counts.get(m.id) ?? 0 }));
     },
     async memberPlaces(id) {
       const meId = current()?.id ?? null;

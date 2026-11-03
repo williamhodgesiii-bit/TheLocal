@@ -9,6 +9,7 @@ import { useApp } from "./Providers";
 import { Thumb } from "./Photo";
 
 const VERDICT_LABEL = { loved: "Loved it", liked: "It was good", meh: "Not for me" } as const;
+const VERDICTS = ["loved", "liked", "meh"] as const;
 
 /**
  * Your Plate Passport: every local place you've eaten at, stamped. Members only: it lives in the
@@ -18,6 +19,7 @@ export default function Passport({ spots, areas, city, onOpen, onStampMany, comp
   const { been, saved, toast } = useApp();
   const [list, setList] = useState<"been" | "want">("been");
   const [allHoods, setAllHoods] = useState(false);
+  const [sec, setSec] = useState<"stamps" | "hoods" | "trails">("stamps");
   const [sharing, setSharing] = useState(false);
   const ids = new Set(spots.map((s) => s.id));
   const stamped = spots.filter((s) => been[s.id]);
@@ -91,6 +93,24 @@ export default function Passport({ spots, areas, city, onOpen, onStampMany, comp
         </ul>
       )}
 
+      {compact && (
+        <div className="pp-seg" role="tablist" aria-label="Passport">
+          {(
+            [
+              ["stamps", `Your stamps${count ? ` (${count})` : ""}`],
+              ["hoods", "Neighborhoods"],
+              ["trails", "Trails"],
+            ] as ["stamps" | "hoods" | "trails", string][]
+          ).map(([k, l]) => (
+            <button key={k} type="button" role="tab" aria-selected={sec === k} className={sec === k ? "on" : ""} onClick={() => setSec(k)}>
+              {l}
+            </button>
+          ))}
+        </div>
+      )}
+      {compact && sec === "stamps" && <StampsManager spots={stamped} onOpen={onOpen} onStampMany={onStampMany} />}
+      {(!compact || sec === "hoods") && (
+        <>
       <h3 className="pp-h">Stamps by neighborhood</h3>
       <ul className="pp-hoods">
         {(compact && !allHoods ? [...hoods].sort((a, b) => b.got - a.got || b.total - a.total).slice(0, 8) : hoods).map(({ area, total: t, got }) => (
@@ -111,6 +131,10 @@ export default function Passport({ spots, areas, city, onOpen, onStampMany, comp
         </button>
       )}
 
+        </>
+      )}
+      {(!compact || sec === "trails") && (
+        <>
       {trails.length > 0 && (
         <>
           <h3 className="pp-h">Trails</h3>
@@ -140,6 +164,8 @@ export default function Passport({ spots, areas, city, onOpen, onStampMany, comp
         </>
       )}
 
+        </>
+      )}
       {!compact && (<>
       <nav className="profile-tabs pp-tabs" aria-label="Your lists">
         <button className={list === "been" ? "on" : ""} aria-pressed={list === "been"} onClick={() => setList("been")}>
@@ -183,5 +209,98 @@ function Lines({ spots, onOpen, note }: { spots: Spot[]; onOpen: (id: string) =>
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * Every place you've stamped, newest first: change how it went, or take a stamp back if it went
+ * on by mistake (a second tap confirms, so a stray thumb can't).
+ */
+function StampsManager({ spots, onOpen, onStampMany }: { spots: Spot[]; onOpen: (id: string) => void; onStampMany: () => void }) {
+  const { been, markBeen, toast } = useApp();
+  const [q, setQ] = useState("");
+  const [all, setAll] = useState(false);
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const list = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    return [...spots].filter((s) => !t || s.name.toLowerCase().includes(t)).sort((a, b) => (been[b.id]?.at ?? "").localeCompare(been[a.id]?.at ?? ""));
+  }, [spots, been, q]);
+  if (!spots.length)
+    return (
+      <div className="pp-empty">
+        <p>No stamps yet. Tap <b>I&apos;ve been</b> on any place, or stamp the ones you remember all at once.</p>
+        <button type="button" className="btn btn-red" onClick={onStampMany}>
+          Stamp places you&apos;ve been
+        </button>
+      </div>
+    );
+  const shown = all || q ? list : list.slice(0, 8);
+  return (
+    <div className="stamps">
+      {spots.length > 8 && (
+        <label className="search stamps-search">
+          <span className="sr-only">Find a stamp</span>
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search your ${spots.length} stamps`} />
+        </label>
+      )}
+      <ul className="stamp-list">
+        {shown.map((s) => {
+          const st = been[s.id];
+          return (
+            <li key={s.id} className="stamp-row">
+              <button type="button" className="stamp-main" onClick={() => onOpen(s.id)}>
+                <Thumb spot={s} w={48} />
+                <span className="pp-line-body">
+                  <span className="pp-line-name">{s.name}</span>
+                  <span className="pp-line-meta">
+                    {areaLabelOf(s)}
+                    {st?.at ? ` · stamped ${new Date(st.at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
+                  </span>
+                </span>
+              </button>
+              {confirm === s.id ? (
+                <span className="stamp-confirm">
+                  <span>Take the stamp back?</span>
+                  <button
+                    type="button"
+                    className="btn btn-red btn-sm"
+                    onClick={() => {
+                      markBeen(s.id, null);
+                      setConfirm(null);
+                      toast(`${s.name} is off your passport.`);
+                    }}
+                  >
+                    Remove
+                  </button>
+                  <button type="button" className="link-btn" onClick={() => setConfirm(null)}>
+                    Keep
+                  </button>
+                </span>
+              ) : (
+                <span className="stamp-tools">
+                  <span className="stamp-verdicts" role="group" aria-label={`How ${s.name} went`}>
+                    {VERDICTS.map((v) => (
+                      <button key={v} type="button" className={`chip chip-xs ${st?.verdict === v ? "on" : ""}`} aria-pressed={st?.verdict === v} onClick={() => markBeen(s.id, v)}>
+                        {VERDICT_LABEL[v]}
+                      </button>
+                    ))}
+                  </span>
+                  <button type="button" className="icon-btn stamp-x" onClick={() => setConfirm(s.id)} aria-label={`Remove ${s.name} from your passport`} title="Remove from passport">
+                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
+                      <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      {!q && list.length > 8 && (
+        <button type="button" className="link-btn pp-more" onClick={() => setAll((v) => !v)}>
+          {all ? "Show fewer" : `Show all ${list.length}`}
+        </button>
+      )}
+    </div>
   );
 }

@@ -10,6 +10,8 @@ import { Thumb } from "./Photo";
 import { Icon } from "./Icons";
 import Sheet from "./Sheet";
 import MapCards from "./MapCards";
+import { Avatar } from "./People";
+import type { Person } from "@/lib/social";
 
 export type Sort = "popular" | "rating" | "az" | "near";
 const SORTS: { id: Sort; label: string }[] = [
@@ -60,6 +62,9 @@ export default function ExploreView(p: {
   milesTo?: (s: Spot) => number | undefined;
   empty: ReactNode;
   foot: ReactNode;
+  /** people whose name matches the search */
+  people?: Person[];
+  onMember?: (handle: string) => void;
 }) {
   const [sheet, setSheet] = useState<null | "food" | "price" | "sort">(null);
   // the first screenful draws at once, the rest a frame later as you scroll (phones stay quick)
@@ -230,6 +235,22 @@ export default function ExploreView(p: {
           {filters}
         </div>
         {head}
+        {!!p.people?.length && !p.mapMode && (
+          <section className="ex-people" aria-label="People">
+            <p className="ex-people-h">People</p>
+            <div className="ex-people-row">
+              {p.people.map((m) => (
+                <button key={m.id} type="button" className="ex-person" onClick={() => p.onMember?.(m.handle)}>
+                  <Avatar m={m} size={40} />
+                  <span>
+                    <b>{m.name}</b>
+                    <span>@{m.handle}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
         {p.sponsoredPick && !p.mapMode && (
           <aside className="spons" aria-label="Sponsored">
             <button className="spons-card" onClick={() => p.onOpen(p.sponsoredPick!.id)}>

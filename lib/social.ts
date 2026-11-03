@@ -36,7 +36,7 @@ export const COMMENT_POLICIES: { id: CommentPolicy; label: string }[] = [
 ];
 
 export type MemberLite = { id: string; handle: string; name: string; avatar?: string; role?: "member" | "editor" };
-export type Member = MemberLite & { bio?: string; private: boolean; top: string[]; since?: string; comments?: CommentPolicy };
+export type Member = MemberLite & { bio?: string; private: boolean; top: string[]; since?: string; comments?: CommentPolicy; verified?: boolean; patron?: boolean };
 /** your own member settings */
 export type MemberSettings = {
   handle: string;
@@ -56,7 +56,7 @@ export type MemberPage = {
   member: Member;
   /** their passport, lists and activity are open to me */
   visible: boolean;
-  stats: { following: number; followers: number; reviews: number; been: number | null };
+  stats: { following: number; followers: number; reviews: number; been: number | null; photos?: number; helpful?: number };
   /** null when it's my own page or I'm signed out */
   rel: Rel | null;
   match: { common: number; agree: number } | null;
@@ -64,7 +64,9 @@ export type MemberPage = {
 /** one place on someone's page */
 export type MemberPlace = { spotId: string; verdict?: Verdict; rating?: number; reviewId?: string; been?: string; saved: boolean; savedOn?: string };
 /** a person in a list: search, suggestions, followers */
-export type Person = MemberLite & { private: boolean; bio?: string; iFollow: FollowState; followsMe: boolean; reviews?: number; reason?: string };
+export type Person = MemberLite & { private: boolean; bio?: string; iFollow: FollowState; followsMe: boolean; reviews?: number; reason?: string; verified?: boolean; photos?: number; helpful?: number };
+/** what the marks next to a name are made of (lib/badges.ts) */
+export type BadgeFacts = { id: string; verified: boolean; patron: boolean; reviews: number; photos: number; helpful: number; since?: string };
 export type ActivityKind = "review" | "been" | "save" | "follow";
 export type Activity = { id: number; kind: ActivityKind; spotId?: string; reviewId?: string; verdict?: Verdict; at: string; actor: MemberLite; target?: MemberLite };
 export type Comment = {
@@ -94,7 +96,7 @@ export const MEMBER_REPORT_REASONS: { id: string; label: string }[] = [
   { id: "harassment", label: "Harassing people" },
   { id: "spam", label: "Spam or fake reviews" },
   { id: "underage", label: "Under 13" },
-  { id: "inappropriate", label: "Inappropriate name or bio" },
+  { id: "inappropriate", label: "Inappropriate name, photo or bio" },
   { id: "other", label: "Something else" },
 ];
 

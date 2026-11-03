@@ -50,3 +50,78 @@ Rules that keep it worth buying: one Featured card per cuisine and per neighborh
 ## What to measure
 
 Weekly: new members, reviews with photos, lists made, Surprise spins and landings ("Let's go"), saves per place. Monthly per place: saves, stamps, lists, reviews, directions taps. Those numbers are the product we sell; keep the events (`lib/analytics.ts`) honest and never sell anything they don't show.
+
+---
+
+# Part 2 (Nov 3): people, profiles, credibility, and how it pays
+
+## What was wrong
+
+- **No way in to people.** Following existed, but the only door was a hidden "Find people" button and tapping a name on a review. Nobody could search for a friend or browse reviewers.
+- **Profiles were plain.** Initials only, no marks of credibility, reviews and photos you couldn't sort or filter.
+- **The passport was a long scroll** with no way to undo a stamp except from the place's own page.
+
+## What's built now
+
+| | Where | Why it matters |
+| --- | --- | --- |
+| **People** page: search by name or @name, top reviewers this month, people you might know, invite friends | `/people`, desktop nav, "Find friends and local reviewers" on Home → Friends, "Find friends" on You, people show up when you type a name in Explore | Following is the engine of the feed (Letterboxd, Beli). Two taps to anyone. |
+| **People to follow** shelf in the For you feed | `components/Home.tsx` | Discovery where people already are, not in a menu. |
+| **Profile pictures** | tap your picture on You. Squared and shrunk on the phone, stored in your own folder; the database only accepts a picture from your own folder (`member_rules`) | Faces make reviews credible and the feed social. |
+| **Marks next to names** (`lib/badges.ts`) | profile header, People, feed, reviews (the check) | See "The credibility ladder" below. |
+| **Filterable reviews and photos** on every member's page | Reviews: All / 5★ / 4★ / 3★ and under / With photos, any cuisine, sorted newest, highest, lowest or most helpful. A Photos tab, filterable by cuisine, opens full screen. | Letterboxd-style browsing of a person's taste. |
+| **Passport you can manage** | You → Passport → Your stamps: change how it went, take a stamp back (a second tap confirms), search when there are many. Neighborhoods and Trails are separate tabs. | Fixes accidental stamps; easier to navigate. |
+| **Passport strip on Home** | under This week's three | People know it exists, without it taking over the page. |
+| **Patron and Verified lists** | You → Settings | We measure demand before building payments (see below). |
+| **Plate Invites list** | `/partners`, the form's "Plate Invites" option | The restaurant side of credibility (see below). |
+
+## The credibility ladder
+
+Credibility is the asset restaurants will pay to be near, so it is **earned and never sold**:
+
+1. **Regular**: 5 reviews.
+2. **Trusted reviewer**: 15 reviews and 20 Helpful votes from other people.
+3. **Top reviewer**: in the top 10 for useful reviews in the last 30 days (`top_reviewers`: Helpful ×3, reviews ×2, photos ×1).
+
+Separate from those, and never a sign of taste:
+
+- **Verified** (the check): staff confirmed who someone is. Free for notable locals (chefs, food writers, owners); included for Patrons who confirm their identity. It never makes a review count more.
+- **Local editor**: our own writers (`members.role = 'editor'`).
+- **Owner**: someone who claimed a place (next: show it on their replies to reviews).
+- **Patron**: supports the site.
+- **Founding member**: joined before March 1, 2027. Free, permanent, and a quiet reason to join now.
+
+This mirrors what works elsewhere: Google's Local Guides levels and Yelp Elite make status earned; Letterboxd sells Pro and Patron ($19 and $49 a year) for features and a supporter mark, never for influence.
+
+## How each side pays (members never feel sold to)
+
+**Members**
+- **Plate Patron**, $3 a month or $24 a year (founding price kept for good): a Patron mark, Plate Wrapped (your year in food, made to share), a cover photo on your page, The Thursday Plate a day early. Start with a Stripe payment link once the list has ~100 names; set `members.patron_until` from the payment hook.
+- **Verified**, part of Patron after an ID check, free for notable locals.
+
+**Restaurants** (see Part 1 for Listing, Partner, Featured, Featured posts)
+- **Owner mark** on a claimed listing: claiming is free, and it's how every owner enters the funnel.
+- **Plate Invites** (next to build): a restaurant hosts a table of Trusted reviewers. Every review from an invited visit is labeled "Invited" in its first line and is left out of the score. That keeps it inside the FTC's 2024 rule: the meal can't be tied to a positive review, and the connection is disclosed where nobody can miss it. Price per table; cap how many invites a reviewer accepts a month so seats stay scarce.
+- **Sponsored photo of the week**: a restaurant's own photo leading the For you feed for a week, labeled Sponsored.
+
+**Local brands**
+- "The Thursday Plate, presented by …" and seasonal trails (Part 1).
+
+## Why restaurants will want in early (all of it true, none of it a trick)
+
+- **They can see what they're missing.** An unclaimed place shows a matchbook where its neighbor shows a mouth-watering photo, plus "Is this your place?" on its page. The owner snapshot (`/partners?spot=…`) shows how many people want to try them.
+- **Slots are scarce by design.** One Featured card per cuisine and one per neighborhood. Whoever takes "brunch in Homewood" first has it.
+- **The founding rate.** The first 25 Partners lock their price for a year.
+- **The reviewers are the audience.** Trusted reviewers are a small, visible group with followers. Invites put a restaurant in front of exactly them, honestly labeled.
+
+## Next to build, in order
+
+1. Stripe payment link for Patron; `patron_until` set by a webhook.
+2. Owner accounts: a claimed listing links to a member; their replies to reviews carry the Owner mark.
+3. Plate Invites: an `invited` flag on reviews, the "Invited" label, kept out of averages.
+4. Plate Wrapped (December is the moment) and profile cover photos for Patrons.
+5. A staff screen for reported members and pictures (today: Supabase table editor; clear `members.avatar_url` to take a picture down).
+
+## What to watch
+
+Follows per active member, % of reviews with photos, members reaching Regular and Trusted, Patron list sign-ups, verification requests, claimed listings, Invites interest. If follows per member stay under 3, put People higher on Home.

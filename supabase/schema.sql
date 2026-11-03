@@ -534,6 +534,11 @@ create table if not exists public.members (
 );
 create index if not exists members_handle_trgm on public.members using gin (handle gin_trgm_ops);
 create index if not exists members_name_trgm on public.members using gin (lower(display_name) gin_trgm_ops);
+-- a check by the name: identity confirmed by staff (notable locals, chefs, writers, owners, or a
+-- Patron who verified who they are); never earned by reviewing and never changes a review's weight
+alter table public.members add column if not exists verified boolean not null default false;
+-- supporters (Plate Patron); staff or the payment hook sets it, members can't
+alter table public.members add column if not exists patron_until date;
 
 -- an old @name points to its owner for 90 days, so shared links keep working and nobody can grab it
 create table if not exists public.handle_history (
@@ -598,10 +603,15 @@ begin
     new.id := old.id;
     new.created_at := old.created_at;
     if not public.is_admin() then new.handle_changed_at := old.handle_changed_at; end if;
-    -- staff set roles; names come from the account (sync_member), pictures aren't uploadable yet
+    -- staff set roles, checks and Patron; names come from the account (sync_member); a picture
+    -- must be one the member uploaded to their own folder (or none)
     if not public.is_admin() then
       new.role := old.role;
-      new.avatar_url := old.avatar_url;
+      new.verified := old.verified;
+      new.patron_until := old.patron_until;
+      if new.avatar_url is not null and new.avatar_url not like '%/storage/v1/object/public/spot-photos/' || new.id::text || '/avatar/%' then
+        new.avatar_url := old.avatar_url;
+      end if;
       if pg_trigger_depth() < 2 then new.display_name := old.display_name; end if;
     end if;
     if new.handle is distinct from old.handle then
@@ -620,6 +630,8 @@ begin
     if not public.is_admin() then
       new.role := 'member';
       new.avatar_url := null;
+      new.verified := false;
+      new.patron_until := null;
     end if;
     new.handle_changed_at := null;
     if not public.handle_ok(new.handle, new.id) then raise exception '@% is taken or not allowed. Try another.', new.handle; end if;
@@ -711,7 +723,7 @@ drop policy if exists "members are public" on public.members;
 create policy "members are public" on public.members for select using (not public.blocked_with(id));
 -- and only these columns: Top 4, privacy and search settings are read through member_page / ensure_member
 revoke select on public.members from anon, authenticated;
-grant select (id, handle, display_name, avatar_url, role, is_private, bio, comments, created_at) on public.members to anon, authenticated;
+grant select (id, handle, display_name, avatar_url, role, is_private, bio, comments, created_at, verified) on public.members to anon, authenticated;
 drop policy if exists "members edit themselves" on public.members;
 create policy "members edit themselves" on public.members for update using ((select auth.uid()) = id) with check ((select auth.uid()) = id);
 drop policy if exists "members create themselves" on public.members;
@@ -1374,12 +1386,14 @@ begin
   return jsonb_build_object(
     'member', jsonb_build_object('id', m.id, 'handle', m.handle, 'name', m.display_name, 'bio', m.bio, 'avatar', m.avatar_url,
       'role', m.role, 'private', m.is_private, 'top', case when ok then to_jsonb(m.top_spots) else '[]'::jsonb end, 'since', m.created_at,
-      'comments', m.comments),
+      'comments', m.comments, 'verified', m.verified, 'patron', coalesce(m.patron_until >= current_date, false)),
     'visible', ok,
     'stats', jsonb_build_object(
       'following', (select count(*) from public.follows where follower_id = m.id and status = 'accepted'),
       'followers', (select count(*) from public.follows where followee_id = m.id and status = 'accepted'),
       'reviews', (select count(*) from public.reviews where user_id = m.id and status = 'live'),
+      'photos', (select count(*) from public.photos where user_id = m.id and approved),
+      'helpful', (select count(*) from public.review_votes v join public.reviews r on r.id = v.review_id where r.user_id = m.id and r.status = 'live'),
       'been', case when ok and (me = m.id or m.share_visits) then (select count(*) from public.stamps where user_id = m.id) end),
     'rel', case when me is null or me = m.id then null else jsonb_build_object(
       'following', coalesce((select status from public.follows where follower_id = me and followee_id = m.id), 'none'),
@@ -1769,5 +1783,43 @@ create table if not exists public.google_cache (
   updated_at timestamptz not null default now()
 );
 alter table public.google_cache enable row level security;
+
+-- Profiles: the little marks next to a name (lib/badges.ts) for a batch of members: the staff
+-- check, Patron, and what credibility is built from (reviews, photos, Helpful votes received).
+create or replace function public.member_badges(ids uuid[])
+returns table (id uuid, verified boolean, patron boolean, reviews bigint, photos bigint, helpful bigint, since timestamptz)
+language sql stable security definer set search_path = public
+as $$
+  select m.id, m.verified, coalesce(m.patron_until >= current_date, false),
+    (select count(*) from public.reviews r where r.user_id = m.id and r.status = 'live'),
+    (select count(*) from public.photos p where p.user_id = m.id and p.approved),
+    (select count(*) from public.review_votes v join public.reviews r on r.id = v.review_id where r.user_id = m.id and r.status = 'live'),
+    m.created_at
+  from public.members m
+  where m.id = any(ids[1:60]) and not public.blocked_with(m.id)
+$$;
+grant execute on function public.member_badges(uuid[]) to anon, authenticated;
+
+-- People: who's been writing the most useful reviews lately (photos count extra, Helpful votes
+-- most). Public members who are in search only.
+create or replace function public.top_reviewers(days int default 30, lim int default 10)
+returns table (id uuid, handle text, display_name text, avatar_url text, role text, verified boolean, is_private boolean, bio text, reviews bigint, photos bigint, helpful bigint, i_follow text)
+language sql stable security definer set search_path = public
+as $$
+  with since as (select now() - make_interval(days => least(greatest(days, 7), 365)) as t),
+  rv as (select r.user_id, count(*) as n from public.reviews r, since where r.status = 'live' and r.created_at >= since.t group by r.user_id),
+  ph as (select p.user_id, count(*) as n from public.photos p, since where p.approved and p.created_at >= since.t group by p.user_id),
+  hv as (select r.user_id, count(*) as n from public.review_votes v join public.reviews r on r.id = v.review_id, since
+         where r.status = 'live' and v.created_at >= since.t group by r.user_id)
+  select m.id, m.handle, m.display_name, m.avatar_url, m.role, m.verified, m.is_private, m.bio,
+    coalesce(rv.n, 0), coalesce(ph.n, 0), coalesce(hv.n, 0),
+    coalesce((select f.status from public.follows f where f.follower_id = (select auth.uid()) and f.followee_id = m.id), 'none')
+  from rv join public.members m on m.id = rv.user_id
+  left join ph on ph.user_id = m.id left join hv on hv.user_id = m.id
+  where m.in_search and not public.blocked_with(m.id) and m.id is distinct from (select auth.uid())
+  order by coalesce(hv.n, 0) * 3 + coalesce(rv.n, 0) * 2 + coalesce(ph.n, 0) desc, m.created_at
+  limit least(greatest(lim, 1), 30)
+$$;
+grant execute on function public.top_reviewers(int, int) to anon, authenticated;
 
 commit;
