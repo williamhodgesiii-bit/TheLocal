@@ -4944,3 +4944,202 @@ h2 {
   white-space: nowrap;
   font-size: 12px;
 }
+
+/* ---------- Passport on the You page (Nov 2026): one card, quiet tabs, one picker per stamp ---------- */
+.pp-compact {
+  padding: 4px 0 0;
+  border-bottom: 0;
+}
+.pp-compact .pp-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+}
+.pp-top-text {
+  min-width: 0;
+}
+.pp-compact .pp-top {
+  gap: 14px;
+}
+.pp-compact .pp-title {
+  font-size: 22px;
+}
+.pp-compact .pp-sub {
+  color: var(--muted);
+  font-size: 14px;
+}
+.pp-compact .pp-bar {
+  height: 6px;
+  margin-top: 14px;
+}
+.pp-compact .pp-badges {
+  gap: 6px;
+  margin-top: 12px;
+}
+.pp-compact .pp-badge {
+  padding: 3px 10px 3px 3px;
+  background: var(--paper);
+  font-size: 12.5px;
+}
+.pp-compact .pp-badge b {
+  min-width: 22px;
+  height: 22px;
+  font-size: 11px;
+}
+.pp-compact .pp-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px !important;
+}
+.pp-compact .pp-actions .btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 15px;
+}
+.pp-compact .pp-actions .btn:only-child {
+  grid-column: 1 / -1;
+}
+/* quiet underline tabs inside the passport (the pills above are the page's own tabs) */
+.pp-compact .pp-seg {
+  gap: 22px;
+  margin: 22px 0 2px;
+  border-bottom: 1px solid var(--line);
+}
+.pp-compact .pp-seg button {
+  min-height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 transparent;
+}
+.pp-compact .pp-seg button.on {
+  border: 0;
+  background: none;
+  color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--red);
+}
+.stamp-row {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 12px 0;
+}
+.stamp-main {
+  flex: 1 1 0;
+}
+.stamp-main .pp-line-body {
+  min-width: 0;
+}
+.stamp-main .pp-line-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stamp-pick {
+  flex: none;
+}
+/* 16px so iPhones don't zoom in when it opens */
+.stamp-pick select {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 36px;
+  padding: 0 28px 0 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background-color: var(--card);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%236c665a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: right 11px center;
+  background-repeat: no-repeat;
+  background-size: 10px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+}
+.stamp-pick.v-loved select {
+  border-color: var(--green);
+  background-color: var(--green);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23fbf8f0' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  color: var(--card);
+}
+.stamp-pick.v-liked select {
+  border-color: var(--green);
+  color: var(--green);
+}
+.stamp-pick.v-meh select,
+.stamp-pick.v-none select {
+  color: var(--muted);
+}
+.stamp-pick.v-none select {
+  border-style: dashed;
+}
+.stamp-confirm {
+  width: 100%;
+  justify-content: flex-end;
+  margin-left: 0;
+}
+
+/* ---------- The Thursday Plate on the web ---------- */
+.th-slot {
+  margin: 0 0 2px;
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.th-note {
+  margin: 10px 0 0;
+  padding: 2px 0 2px 14px;
+  border-left: 2px solid var(--red);
+  color: var(--ink-2);
+  font-family: var(--f-display);
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1.45;
+}
+.th-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin: 28px 0;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+.th-cta p {
+  flex: 1 1 260px;
+  margin: 0;
+  color: var(--ink-2);
+}
+.th-weeks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.th-weeks a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 14px;
+  text-decoration: none;
+}

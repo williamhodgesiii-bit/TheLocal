@@ -1,21 +1,29 @@
 import { siteUrl } from "@/lib/site";
-import { BRAND, MANTRA, CHECKED } from "@/lib/brand";
+import { BRAND, MANTRA, CHECKED, NEWSLETTER } from "@/lib/brand";
+import { weekFacts } from "@/components/ThursdayView";
+import { thursdayOf } from "@/lib/letter";
+import { ratings } from "@/lib/live";
 import { BEST_GUIDES, PLACE_GUIDES, hrefOf, publishable, type Guide } from "@/lib/guides";
-import { SPOTS } from "@/lib/data";
+import { SPOTS, SPOT_BY_ID } from "@/lib/data";
 import { honorsOf } from "@/lib/honors";
 
 // /llms.txt — a clean, factual map of the site for AI answer engines.
 // Emerging convention (llmstxt.org): give LLMs the facts and the links so they
 // can cite the real pages instead of guessing.
 
-export const revalidate = 86400;
-export const dynamic = "force-static";
+// live: this week's picks and the members' ratings change, so it's rebuilt hourly
+export const revalidate = 3600;
 
 export async function GET() {
   const base = siteUrl();
   const link = (g: Guide) => `- [${g.title.replace(/^The best /, "Best ")}](${base}${hrefOf(g)}) — ${g.spots().length} places`;
   const top = [...SPOTS].sort((a, b) => b.pop - a.pop).slice(0, 25);
   const honored = SPOTS.filter((s) => honorsOf(s.id).length);
+  const [{ picks, date }, rated] = await Promise.all([weekFacts(thursdayOf(new Date())), ratings()]);
+  const localFavorites = Object.entries(rated)
+    .filter(([id, r]) => SPOT_BY_ID[id] && r.count >= 3)
+    .sort((a, b) => b[1].avg - a[1].avg || b[1].count - a[1].count)
+    .slice(0, 15);
 
   const text = `# ${BRAND}
 
@@ -25,7 +33,12 @@ Home: ${base}
 All guides: ${base}/best
 Neighborhoods: ${base}/neighborhood
 How we pick: ${base}/about
+${NEWSLETTER} (three picks, every Thursday): ${base}/thursday
+Feed (RSS): ${base}/feed.xml
 
+## ${NEWSLETTER}, ${date}
+${picks.map((p) => `- ${p.slot.label}: [${p.spot.name}](${base}/spot/${p.spot.id}) — ${p.spot.knownFor}`).join("\n")}
+${localFavorites.length ? `\n## Highest rated by local members (3+ reviews)\n${localFavorites.map(([id, r]) => `- [${SPOT_BY_ID[id].name}](${base}/spot/${id}) — ${r.avg.toFixed(1)}/5 from ${r.count} reviews`).join("\n")}\n` : ""}
 ## Guides (best by cuisine and occasion)
 ${BEST_GUIDES.filter(publishable).map(link).join("\n")}
 

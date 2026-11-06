@@ -69,6 +69,7 @@ export default function Home({
   const { unread, user } = useApp();
   return (
     <div className="home">
+      <h1 className="sr-only">Locally owned restaurants, coffee shops and bars in Birmingham, Alabama</h1>
       <div className="seg-wrap">
         <div className="seg" role="tablist" aria-label="Feed">
           <button role="tab" aria-selected={tab === "foryou"} className={tab === "foryou" ? "on" : ""} onClick={() => onTab("foryou")}>

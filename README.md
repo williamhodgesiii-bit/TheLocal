@@ -146,6 +146,15 @@ The weekly email, and **This week's three** on the front page: **one fine dining
 
 Each open city has its own page (`/al/huntsville`) and every place has its own page (`/spot/{id}`). Both are in the sitemap. To open a city, change its status in `CITIES` to `"founding"` or `"live"`; to add one, add a line.
 
+## Search & sharing (Nov 2026)
+
+- **Share cards.** Every link draws its own 1200×630 card in the site's type and matchbook inks (`lib/og.tsx`, `lib/og-cards.tsx`): each place (with its own photo when it has one, its order, honors and live rating), each guide (its top five), each neighborhood, the front page and `/thursday` (this week's three: a new picture every Thursday), and member pages (their Plate Passport). Card addresses change when the picture does (new week, new review count), so apps that cache previews fetch the new one.
+- **Live search data.** Place pages carry the members' rating and newest reviews as structured data (`lib/live.ts` → `spotLd`), so results can show stars. Titles and descriptions lead with the local rating, or an honor, then what to order. Guides show live ratings and the date anything on them last changed.
+- **Always something new.** `/thursday` (this week's three) and `/thursday/<date>` (every past week) are dated articles. `/feed.xml` is an RSS feed of each Thursday Plate and the newest reviews. `llms.txt` lists this week's picks and the highest-rated places for AI answer engines.
+- **Honest freshness.** The sitemap's dates are real: a place's newest review or photo, a guide's newest change, each letter's date (`LIST_CHECKED` in `app/sitemap.ts` is the day the list was last checked by hand; bump it when `lib/data.ts` changes). A daily job (`/api/indexnow`, Vercel cron) tells Bing, which ChatGPT search reads, which pages changed; the GitHub workflow still pings everything after each deploy.
+- **Icons.** `app/favicon.ico` (48/32/16), `app/icon.svg`, `app/apple-icon.png`, and `public/icon-192.png`, `icon-512.png`, `icon-maskable-512.png` for Android. A bolder plate that still reads at 16 px.
+- **Your side, once:** in Google Search Console add the site (DNS or the `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` tag) and submit `https://www.theplatenextdoor.com/sitemap.xml`; in Bing Webmaster Tools import it from Search Console (one click). That's what ChatGPT search reads.
+
 ## To do
 
 Not built yet, in rough order:

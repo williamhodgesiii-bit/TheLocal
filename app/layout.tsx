@@ -61,6 +61,10 @@ export const metadata: Metadata = {
   openGraph: { type: "website", siteName: BRAND, locale: "en_US" },
   twitter: { card: "summary_large_image" },
   appleWebApp: { capable: true, title: "The Plate", statusBarStyle: "default" },
+  applicationName: BRAND,
+  category: "food",
+  creator: BRAND,
+  publisher: BRAND,
   robots: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
   verification: {
     ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } : {}),
@@ -82,6 +86,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* start the map's style download (and its connection) before the map code arrives */}
         <link rel="preconnect" href={new URL(MAP_FIRST_FETCH).origin} crossOrigin="anonymous" />
         <link rel="preload" href={MAP_FIRST_FETCH} as="fetch" crossOrigin="anonymous" />
+        {/* the feed: every Thursday Plate and the newest reviews */}
+        <link rel="alternate" type="application/rss+xml" title={BRAND} href="/feed.xml" />
       </head>
       <body>
         <JsonLd data={[organizationLd(), websiteLd()]} />

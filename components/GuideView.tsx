@@ -6,9 +6,14 @@ import { areaLabelOf, GENRE_BY_ID } from "@/lib/data";
 import { honorsOf } from "@/lib/honors";
 import { type Guide, guideFaqs, guideIntro, hrefOf, relatedGuides } from "@/lib/guides";
 import { breadcrumbLd, collectionPageLd, faqLd, itemListLd } from "@/lib/seo";
+import { lastActivity, ratings } from "@/lib/live";
 
-export default function GuideView({ guide }: { guide: Guide }) {
+export default async function GuideView({ guide }: { guide: Guide }) {
   const spots = guide.spots();
+  // live: how locals rate each place, and when anything on the list last changed
+  const [rated, activity] = await Promise.all([ratings(), lastActivity()]);
+  const latest = spots.map((s) => activity[s.id]).filter(Boolean).sort().pop();
+  const updated = latest ? new Date(latest).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "America/Chicago" }) : null;
   const href = hrefOf(guide);
   const isPlace = guide.kind === "neighborhood" || guide.kind === "town";
   const hub = isPlace ? { name: "Neighborhoods", path: "/neighborhood" } : { name: "Guides", path: "/best" };
@@ -51,7 +56,7 @@ export default function GuideView({ guide }: { guide: Guide }) {
       <h1 className="guide-h1">{guide.title}</h1>
       <p className="guide-lede">{guideIntro(guide)}</p>
       <p className="guide-meta">
-        {spots.length} places · ranked by how well-loved they are · last checked {CHECKED} ·{" "}
+        {spots.length} places · ranked by how well-loved they are · {updated ? <>updated <time dateTime={latest!.slice(0, 10)}>{updated}</time></> : <>last checked {CHECKED}</>} ·{" "}
         <Link href="/" className="guide-maplink">See them on the map →</Link>
       </p>
 
@@ -68,6 +73,7 @@ export default function GuideView({ guide }: { guide: Guide }) {
                 </h2>
                 <p className="guide-item-meta">
                   {areaLabelOf(s)} · {"$".repeat(s.price)} · {cuisines.join(", ")}
+                  {rated[s.id]?.count ? ` · ★ ${rated[s.id].avg.toFixed(1)} (${rated[s.id].count})` : ""}
                 </p>
                 <p className="guide-item-known">{s.knownFor}. {s.blurb}</p>
                 {honors.length > 0 && (

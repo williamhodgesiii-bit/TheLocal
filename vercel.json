@@ -9,6 +9,10 @@
     {
       "path": "/api/pins/refresh",
       "schedule": "17 13 * * 1"
+    },
+    {
+      "path": "/api/indexnow",
+      "schedule": "23 16 * * *"
     }
   ]
 }

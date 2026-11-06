@@ -5,5 +5,9 @@ const nextConfig = {
   // pages are built ahead of time; the first paint shows the week's plate as of the build,
   // then the visitor's own clock takes over (no layout jump unless a Thursday has passed)
   env: { NEXT_PUBLIC_BUILT_AT: String(Date.now()) },
+  // the share cards read their fonts (and owners' photos) from disk at request time on Vercel
+  experimental: {
+    outputFileTracingIncludes: { "/**": ["./assets/og/**/*", "./public/photos/**/*"] },
+  },
 };
 export default nextConfig;

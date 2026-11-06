@@ -277,8 +277,11 @@ export default function Explorer({
     if (c && COLLECTION_BY_ID[c]) setTheme({ kind: "collection", id: c });
     else if (t && TRAILS.some((x) => x.id === t)) setTheme({ kind: "trail", id: t });
     if (p.get("view") === "map") setMapMode(true);
+    // a search handed over from a search engine or a shared link (/explore?q=pizza)
+    const q = p.get("q")?.trim().slice(0, 80);
+    if (q) setQuery(q);
     // an old link to the list with filters on it lands on Explore
-    if (!initialView && !cityId && !initialSpot && (g || a || c || t || p.get("view"))) setView("explore");
+    if (!initialView && !cityId && !initialSpot && (g || a || c || t || q || p.get("view"))) setView("explore");
     if (location.pathname === "/friends") {
       const tab = p.get("tab");
       if (tab === "everyone" || tab === "activity") setFriendsTab(tab);

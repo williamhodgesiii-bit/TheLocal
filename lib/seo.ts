@@ -14,6 +14,13 @@ import { CITY_BY_ID } from "./regions";
 import { honorsOf } from "./honors";
 import { coverFor } from "./photos";
 
+/** "Get the handmade pasta" / "Get a bowl of ramen": the order, as a sentence, without "the the" */
+export function getThe(knownFor: string) {
+  const k = knownFor.trim();
+  const low = k.charAt(0).toLowerCase() + k.slice(1);
+  return /^(the|a|an|one|two|any|whatever)\s/i.test(k) ? `Get ${low}` : `Get the ${low}`;
+}
+
 /** an absolute URL for a site-relative path */
 export const abs = (path: string) => `${siteUrl()}${path.startsWith("/") ? path : `/${path}`}`;
 
@@ -87,6 +94,11 @@ export function websiteLd() {
     description: DESCRIPTION,
     inLanguage: "en-US",
     publisher: { "@id": ORG_ID() },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: `${siteUrl()}/explore?q={search_term_string}` },
+      "query-input": "required name=search_term_string",
+    },
   };
 }
 
@@ -104,8 +116,15 @@ export function breadcrumbLd(items: { name: string; path: string }[]) {
   };
 }
 
-/** One restaurant/bar/café, as rich as the data honestly allows. */
-export function spotLd(s: Spot) {
+type LiveRating = { avg: number; count: number };
+type LiveReview = { author: string; rating: number; body: string; at: string };
+
+/**
+ * One restaurant/bar/café, as rich as the data honestly allows. With live data it also carries the
+ * members' rating and newest reviews (collected here, first-hand, from people who went: the kind of
+ * reviews Google's review-snippet rules allow), so search results can show stars.
+ */
+export function spotLd(s: Spot, live?: { rating?: LiveRating | null; reviews?: LiveReview[] }) {
   const city = CITY_BY_ID[s.city];
   const honors = honorsOf(s.id);
   const img = spotImage(s);
@@ -133,8 +152,52 @@ export function spotLd(s: Spot) {
     ...(honors.length
       ? { award: honors.map((h) => `${h.label}${h.who ? ` — ${h.who}` : ""} (${h.year})`) }
       : {}),
+    ...(live?.rating && live.rating.count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: Number(live.rating.avg.toFixed(1)),
+            ratingCount: live.rating.count,
+            reviewCount: live.rating.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
+    ...(live?.reviews?.length
+      ? {
+          review: live.reviews.map((r) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: r.author },
+            datePublished: r.at.slice(0, 10),
+            reviewBody: r.body,
+            reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5, worstRating: 1 },
+            publisher: { "@id": ORG_ID() },
+          })),
+        }
+      : {}),
     isPartOf: { "@id": SITE_ID() },
     publisher: { "@id": ORG_ID() },
+  };
+}
+
+/** A dated piece of writing (The Thursday Plate): engines see it's new every week. */
+export function articleLd(opts: { headline: string; description: string; path: string; published: string; modified?: string; image?: string; about?: Spot[] }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: opts.headline,
+    description: opts.description,
+    url: abs(opts.path),
+    mainEntityOfPage: abs(opts.path),
+    datePublished: opts.published,
+    dateModified: opts.modified ?? opts.published,
+    ...(opts.image ? { image: [opts.image] } : {}),
+    author: { "@id": ORG_ID() },
+    publisher: { "@id": ORG_ID() },
+    isPartOf: { "@id": SITE_ID() },
+    inLanguage: "en-US",
+    ...(opts.about?.length ? { about: opts.about.map((s) => ({ "@id": `${abs(`/spot/${s.id}`)}#business`, name: s.name })) } : {}),
   };
 }
 

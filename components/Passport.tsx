@@ -46,52 +46,51 @@ export default function Passport({ spots, areas, city, onOpen, onStampMany, comp
   }
 
   return (
-    <section className="passport">
-      <div className="pp-top">
-        <div className="pp-ring pp-ring-lg" style={{ ["--p" as string]: total ? count / total : 0 }}>
-          <span>{count}</span>
+    <section className={`passport ${compact ? "pp-compact" : ""}`}>
+      <div className="pp-card">
+        <div className="pp-top">
+          <div className={`pp-ring ${compact ? "" : "pp-ring-lg"}`} style={{ ["--p" as string]: total ? count / total : 0 }}>
+            <span>{count}</span>
+          </div>
+          <div className="pp-top-text">
+            <p className="cap-kicker">Your Plate Passport</p>
+            <h2 className="pp-title">{count === 0 ? "No stamps yet" : `${count} of ${total} local plates`}</h2>
+            <p className="pp-sub">
+              {count === 0
+                ? "Stamp the places you've eaten at. You've probably been to a few already."
+                : left > 0
+                  ? `${left} more to ${milestoneName(next, total)}`
+                  : "You've eaten at every place on the list."}
+              {streak.weeks > 1 ? ` · ${streak.weeks} weeks in a row` : ""}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="cap-kicker">Your Plate Passport</p>
-          <h2 className="pp-title">
-            {count === 0 ? "No stamps yet" : `${count} of ${total} local plates`}
-          </h2>
-          <p className="pp-sub">
-            {count === 0
-              ? "Stamp the places you've eaten at. You've probably been to a few already."
-              : left > 0
-                ? `${left} more to "${milestoneName(next, total)}".`
-                : "You've eaten at every place on the list."}
-            {streak.weeks > 1 ? ` ${streak.weeks} weeks in a row eating local.` : ""}
-          </p>
-          {count > 0 && left > 0 && (
-            <span className="pp-bar" aria-hidden>
-              <i style={{ width: `${((count - prev) / (next - prev)) * 100}%` }} />
-            </span>
-          )}
-        </div>
-      </div>
-      <p className="pp-actions">
-        <button className="btn btn-red" onClick={onStampMany}>
-          {count === 0 ? "Stamp places you've been" : "Stamp more"}
-        </button>
-        {count > 0 && (
-          <button className="btn btn-line" onClick={share} disabled={sharing}>
-            {sharing ? "Making it…" : "Share my passport"}
-          </button>
+        {count > 0 && left > 0 && (
+          <span className="pp-bar" aria-hidden>
+            <i style={{ width: `${((count - prev) / (next - prev)) * 100}%` }} />
+          </span>
         )}
-      </p>
-
-      {earned.length > 0 && (
-        <ul className="pp-badges" aria-label="Milestones">
-          {earned.map((m) => (
-            <li key={m} className="pp-badge">
-              <b>{m}</b>
-              <span>{milestoneName(m, total)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+        {earned.length > 0 && (
+          <ul className="pp-badges" aria-label="Milestones">
+            {earned.map((m) => (
+              <li key={m} className="pp-badge">
+                <b>{m}</b>
+                <span>{milestoneName(m, total)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="pp-actions">
+          <button className="btn btn-red" onClick={onStampMany}>
+            {count === 0 ? "Stamp places you've been" : "Stamp more"}
+          </button>
+          {count > 0 && (
+            <button className="btn btn-line" onClick={share} disabled={sharing}>
+              {sharing ? "Making it…" : "Share passport"}
+            </button>
+          )}
+        </p>
+      </div>
 
       {compact && (
         <div className="pp-seg" role="tablist" aria-label="Passport">
@@ -254,7 +253,7 @@ function StampsManager({ spots, onOpen, onStampMany }: { spots: Spot[]; onOpen: 
                   <span className="pp-line-name">{s.name}</span>
                   <span className="pp-line-meta">
                     {areaLabelOf(s)}
-                    {st?.at ? ` · stamped ${new Date(st.at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
+                    {st?.at ? ` · ${new Date(st.at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
                   </span>
                 </span>
               </button>
@@ -277,20 +276,27 @@ function StampsManager({ spots, onOpen, onStampMany }: { spots: Spot[]; onOpen: 
                   </button>
                 </span>
               ) : (
-                <span className="stamp-tools">
-                  <span className="stamp-verdicts" role="group" aria-label={`How ${s.name} went`}>
+                <label className={`stamp-pick ${st?.verdict ? `v-${st.verdict}` : "v-none"}`}>
+                  <span className="sr-only">How {s.name} went</span>
+                  <select
+                    value={st?.verdict ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === "remove") return setConfirm(s.id);
+                      if (v) markBeen(s.id, v as (typeof VERDICTS)[number]);
+                    }}
+                  >
+                    <option value="" disabled>
+                      How was it?
+                    </option>
                     {VERDICTS.map((v) => (
-                      <button key={v} type="button" className={`chip chip-xs ${st?.verdict === v ? "on" : ""}`} aria-pressed={st?.verdict === v} onClick={() => markBeen(s.id, v)}>
+                      <option key={v} value={v}>
                         {VERDICT_LABEL[v]}
-                      </button>
+                      </option>
                     ))}
-                  </span>
-                  <button type="button" className="icon-btn stamp-x" onClick={() => setConfirm(s.id)} aria-label={`Remove ${s.name} from your passport`} title="Remove from passport">
-                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
-                      <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                </span>
+                    <option value="remove">Remove stamp…</option>
+                  </select>
+                </label>
               )}
             </li>
           );
