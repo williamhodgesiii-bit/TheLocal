@@ -41,7 +41,8 @@ export default function GiftSheet({
   const [went, setWent] = useState(false);
   const [note, setNote] = useState("");
   const [sent, setSent] = useState(false);
-  const giftable = spots.filter((s) => giftFor(s));
+  // confirmed gift card pages first; every other place still gets a way to find theirs
+  const ordered = [...spots.filter((s) => giftFor(s)), ...spots.filter((s) => !giftFor(s))];
   const first = to?.name.split(" ")[0];
 
   useEffect(() => {
@@ -91,42 +92,34 @@ export default function GiftSheet({
             </div>
             <div className="sheet-body">
               {!pick ? (
-                giftable.length ? (
+                ordered.length ? (
                   <>
-                    <p className="muted">A gift card to one of {first}&apos;s favorites. Each is sold by the place itself.</p>
+                    <p className="muted">
+                      A gift card to one of {first ? `${first}'s` : "these"} places. Each card is sold by the place itself, and the money goes straight to them.
+                    </p>
                     <ul className="gift-list">
-                      {giftable.map((s) => (
-                        <li key={s.id}>
-                          <button type="button" className="mb-row" onClick={() => setPick(s)}>
-                            <Thumb spot={s} w={56} />
-                            <span className="mb-row-main">
-                              <b>{s.name}</b>
-                              <span className="mb-row-sub">{reason?.(s.id) || areaLabelOf(s)}</span>
-                              <span className="mb-row-sub">{soldBy(s, giftFor(s)!)}</span>
-                            </span>
-                            <span className="gift-go" aria-hidden>
-                              →
-                            </span>
-                          </button>
-                        </li>
-                      ))}
+                      {ordered.map((s) => {
+                        const sg = giftFor(s);
+                        return (
+                          <li key={s.id}>
+                            <button type="button" className="mb-row" onClick={() => setPick(s)}>
+                              <Thumb spot={s} w={56} />
+                              <span className="mb-row-main">
+                                <b>{s.name}</b>
+                                <span className="mb-row-sub">{reason?.(s.id) || areaLabelOf(s)}</span>
+                                <span className="mb-row-sub">{sg ? soldBy(s, sg) : "Find their gift card page"}</span>
+                              </span>
+                              <span className="gift-go" aria-hidden>
+                                →
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </>
                 ) : (
-                  <>
-                    <p className="muted">
-                      None of {first ? `${first}'s` : "these"} places sell gift cards online that we&apos;ve found yet. Most sell them at the register, so ask next time you&apos;re in.
-                    </p>
-                    {spots.length > 0 && (
-                      <ul className="gift-list quiet">
-                        {spots.slice(0, 6).map((s) => (
-                          <li key={s.id}>
-                            <b>{s.name}</b> · {reason?.(s.id) || areaLabelOf(s)}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </>
+                  <p className="muted">{first ? `${first} hasn't rated any places yet.` : "No places here yet."} Check back once they have.</p>
                 )
               ) : (
                 <div className="gift-one">
@@ -153,40 +146,46 @@ export default function GiftSheet({
                         <li>Pick an amount on their page{to ? ` and put in ${first}'s email` : ""}.</li>
                         <li>{pick.name} sends the card. Questions about it go to them.</li>
                       </ol>
-                      <a
-                        className="btn btn-green btn-block gift-buy"
-                        href={giftHref(pick.id, surface)}
-                        target="_blank"
-                        rel="noopener"
-                        onClick={() => {
-                          setWent(true);
-                          track("gift_click", { id: pick.id, via: g.via, from: surface });
-                        }}
-                      >
-                        Buy a gift card from {pick.name} ↗
-                      </a>
-                      {to && went && (
-                        <div className="gift-note">
-                          {to.friends ? (
-                            sent ? (
-                              <p className="gift-sent">Note sent. {first} will see it under Activity.</p>
-                            ) : (
-                              <>
-                                <label htmlFor="gift-note">Tell {first} it&apos;s on the way (optional)</label>
-                                <textarea id="gift-note" rows={2} maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Happy birthday! Get the ribeye." />
-                                <button type="button" className="btn btn-line btn-sm" onClick={sendNote}>
-                                  Send the note
-                                </button>
-                              </>
-                            )
-                          ) : (
-                            <p className="muted">Bought it? Let {first} know it&apos;s coming. Notes on the site are for friends (you follow each other).</p>
-                          )}
-                        </div>
-                      )}
                     </>
                   ) : (
-                    <p className="muted">We haven&apos;t found a way to buy {pick.name} gift cards online. Ask at the register.</p>
+                    <>
+                      <p className="gift-how">This finds {pick.name}&apos;s gift card page. Pick their own website from the results, not a reseller.</p>
+                      <ol className="gift-steps">
+                        <li>Pick an amount on their site{to ? ` and put in ${first}'s email` : ""}.</li>
+                        <li>{pick.name} sends the card. They also sell them at the register.</li>
+                      </ol>
+                    </>
+                  )}
+                  <a
+                    className="btn btn-green btn-block gift-buy"
+                    href={giftHref(pick.id, surface)}
+                    target="_blank"
+                    rel="noopener"
+                    onClick={() => {
+                      setWent(true);
+                      track("gift_click", { id: pick.id, via: g?.via ?? "search", from: surface });
+                    }}
+                  >
+                    {g ? `Buy a gift card from ${pick.name} ↗` : `Find ${pick.name}'s gift cards ↗`}
+                  </a>
+                  {to && went && (
+                    <div className="gift-note">
+                      {to.friends ? (
+                        sent ? (
+                          <p className="gift-sent">Note sent. {first} will see it under Activity.</p>
+                        ) : (
+                          <>
+                            <label htmlFor="gift-note">Tell {first} it&apos;s on the way (optional)</label>
+                            <textarea id="gift-note" rows={2} maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Happy birthday! Get the ribeye." />
+                            <button type="button" className="btn btn-line btn-sm" onClick={sendNote}>
+                              Send the note
+                            </button>
+                          </>
+                        )
+                      ) : (
+                        <p className="muted">Bought it? Let {first} know it&apos;s coming. Notes on the site are for friends (you follow each other).</p>
+                      )}
+                    </div>
                   )}
                 </div>
               )}

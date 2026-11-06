@@ -6,7 +6,10 @@ import type { Spot } from "./data";
  * (Selling cards ourselves would make us a money transmitter in Alabama. README → Gift cards.)
  *
  * A place is listed here only when its own website links to the page, or we opened the seller's
- * page and it named the place. Checked October 2026; re-check every few months.
+ * page and it named the place. Checked October–November 2026; re-check every few months.
+ *
+ * Every other place still gets a way to buy: a search for its own gift card page (`giftSearch`),
+ * so a gift never dead-ends. Add a place here once its page is confirmed.
  */
 export type GiftVia = "Toast" | "Square" | "Instagift" | "their website";
 export type Gift = {
@@ -45,9 +48,21 @@ export const GIFTS: Record<string, Gift> = {
   "surin-west": { url: "https://surinofthailand.com/gift-cards/", via: "their website", kind: "either", note: "Surin of Thailand's card.", checked: "2026-10" },
   "yo-mamas": { url: "https://squareup.com/gift/0CB4VEJKT2DQR/order", via: "Square", kind: "egift", checked: "2026-10" },
   "back-forty": { url: "https://squareup.com/gift/6C9MA0MG52AJN/order", via: "Square", kind: "egift", checked: "2026-10" },
+  "automatic-seafood": {
+    url: "https://www.toasttab.com/local/order/automatic-seafood-and-oysters",
+    via: "Toast",
+    kind: "egift",
+    note: "It opens their Toast page: tap Gift cards.",
+    checked: "2026-11",
+  },
+  helen: { url: "https://www.helenbham.com/", via: "their website", kind: "egift", note: "E-gift cards are on their website, sent by text or email.", checked: "2026-11" },
+  "hot-and-hot": { url: "https://www.hotandhotfishclub.com/", via: "their website", kind: "either", note: "Gift cards are in the Store on their website.", checked: "2026-11" },
 };
 
 export const giftFor = (spot: Pick<Spot, "id">): Gift | undefined => GIFTS[spot.id];
+/** for a place we haven't confirmed yet: a search that leads to its own gift card page */
+export const giftSearch = (spot: Pick<Spot, "name">) =>
+  `https://www.google.com/search?q=${encodeURIComponent(`${spot.name} Birmingham AL gift card`)}`;
 /** through our own link, so we can count how many gift buyers we send each place */
 export const giftHref = (spotId: string, surface: string) => `/go/gift/${encodeURIComponent(spotId)}?from=${encodeURIComponent(surface)}`;
 export const soldBy = (spot: Pick<Spot, "name">, g: Gift) =>

@@ -4833,3 +4833,114 @@ h2 {
 .quiz-cta p {
   color: var(--ink-2);
 }
+
+/* ---------- Signed out: searching is open, the rest asks to join (Nov 2026) ---------- */
+.foryou > .find-bar {
+  margin: 4px 0 14px;
+}
+.join-card {
+  margin: 0 0 28px;
+  padding: 20px 20px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+.join-card h2 {
+  margin: 0 0 10px;
+  font-family: var(--f-display);
+  font-size: 22px;
+  font-weight: 550;
+  line-height: 1.2;
+}
+.join-card ul {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-2, var(--ink));
+  font-size: 15px;
+  line-height: 1.45;
+}
+.join-card li {
+  position: relative;
+  padding-left: 18px;
+}
+.join-card li + li {
+  margin-top: 4px;
+}
+.join-card li::before {
+  content: "";
+  position: absolute;
+  top: 0.62em;
+  left: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+}
+.join-card .btn,
+.feed-gate .btn,
+.gate-join {
+  min-width: 180px;
+}
+.join-fine,
+.gate-fine {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.feed-gate {
+  margin: 4px 0 28px;
+  padding: 24px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+}
+.feed-gate p {
+  margin: 0 auto 14px;
+  max-width: 34ch;
+  color: var(--muted);
+}
+.feed-gate .fg-big {
+  margin-bottom: 4px;
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-size: 22px;
+}
+.gate {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 72px 16px 96px;
+  text-align: center;
+}
+.gate-title {
+  margin: 0 0 10px;
+  font-family: var(--f-display);
+  font-size: clamp(28px, 6vw, 36px);
+  font-weight: 550;
+  line-height: 1.12;
+}
+.gate-why {
+  margin: 0 0 22px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.45;
+}
+.gate-search {
+  margin-top: 18px;
+}
+
+/* Top 4 under a profile: the name gets two lines, the stars sit under it, nothing squeezes */
+.mp-top-row .tile-name {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.mp-top-row .tile-meta {
+  display: block;
+  margin-top: 3px;
+  white-space: nowrap;
+  font-size: 12px;
+}

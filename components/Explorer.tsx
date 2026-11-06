@@ -86,6 +86,17 @@ const noHover = () => {};
 
 /* exploring is open to everyone; these belong to an account (stamps and saves are gated in Providers) */
 const SURPRISE_WHY = "Sign in to spin Surprise me. It takes a few seconds, no password.";
+/**
+ * Searching restaurants is open to everyone; the rest of the site needs an account. These are the
+ * screens behind sign-in, and the line each one asks with.
+ */
+const GATE: Partial<Record<View, { title: string; why: string }>> = {
+  friends: { title: "See what your friends are eating", why: "Sign in to follow friends and see their reviews and photos. It takes a few seconds, no password." },
+  lists: { title: "Make lists Surprise me can spin", why: "Sign in to make lists like Date night or Cheap eats. It takes a few seconds, no password." },
+  me: { title: "Your passport, lists and reviews", why: "Sign in to keep your Plate Passport, lists and reviews. It takes a few seconds, no password." },
+  member: { title: "See people's pages", why: "Sign in to see people's reviews, photos and passports. It takes a few seconds, no password." },
+  people: { title: "Find friends and local reviewers", why: "Sign in to find friends and follow local reviewers. It takes a few seconds, no password." },
+};
 const STAMP_WHY = "Sign in to stamp your Plate Passport. It takes a few seconds, no password.";
 /** an occasion collection or a trail, picked from the front page; filters the list and frames the map */
 type Theme = { kind: "collection" | "trail"; id: string } | null;
@@ -123,7 +134,10 @@ export default function Explorer({
   /** /u/[handle]: whose page */
   initialHandle?: string;
 }) {
-  const { backend, user, openAuth, requireAuth, toast, saved, home, unread, registerNav, me, google } = useApp();
+  const { backend, user, authReady, openAuth, requireAuth, toast, saved, home, unread, registerNav, me, google } = useApp();
+  // read inside callbacks that run after sign-in, so they see the new member, not the stale guest
+  const userRef = useRef(user);
+  userRef.current = user;
   const router = useRouter();
   const [city, setCity] = useState<City>(CITY_BY_ID[cityId ?? initialSpotData?.city ?? DEFAULT_CITY] ?? CITY_BY_ID[DEFAULT_CITY]);
   const [community, setCommunity] = useState<Spot[]>(initialSpotData ? [initialSpotData] : []);
@@ -480,6 +494,8 @@ export default function Explorer({
   /** the tab you tapped lights up right away, while its screen draws */
   const [navTo, setNavTo] = useState<View | null>(null);
   const goView = useCallback((v: View) => {
+    const gate = GATE[v];
+    if (gate && !userRef.current) return openAuth(gate.why, () => goView(v));
     push.current = true;
     setNavTo(v);
     startTransition(() => {
@@ -489,7 +505,7 @@ export default function Explorer({
       setView(v);
     });
     top();
-  }, []);
+  }, [openAuth]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => setNavTo(null), [view, selectedId]);
   const openFriends = useCallback(
     (tab?: FriendsTab) => {
@@ -500,6 +516,7 @@ export default function Explorer({
   );
   const openMember = useCallback(
     (h: string) => {
+      if (!userRef.current) return openAuth(GATE.member!.why, () => openMember(h));
       push.current = true;
       setReturnView(selectedId ? view : view === "member" ? returnView : view);
       setHandle(h);
@@ -508,7 +525,7 @@ export default function Explorer({
       setView("member");
       top();
     },
-    [selectedId, view, returnView]
+    [selectedId, view, returnView, openAuth] // eslint-disable-line react-hooks/exhaustive-deps
   );
   /** Back: one step through the app's own history when there is one, else somewhere sensible */
   const goBack = useCallback((fallback: () => void) => {
@@ -526,6 +543,11 @@ export default function Explorer({
   const toExplore = useCallback(() => {
     if (view !== "explore" || selectedId) goView("explore");
   }, [view, selectedId, goView]);
+  /** straight to the search box (the one thing open to everyone) */
+  const findPlace = useCallback(() => {
+    toExplore();
+    setTimeout(() => searchRef.current?.focus(), 80);
+  }, [toExplore]);
   const chooseGenre = (g: GenreId | "all") => {
     setGenre((cur) => (cur === g && g !== "all" ? "all" : g));
     setDrink("all");
@@ -595,6 +617,14 @@ export default function Explorer({
   }, [selectedId, surprise.open, select, goBack, toExplore, openSurprise]);
 
   const selected = selectedId ? placedById[selectedId] ?? null : null;
+  // a members-only screen reached by its address (or Back) while signed out: say so, and ask once
+  const gate = !selected && !user ? GATE[view] : undefined;
+  const askedFor = useRef<View | null>(null);
+  useEffect(() => {
+    if (!gate || !authReady || askedFor.current === view) return;
+    askedFor.current = view;
+    openAuth(gate.why);
+  }, [gate, authReady, view, openAuth]);
 
   // the map engine is the heaviest thing on the page: it loads only for Explore's map
   const showMap = view === "explore" && mapMode && !selected;
@@ -778,7 +808,15 @@ export default function Explorer({
   ];
 
   let body: React.ReactNode;
-  if (selected) body = <SpotDetail key={selected.id} spot={selected} pool={allSpots} areas={areas} onBack={() => goBack(() => select(null))} onSelect={select} />;
+  if (gate)
+    body = authReady ? (
+      <Gate title={gate.title} why={gate.why} onJoin={() => openAuth(gate.why)} onSearch={findPlace} />
+    ) : (
+      <div className="skeleton-feed" aria-hidden>
+        <span />
+      </div>
+    );
+  else if (selected) body = <SpotDetail key={selected.id} spot={selected} pool={allSpots} areas={areas} onBack={() => goBack(() => select(null))} onSelect={select} />;
   else if (view === "home" || view === "friends")
     body = (
       <div className="with-rail">
@@ -786,9 +824,10 @@ export default function Explorer({
           <Home
             tab={view === "friends" ? "friends" : "foryou"}
             onTab={(t) => {
-              if (t === "friends") setFriendsTab((x) => x);
+              if (t === "friends" && !userRef.current) return openAuth(GATE.friends!.why, () => setView("friends"));
               setView(t === "friends" ? "friends" : "home");
             }}
+            onSearch={findPlace}
             friendsTab={friendsTab}
             onFriendsTab={setFriendsTab}
             spotById={spotById}
@@ -1126,5 +1165,24 @@ function Newsletter({ city }: { city: City }) {
         </div>
       )}
     </form>
+  );
+}
+
+/** what a signed-out visitor sees on a members-only screen */
+function Gate({ title, why, onJoin, onSearch }: { title: string; why: string; onJoin: () => void; onSearch: () => void }) {
+  return (
+    <section className="gate" aria-labelledby="gate-title">
+      <h1 className="gate-title" id="gate-title">
+        {title}
+      </h1>
+      <p className="gate-why">{why.replace(/ It takes a few seconds, no password\.$/, "")}</p>
+      <button type="button" className="btn btn-ink gate-join" onClick={onJoin}>
+        Sign in or join
+      </button>
+      <p className="gate-fine">Free, no password. Join before March 1 and you&apos;re a Founding member.</p>
+      <button type="button" className="textbtn gate-search" onClick={onSearch}>
+        Or search restaurants
+      </button>
+    </section>
   );
 }

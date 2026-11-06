@@ -177,9 +177,10 @@ export default function MemberPage({
   useEffect(() => () => onPins(null), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // what they could be treated to: their Top 4, what they want to try, what they loved
+  // (the sheet puts places with a confirmed gift card page first; the rest link to a search for theirs)
   const giftable = useMemo(() => {
     const order = [...top.ids, ...wants.map((p) => p.spotId), ...[...rated].sort((a, b) => placeScore(b) - placeScore(a)).map((p) => p.spotId)];
-    return Array.from(new Set(order)).filter((id) => spotById[id] && giftFor(spotById[id]));
+    return Array.from(new Set(order)).filter((id) => spotById[id]).slice(0, 12);
   }, [top, wants, rated, spotById]);
 
   if (page === undefined)
@@ -360,7 +361,7 @@ export default function MemberPage({
         </div>
       ) : (
         <>
-          {!mineToo && (
+          {!mineToo && giftable.length > 0 && (
             <button type="button" className="btn btn-green mb-treat" onClick={() => setGift(true)}>
               <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden>
                 <path d="M4 10h16v10H4zM3 7h18v3H3zM12 7v13M12 7c-1.5-3-5-3-5-1s3 1 5 1c2 0 5 1 5-1s-3.5-2-5 1" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
@@ -380,7 +381,7 @@ export default function MemberPage({
                     <button key={id} type="button" className="tile" onClick={() => onOpen(id)}>
                       <Poster spot={s} sizes="(max-width: 640px) 22vw, 150px" />
                       <span className="tile-name">{s.name}</span>
-                      <span className="tile-meta">{p ? <Score p={p} /> : areaLabelOf(s)}</span>
+                      <span className="tile-meta">{p ? <TopScore p={p} /> : areaLabelOf(s)}</span>
                     </button>
                   );
                 })}
@@ -610,7 +611,7 @@ export default function MemberPage({
         open={gift}
         onClose={() => setGift(false)}
         to={{ id: m.id, name: m.name, friends: !!friends }}
-        spots={(giftable.length ? giftable : top.ids).map((id) => spotById[id]).filter(Boolean)}
+        spots={giftable.map((id) => spotById[id])}
         reason={reason}
         surface="profile"
       />
@@ -637,6 +638,12 @@ function Score({ p }: { p: MemberPlace }) {
     );
   if (p.verdict) return <span className={`mb-score v-${p.verdict}`}>{VERDICT_WORDS[p.verdict]}</span>;
   return <span className="mb-score quiet">Been</span>;
+}
+
+/** under a Top 4 poster there's room for the stars alone */
+function TopScore({ p }: { p: MemberPlace }) {
+  if (p.rating) return <Stars value={p.rating} size={11} />;
+  return <>{p.verdict ? VERDICT_WORDS[p.verdict] : "Been"}</>;
 }
 
 const areaTown = (area: string): TownId | undefined => AREA_BY_ID[area]?.town;

@@ -9,7 +9,6 @@ import { BRAND, CHECKED } from "@/lib/brand";
 import { HOUSE_PHOTOS, PLACE_PHOTOS, commonsPage, commonsSrc, commonsSrcSet, frontFor, googleSrc, houseSrcSet, type HousePhoto } from "@/lib/photos";
 import type { Photo as MemberPhoto, PhotoKind } from "@/lib/backend";
 import type { SpinList } from "@/lib/lists";
-import { giftFor } from "@/lib/gifts";
 import { shareLink } from "@/lib/native";
 import { useApp, type Verdict } from "./Providers";
 import Reviews from "./Reviews";
@@ -170,7 +169,6 @@ export default function SpotDetail({
   const want = saved.includes(spot.id);
   const website = safeUrl(spot.website);
   const locs = locationsOf(spot);
-  const gift = giftFor(spot);
 
   const info = (
     <div className="pl-info">
@@ -214,11 +212,12 @@ export default function SpotDetail({
               <Icon name="globe" size={16} /> Website
             </a>
           )}
-          {gift && (
-            <button className="btn btn-line" onClick={() => setGifting(true)}>
-              <Icon name="gift" size={16} /> Gift card
-            </button>
-          )}
+          <button
+            className="btn btn-line"
+            onClick={() => requireAuth(`Sign in to buy a ${spot.name} gift card. It takes a few seconds, no password.`, () => setGifting(true)) && setGifting(true)}
+          >
+            <Icon name="gift" size={16} /> Gift card
+          </button>
         </div>
       </div>
     </div>

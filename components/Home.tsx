@@ -44,6 +44,7 @@ export default function Home({
   onSignup,
   onPeople,
   onPassport,
+  onSearch,
 }: {
   tab: HomeTab;
   onTab: (t: HomeTab) => void;
@@ -62,6 +63,8 @@ export default function Home({
   onPeople: () => void;
   /** your Plate Passport (on the You page) */
   onPassport: () => void;
+  /** to the restaurant search */
+  onSearch: () => void;
 }) {
   const { unread, user } = useApp();
   return (
@@ -87,7 +90,7 @@ export default function Home({
           <Friends spotById={spotById} onOpen={onOpen} onPins={onPins} tab={friendsTab} onTab={onFriendsTab} />
         </>
       ) : (
-        <ForYou spotById={spotById} letter={letter} rows={rows} fresh={fresh} onOpen={onOpen} onSeeAll={onSeeAll} onSignup={onSignup} onPeople={onPeople} onPassport={onPassport} />
+        <ForYou spotById={spotById} letter={letter} rows={rows} fresh={fresh} onOpen={onOpen} onSeeAll={onSeeAll} onSignup={onSignup} onPeople={onPeople} onPassport={onPassport} onSearch={onSearch} />
       )}
     </div>
   );
@@ -103,6 +106,7 @@ function ForYou({
   onSignup,
   onPeople,
   onPassport,
+  onSearch,
 }: {
   spotById: Record<string, Spot>;
   letter: Letter;
@@ -113,12 +117,17 @@ function ForYou({
   onSignup: () => void;
   onPeople: () => void;
   onPassport: () => void;
+  onSearch: () => void;
 }) {
+  const { user, authReady, openAuth } = useApp();
+  // signed out: search is open, the feed is a taste (two posts), and the rest asks them to join
+  const guest = authReady && !user;
   const feed = useFeed("everyone", true);
-  const posts = useMemo(
+  const allPosts = useMemo(
     () => (feed.items ?? []).filter((a) => a.kind === "review" && a.reviewId && feed.reviews[a.reviewId] && spotById[feed.reviews[a.reviewId].spotId]),
     [feed.items, feed.reviews, spotById]
   );
+  const posts = guest ? allPosts.slice(0, 2) : allPosts;
   const feature = featuredPost();
 
   // shelves and the odd module between posts, so the feed reads like a magazine, not a wall
@@ -126,11 +135,11 @@ function ForYou({
     const m: { at: number; key: string; node: React.ReactNode }[] = [];
     if (feature && spotById[feature.spotId]) m.push({ at: 1, key: "featured", node: <FeaturedCard f={feature} spot={spotById[feature.spotId]} onOpen={onOpen} /> });
     rows.slice(0, 3).forEach((r, i) => m.push({ at: [2, 5, 9][i], key: `row-${r.id}`, node: <Shelf title={r.title} line={r.line} spots={r.spots} now={r.now} onOpen={onOpen} onSeeAll={() => onSeeAll(r.id)} /> }));
-    m.push({ at: 4, key: "people", node: <PeopleShelf onPeople={onPeople} /> });
+    if (!guest) m.push({ at: 4, key: "people", node: <PeopleShelf onPeople={onPeople} /> });
     if (fresh.length) m.push({ at: 7, key: "fresh", node: <Shelf title="Just added" line="Places members wrote in, checked by us." spots={fresh} onOpen={onOpen} /> });
     m.push({ at: 12, key: "house", node: <HouseAd /> });
     return m.sort((a, b) => a.at - b.at);
-  }, [feature, spotById, rows, fresh, onOpen, onSeeAll, onPeople]);
+  }, [feature, spotById, rows, fresh, onOpen, onSeeAll, onPeople, guest]);
 
   const blocks: React.ReactNode[] = [];
   let mi = 0;
@@ -144,8 +153,18 @@ function ForYou({
   return (
     <div className="foryou">
       <ScrollCue />
+      {guest && (
+        <>
+          <button type="button" className="find-bar" onClick={onSearch}>
+            <Icon name="search" size={18} />
+            <span>Search Birmingham restaurants</span>
+            <Icon name="right" size={16} />
+          </button>
+          <JoinCard onJoin={() => openAuth()} />
+        </>
+      )}
       <ThursdayThree letter={letter} onOpen={onOpen} onSignup={onSignup} />
-      <PassportStrip total={Object.keys(spotById).length} onOpen={onPassport} />
+      {!guest && <PassportStrip total={Object.keys(spotById).length} onOpen={onPassport} />}
       {feed.items === null ? (
         <div className="skeleton-feed" aria-hidden>
           <span />
@@ -154,6 +173,15 @@ function ForYou({
         <>
           {posts.length > 0 && <h2 className="feed-label">Lately on the plate</h2>}
           <ul className="feed-list">{blocks}</ul>
+          {guest && allPosts.length > posts.length && (
+            <div className="feed-gate">
+              <p className="fg-big">That&apos;s a taste.</p>
+              <p>Sign in to see the whole feed, follow friends and keep your own reviews and photos.</p>
+              <button type="button" className="btn btn-ink" onClick={() => openAuth("Sign in to see the whole feed. It takes a few seconds, no password.")}>
+                Sign in or join
+              </button>
+            </div>
+          )}
           {posts.length === 0 && (
             <div className="first-review">
               <p className="fr-big">No reviews yet this week.</p>
@@ -166,12 +194,30 @@ function ForYou({
       {(feed.items === null ? modules : rest).map((m) => (
         <div key={m.key}>{m.node}</div>
       ))}
-      {feed.more && (
+      {feed.more && !guest && (
         <button type="button" className="more-btn" onClick={feed.loadMore} ref={feed.sentinel}>
           Show more
         </button>
       )}
     </div>
+  );
+}
+
+/** For people who aren't signed in: what joining gets them, said once, calmly. */
+function JoinCard({ onJoin }: { onJoin: () => void }) {
+  return (
+    <section className="join-card" aria-labelledby="join-title">
+      <h2 id="join-title">Your Birmingham food life, saved</h2>
+      <ul>
+        <li>See what friends are eating, with their photos</li>
+        <li>Stamp a Plate Passport of every local place you&apos;ve been</li>
+        <li>Make lists, and let Surprise me pick from them</li>
+      </ul>
+      <button type="button" className="btn btn-ink" onClick={onJoin}>
+        Sign in or join
+      </button>
+      <p className="join-fine">Free, no password. Join before March 1 and you&apos;re a Founding member.</p>
+    </section>
   );
 }
 

@@ -8,89 +8,60 @@ import { useApp } from "./Providers";
 import GoogleButton from "./GoogleButton";
 
 /**
- * The gentle first-visit sign-in prompt.
+ * The sign-in card for people who aren't signed in yet.
  *
- * Why it works the way it does (not a modal slammed up on load):
- *  - The whole site is public and indexed. A full-screen dialog over public content on arrival is
- *    the pattern Google's "intrusive interstitial" guidance penalises on mobile, and it buries the
- *    thing people came for. So this is a small, dismissible card to the side — never an overlay.
- *  - People should feel the place before they're asked to join, so it waits a few calm seconds.
- *  - It never nags: once dismissed it waits (3 days, then 2 weeks), gives up after three asks, and
- *    the moment someone signs in — here or anywhere — it's done for good. This mirrors how Google
- *    One Tap caps itself (2h → 1d → 1w → 4w, reset on success); we do the same for the card.
- *  - Only where it makes sense: signed out, on the map/passport pages, and never while the full
- *    sign-in dialog is already open. The copy tells the truth for the mode it's in — "every device"
- *    only when there's a real database behind it (Supabase); on-device otherwise.
+ * Nearly everything on the site needs an account (searching restaurants is the exception), so
+ * this card comes back on every visit: a few seconds in, and again a few minutes after "Maybe
+ * later". It's a small card at the side, never a full-screen wall over the page (Google penalises
+ * those on mobile, and it would bury the search people came for). The full sign-in dialog opens
+ * whenever someone taps something that needs an account. Signed in, and it's gone for good.
  */
-const KEY = "tl.signinNudge";
-const DELAY = 12000; // let them look around first: value before the ask
-const COOLDOWN_DAYS = [3, 14]; // the wait after the 1st and 2nd "maybe later"
-const MAX_SHOWS = 3; // then stop asking for good
-const DAY = 86_400_000;
+const FIRST = 5000; // a few seconds to look around first
+const AGAIN = 4 * 60_000; // after "Maybe later" (or closing the sign-in dialog), ask again later this visit
 
-/**
- * Pages that aren't the map/passport experience (reading the privacy page is no time to be nudged),
- * and Friends and member pages, which already ask in their own words.
- */
-const SKIP = ["/admin", "/privacy", "/terms", "/about", "/partners", "/credits", "/auth", "/friends", "/u"];
+/** Pages where asking makes no sense (reading the privacy page is no time to be nudged). */
+const SKIP = ["/admin", "/privacy", "/terms", "/about", "/partners", "/credits", "/auth"];
 
-/** Opening the full sign-in dialog even once this visit means they don't need a reminder too. */
-let engagedThisVisit = false;
+/** when they last said "not now" this visit (a fresh visit asks again) */
+let notNowAt = 0;
 
 /** "Will" → "Will." but "Will H." stays "Will H." */
 const stop = (name: string) => (name.endsWith(".") ? name : `${name}.`);
 
-type Memo = { seen: number; at: number; done?: boolean };
-
-function readMemo(): Memo {
-  try {
-    return { seen: 0, at: 0, ...(JSON.parse(localStorage.getItem(KEY) || "{}") as Partial<Memo>) };
-  } catch {
-    return { seen: 0, at: 0 };
-  }
-}
-function writeMemo(m: Memo) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(m));
-  } catch {
-    /* private mode: we just ask again next time, which is fine */
-  }
-}
-function eligible(m: Memo) {
-  if (m.done || m.seen >= MAX_SHOWS) return false;
-  if (m.seen === 0) return true;
-  const wait = COOLDOWN_DAYS[Math.min(m.seen - 1, COOLDOWN_DAYS.length - 1)] * DAY;
-  return Date.now() - m.at >= wait;
-}
-
 export default function SignInNudge({ authOpen }: { authOpen: boolean }) {
-  const { backend, user, openAuth, toast, saved, been } = useApp();
+  const { backend, user, authReady, openAuth, toast } = useApp();
   const pathname = usePathname() || "/";
   const [show, setShow] = useState(false);
 
-  if (authOpen) engagedThisVisit = true;
+  const [tick, setTick] = useState(0);
   const synced = backend.mode === "supabase";
   const onSkipPage = SKIP.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-  const suppressed = !!user || authOpen || engagedThisVisit || onSkipPage;
+  const suppressed = !authReady || !!user || authOpen || onSkipPage;
 
-  // Signed in — here or in another tab — means never ask again: they've found the way in.
   useEffect(() => {
-    if (user) {
-      writeMemo({ ...readMemo(), done: true });
-      setShow(false);
-    }
+    if (user) setShow(false);
   }, [user]);
 
-  // First visit (and the capped re-asks) surface the card after a short, calm delay.
+  // the sign-in dialog was open and they closed it without joining: that's a "not now" too
+  useEffect(() => {
+    if (!authOpen) return;
+    setShow(false);
+    return () => {
+      notNowAt = Date.now();
+      setTick((t) => t + 1);
+    };
+  }, [authOpen]);
+
+  // every visit: a few seconds in, then again a few minutes after each "not now"
   useEffect(() => {
     if (suppressed) {
       setShow(false);
       return;
     }
-    if (!eligible(readMemo())) return;
-    const t = setTimeout(() => setShow(true), DELAY);
+    const wait = notNowAt ? Math.max(1500, notNowAt + AGAIN - Date.now()) : FIRST;
+    const t = setTimeout(() => setShow(true), wait);
     return () => clearTimeout(t);
-  }, [suppressed]);
+  }, [suppressed, tick]);
 
   // Escape dismisses, like the real dialog.
   useEffect(() => {
@@ -102,13 +73,12 @@ export default function SignInNudge({ authOpen }: { authOpen: boolean }) {
   }, [show]);
 
   function later() {
-    const m = readMemo();
-    writeMemo({ ...m, seen: m.seen + 1, at: Date.now() });
+    notNowAt = Date.now();
     setShow(false);
+    setTick((t) => t + 1);
   }
 
   function openFull() {
-    engagedThisVisit = true;
     setShow(false);
     openAuth();
   }
@@ -125,18 +95,9 @@ export default function SignInNudge({ authOpen }: { authOpen: boolean }) {
   }
 
   const here = typeof window === "undefined" ? "/" : location.pathname + location.search;
-  // a place both saved and stamped is still one place
-  const guest = new Set([...saved, ...Object.keys(been)]).size;
   const hasGoogle = !!backend.googleClientId;
-
-  // Say only what's true for this mode: cross-device sync is real only with a database behind it.
-  const title = guest && synced ? "Keep your passport safe" : "Make it yours";
-  const text =
-    guest && synced
-      ? `You've marked ${guest} ${guest === 1 ? "place" : "places"} on this device. Sign in — free, no password — to keep ${guest === 1 ? "it" : "them"} on every device you use.`
-      : synced
-        ? "Save places, stamp where you've been, make lists and spin Surprise me, on every device. Free, no password."
-        : "Save places, stamp where you've been, make lists and spin Surprise me. Free, no password.";
+  const title = "Join The Plate Next Door";
+  const text = `See what Birmingham is eating, keep your Plate Passport, make lists and let Surprise me pick${synced ? ", on every device" : ""}. Free, no password.`;
 
   return (
     <AnimatePresence>
