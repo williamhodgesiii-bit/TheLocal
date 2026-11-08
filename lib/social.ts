@@ -14,9 +14,10 @@ import type { Verdict } from "./backend";
 
 export type Reaction = "helpful" | "want" | "thanks";
 export const REACTIONS: { id: Reaction; label: string; mine: string; note: string }[] = [
-  { id: "helpful", label: "Helpful", mine: "Helpful", note: "found your review helpful" },
-  { id: "want", label: "Want to go", mine: "Saved", note: "want to go after your review" },
-  { id: "thanks", label: "Thanks", mine: "Thanked", note: "said thanks for your review" },
+  // shown as a heart (helpful underneath, so it still sorts reviews), a bookmark, and old thanks count as likes
+  { id: "helpful", label: "Like", mine: "Liked", note: "liked your review" },
+  { id: "want", label: "Save", mine: "Saved", note: "saved the place after your review" },
+  { id: "thanks", label: "Like", mine: "Liked", note: "liked your review" },
 ];
 export const REACTION_BY_ID = Object.fromEntries(REACTIONS.map((r) => [r.id, r])) as Record<Reaction, (typeof REACTIONS)[number]>;
 

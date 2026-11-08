@@ -64,7 +64,7 @@ export default function Privacy() {
           write back.
         </li>
         <li>
-          <b>Who you follow and who follows you</b>, your <b>comments</b> and <b>reactions</b> (Helpful, Want to go, Thanks), people you block or mute,
+          <b>Who you follow and who follows you</b>, your <b>comments</b> and <b>reactions</b> (likes and saves), people you block or mute,
           and the notifications we show you.
         </li>
         {GOOGLE_ON && (

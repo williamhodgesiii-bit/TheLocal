@@ -4,16 +4,20 @@ import type { Review } from "./backend";
 /**
  * Reviews: the rules and the arithmetic, in one place (README → Reviews has the research).
  *
- * - One paragraph, 100 to 600 characters: long enough to say something specific, short enough
- *   to read on a phone. Yelp's useful reviews average about 460 characters; under 100 rarely help.
+ * - Writing one should take a minute (Nov 2026): a score, a few words, and anything else only if
+ *   they want to (what they got, would they go back, photos). Fewer boxes means more reviews, and
+ *   a friend's quick take is what people read in a feed (the Letterboxd lesson).
+ * - One paragraph, up to 600 characters, so it reads on a phone. There's a small floor (a
+ *   sentence, not "good") that's never shown as a number; the prompt asks what to order instead.
  * - A 1–5 score where every step has words. Labeled scales keep a 3 meaning "good" instead of
  *   everything piling up at 4.5, so places actually separate.
- * - "Would you go back?" and "What did you get?" are asked every time: the go-back share and the
- *   dishes people name tell a reader more than a decimal.
+ * - "Would you go back?" and "What did you get?" are optional now; when people answer, the
+ *   go-back share and the dishes people name tell a reader more than a decimal.
  * - Small numbers are shown as what they are (each rating) until there are enough to average,
  *   and rankings pull thin records toward the site average so one 5 can't top the list.
  */
-export const REVIEW_MIN = 100;
+/** a sentence, not one word (never shown as a number; the database checks the same) */
+export const REVIEW_MIN = 20;
 export const REVIEW_MAX = 600;
 export const ORDER_MAX = 3;
 export const ORDER_LEN = 40;
@@ -101,14 +105,11 @@ export const monthLabel = (ym?: string) => {
 
 /** What's missing, in plain words, or null when it's ready to post. */
 export function checkDraft(d: ReviewDraft): string | null {
-  if (!d.rating) return "Pick a score.";
-  if (d.goBack === null) return "Would you go back? Pick yes or no.";
-  if (!d.ordered.length) return "Add what you got (one is fine).";
+  if (!d.rating) return "Tap the stars to score it.";
   const n = d.body.trim().length;
-  if (n < REVIEW_MIN) return `A little more, please: ${REVIEW_MIN - n} more characters. What stood out, and one thing to know before going?`;
-  if (n > REVIEW_MAX) return `One paragraph: trim ${n - REVIEW_MAX} characters.`;
-  if (!d.visited) return "When did you go?";
-  if (!d.affirmed) return "Check the box to say you went yourself and have no tie to the place.";
+  if (!n) return "Add a few words: how was it, and what should a friend order?";
+  if (n < REVIEW_MIN) return "Say a little more, like what you'd order again.";
+  if (n > REVIEW_MAX) return `Keep it to one paragraph: trim ${n - REVIEW_MAX} characters.`;
   return null;
 }
 
@@ -164,7 +165,7 @@ export const critical = (r: Review) => r.rating <= 2 || r.goBack === false;
 
 export type ReviewSort = "helpful" | "newest" | "highest" | "lowest";
 export const SORTS: { id: ReviewSort; label: string }[] = [
-  { id: "helpful", label: "Most helpful" },
+  { id: "helpful", label: "Most liked" },
   { id: "newest", label: "Newest" },
   { id: "highest", label: "Highest" },
   { id: "lowest", label: "Lowest" },

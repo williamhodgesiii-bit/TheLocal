@@ -438,7 +438,7 @@ export default function MemberPage({
                   <option value="newest">Newest</option>
                   <option value="highest">Highest rated</option>
                   <option value="lowest">Lowest rated</option>
-                  <option value="helpful">Most helpful</option>
+                  <option value="helpful">Most liked</option>
                 </select>
               </label>
             </div>

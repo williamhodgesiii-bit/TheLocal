@@ -99,8 +99,8 @@ export default function About() {
           <b>Members only, one per place.</b> Anyone with an account can review a place once, and edit it any time; an edited review says so. Five a day at most.
         </li>
         <li>
-          <b>What a review is.</b> A score from 1 to 5 where every number has words (3 is good, 5 is one of the best in town), whether you&apos;d go back, what
-          you got, the month you went, and one paragraph of 100 to 600 characters. Optional: what it&apos;s good for, and scores for the food, service and vibe.
+          <b>What a review is.</b> A score from 1 to 5 where every number has words (3 is good, 5 is one of the best in town) and a few words about how it
+          was, up to one paragraph. Optional: what you got, whether you&apos;d go back, and up to three photos.
         </li>
         <li>
           <b>First-hand, no ties.</b> You have to have gone yourself. Owners, staff, their families and competitors can&apos;t review a place, and nobody (us,
@@ -121,7 +121,7 @@ export default function About() {
           &quot;Share my passport&quot; is on, and you can turn it off any time. Members who joined before October 19, 2026 start with it off.
         </li>
         <li>
-          <b>Reactions and comments.</b> Members can mark a review Helpful (the only one that sorts reviews), Want to go or Thanks, and comment in one level of
+          <b>Likes and comments.</b> Members can like a review (likes are what sort reviews), save the place for later, and comment in one level of
           replies, 500 characters, editable for 15 minutes. Talk about the food, not the person. A review&apos;s writer can hide comments on it or turn them
           off; three reports hold a comment until a person checks it.
         </li>

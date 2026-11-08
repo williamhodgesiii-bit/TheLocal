@@ -95,14 +95,15 @@ begin
     if today >= 5 then raise exception 'That''s 5 reviews today. Come back tomorrow for more.'; end if;
   end if;
   new.body := btrim(regexp_replace(regexp_replace(new.body, '\s*\n+\s*', ' ', 'g'), ' {2,}', ' ', 'g'));
-  if char_length(new.body) not between 100 and 600 then
-    raise exception 'Reviews are one paragraph, 100 to 600 characters.';
+  -- a sentence or more, one paragraph (Nov 2026: was 100 to 600; the form asks less now)
+  if char_length(new.body) not between 20 and 600 then
+    raise exception 'Say a little more: a sentence about how it was.';
   end if;
   if public.has_banned_word(new.body || ' ' || array_to_string(new.ordered, ' ')) then
     raise exception 'That has a word we don''t allow here. Talk about the food, not the person.';
   end if;
-  if new.go_back is null then raise exception 'Would you go back? Pick yes or no.'; end if;
-  if cardinality(new.ordered) not between 1 and 3 then raise exception 'Add what you got: one to three things.'; end if;
+  -- "would you go back" and "what you got" are optional (Nov 2026)
+  if cardinality(new.ordered) > 3 then raise exception 'Add up to three things you got.'; end if;
   if exists (select 1 from unnest(new.ordered) o where char_length(btrim(o)) not between 1 and 40) then
     raise exception 'Keep each thing you got under 40 characters.';
   end if;

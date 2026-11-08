@@ -40,18 +40,20 @@ On a phone the site works like an app: a top bar with the logo, and a bottom tab
 
 The main part of the site, and the first thing under a place's name. Rules and arithmetic live in `lib/reviews.ts`; the database enforces the same rules (`supabase/schema.sql`, `review_rules`).
 
-**Writing one** (members only, one per place, editable; an edit says "Edited"):
-- **A 1–5 score where every step has words**: 5 One of the best, 4 Great, 3 Good, 2 Just okay, 1 Skip it. Labeled scales are the best-tested fix for everything piling up at 4.5 (Garg & Johari, *M&SOM* 2021). The form says "3 means good. Save 5 for the best in town."
-- **Would you go back?** (yes/no) and **what did you get?** (1–3 things, tap a suggestion or type). These become "67% would go back" and the "People got" chips, which tell readers more than a decimal.
-- **One paragraph, 100–600 characters**, with a counter; line breaks fold into one paragraph. Yelp's useful reviews average about 460 characters and almost none under 100 help; usefulness rises with detail and then flattens (Mudambi & Schuff, *MISQ* 2010).
-- **The month you went** (last two years), optional **Good for** tags (up to 3) and optional food/service/vibe scores (worded for the place: Drinks, Coffee, Food & drinks…).
-- **A promise**: "I went myself. I don't own, work at or compete with this place, and nobody gave me anything." That's the FTC's 2024 rule on fake, insider and paid reviews (16 CFR 465).
+**Writing one** (members only, one per place, editable; an edit says "Edited"). Since Nov 2026 it takes a minute: fewer boxes, more reviews.
+- **Stars, 1–5, where every step has words**: 5 One of the best, 4 Great, 3 Good, 2 Just okay, 1 Skip it (the word shows as you tap). Labeled scales keep everything from piling up at 4.5 (Garg & Johari, *M&SOM* 2021).
+- **A few words**, up to one paragraph (600 characters). The prompt asks how it was and what a friend should order; there's a small floor (a sentence) that's never shown as a number or a counter.
+- **Optional**: what you got (up to 3, tap a suggestion or type), would you go back (yes/no), and photos. These become "People order …" and "92% would go back" on the place.
+- The month is the month you post (an edit keeps the original). Older reviews keep their Good for tags and detail scores; the form no longer asks for them.
+- **The promise is in one line** under Post: "By posting, you're saying you went yourself and have no tie to this place." (The FTC's 2024 rule on fake, insider and paid reviews, 16 CFR 465.)
 - **Up to 3 photos** (optional): the food, the room, the people they went with. They show under the review (tap for full size), in the Friends feed, and with the place's photos. The database checks they're on the writer's own review (`photo_rules`), and a deleted review takes its photos.
 - Five reviews a day per member. A review stamps your passport (unless you already chose how it went).
 
-**Reading them**: the score in words, the count and the share who'd go back; a five-bar chart you can tap to filter (people trust the shape more than the number, per Baymard); detail scores once three people gave them; "People got" and "Good for" with counts; then the two most useful reviews, always including a critical one when at least 1 in 10 are. **See all** sorts by Most helpful, Newest, Highest or Lowest. Under three reviews there's no average, just each review. A "last 12 months" line shows when it differs from all time by 0.3 or more.
+**Reading them**: the score in words, the count and the share who'd go back, and one line of what people order; then the two most useful reviews, always including a critical one when at least 1 in 10 are. **See all** sorts by Most liked, Newest, Highest or Lowest. Under three reviews there's no average, just each review.
 
-**Fairness**: three labeled reactions (below), and only **Helpful** sorts reviews. **Report** asks why; three reports hold a review until staff look (held reviews don't count, and only their writer sees them). Negative reviews are never hidden for being negative. "Top rated" ranks by an average pulled toward the site's when a place has only a few reviews, so one 5 can't top the list. Sponsors and partners can't touch reviews, their order or moderation. The public rules are on `/about#reviews`.
+**On every review**: three icons people already know, a heart (like), a comment bubble and a bookmark (save the place), and "…" for edit, delete or report. What they ordered and whether they'd go back sit in one quiet line, not pills.
+
+**Fairness**: only likes sort reviews (a like is the old "Helpful" vote underneath; older "Thanks" count as likes). **Report** asks why; three reports hold a review until staff look (held reviews don't count, and only their writer sees them). Negative reviews are never hidden for being negative. "Top rated" ranks by an average pulled toward the site's when a place has only a few reviews, so one 5 can't top the list. Sponsors and partners can't touch reviews, their order or moderation. The public rules are on `/about#reviews`.
 
 **After deploying**: run Actions → **Set up Supabase** again (or paste `supabase/schema.sql` into the SQL editor) to add the new review columns, Helpful votes and reports. Until then reviews still post, with the score and paragraph only.
 

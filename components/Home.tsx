@@ -17,6 +17,7 @@ import Photo from "./Photo";
 import ScrollCue, { useSwipeHint } from "./ScrollCue";
 import { Avatar, FollowButton, NameLink, useBadges } from "./People";
 import { milestoneName, nextMilestone } from "@/lib/passport";
+import { getThe } from "@/lib/words";
 import type { Person } from "@/lib/social";
 
 /* the Friends tab is its own download */
@@ -254,7 +255,7 @@ export const ThursdayThree = memo(function ThursdayThree({ letter, onOpen, onSig
               <span className="t3-meta">
                 {GENRE_BY_ID[spot.genres[0]]?.short} · {areaLabelOf(spot)} · {priceLabel(spot.price)}
               </span>
-              <span className="t3-note">{note || `Order the ${spot.knownFor.charAt(0).toLowerCase()}${spot.knownFor.slice(1)}.`}</span>
+              <span className="t3-note">{note || `${getThe(spot.knownFor).replace(/^Get/, "Order")}.`}</span>
             </button>
           </li>
         ))}

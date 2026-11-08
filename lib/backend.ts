@@ -55,7 +55,7 @@ export type Review = {
   userName: string;
   /** 1–5, every step labeled (lib/reviews.ts) */
   rating: number;
-  /** one paragraph, 100–600 characters (older reviews may be shorter) */
+  /** one paragraph, a sentence up to 600 characters */
   body: string;
   createdAt: string;
   updatedAt?: string;
@@ -89,7 +89,8 @@ export type Review = {
 export type ReviewInput = {
   rating: number;
   body: string;
-  goBack: boolean;
+  /** optional: null when they didn't say */
+  goBack: boolean | null;
   visited: string;
   ordered: string[];
   goodFor: string[];
@@ -1890,7 +1891,7 @@ function localBackend(): Backend {
       const r: Review = {
         id: prev?.id ?? uid(), spotId, userId: u.id, userName: u.name, rating: i.rating, body: i.body,
         createdAt: prev?.createdAt ?? now, updatedAt: prev ? now : undefined,
-        goBack: i.goBack, visited: i.visited, ordered: i.ordered, goodFor: i.goodFor, sub: i.sub, status: "live",
+        goBack: i.goBack ?? undefined, visited: i.visited, ordered: i.ordered, goodFor: i.goodFor, sub: i.sub, status: "live",
       };
       // one review per member per spot (mirrors the DB unique constraint)
       write(K.reviews, [r, ...all.filter((x) => x.id !== r.id)]);

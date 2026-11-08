@@ -13,7 +13,7 @@ import { Thumb } from "./Photo";
 import { ReviewPhotos } from "./Lightbox";
 import { Avatar, NameLink } from "./People";
 import { useApp } from "./Providers";
-import { ReviewActions } from "./ReviewActions";
+import { ReviewActions, ReviewFacts } from "./ReviewActions";
 import { Stars } from "./Stars";
 
 /* the comments only download when someone opens them */
@@ -146,14 +146,7 @@ export function FeedReviewCard({
       <p className={`post-body ${full ? "" : "clamp"}`} onClick={() => setFull(true)}>
         {r.body}
       </p>
-      {(!!r.ordered?.length || typeof r.goBack === "boolean") && (
-        <p className="post-tags">
-          {typeof r.goBack === "boolean" && <span className={r.goBack ? "go-yes" : "go-no"}>{r.goBack ? "Would go back" : "Wouldn't go back"}</span>}
-          {r.ordered?.map((o) => (
-            <span key={o}>{o}</span>
-          ))}
-        </p>
-      )}
+      <ReviewFacts r={r} />
       <ReviewActions
         r={r}
         mine={r.userId === user?.id}

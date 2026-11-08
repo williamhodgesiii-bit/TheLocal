@@ -8,15 +8,11 @@ import { REVIEW_PHOTOS_MAX, type Photo as MemberPhoto, type Review } from "@/lib
 import { spotIdsOf, type Spot } from "@/lib/data";
 import {
   AVG_MIN,
-  GOOD_FOR,
-  GOOD_FOR_LABEL,
-  GOOD_FOR_MAX,
   ORDER_LEN,
   ORDER_MAX,
   RATING_WORDS,
   REPORT_REASONS,
   REVIEW_MAX,
-  REVIEW_MIN,
   SORTS,
   checkDraft,
   cleanDish,
@@ -24,26 +20,23 @@ import {
   monthLabel,
   oneParagraph,
   sortReviews,
-  subLabels,
   summarize,
   verdictFor,
   visitMonths,
   wordFor,
   type ReviewDraft,
   type ReviewSort,
-  type SubKey,
 } from "@/lib/reviews";
 import { VERDICT_SCORE, whoList, type FriendAt, type Reaction } from "@/lib/social";
 import { feel } from "@/lib/native";
 import { useApp } from "./Providers";
-import { ReviewActions } from "./ReviewActions";
+import { ReviewActions, ReviewFacts } from "./ReviewActions";
 export { ReviewActions };
 import { Stars } from "./Stars";
 import { Avatar, NameLink } from "./People";
 import ReviewThread from "./ReviewThread";
 import { ReviewPhotos } from "./Lightbox";
 
-const SUBS: SubKey[] = ["taste", "service", "vibe"];
 /** dish-like bits of our one-line "known for" ("Pulled pork & cheese biscuits"), to tap instead of type */
 const dishesIn = (known: string) =>
   known
@@ -93,7 +86,6 @@ export default function Reviews({ spot, openSignal = 0 }: { spot: Spot; /** bump
   const counted = useMemo(() => list.filter((r) => r.status !== "held"), [list]);
   const sum = useMemo(() => summarize(counted), [counted]);
   const mine = list.find((r) => r.userId === user?.id);
-  const labels = subLabels(spot);
 
   // the people you follow, first: their reviews lead, and the row up top says who's been
   const friendIds = useMemo(() => new Set(friends.map((f) => f.member.id)), [friends]);
@@ -125,12 +117,6 @@ export default function Reviews({ spot, openSignal = 0 }: { spot: Spot; /** bump
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openSignal]);
-  function filterStars(n: number) {
-    setStars((cur) => (cur === n ? null : n));
-    setAll(true);
-    setSort("helpful");
-  }
-
   async function onPosted(r: Review, draft: ReviewDraft) {
     setReviews((cur) => [r, ...(cur ?? []).filter((x) => x.userId !== r.userId)]);
     setWriting(false);
@@ -151,7 +137,7 @@ export default function Reviews({ spot, openSignal = 0 }: { spot: Spot; /** bump
     }
   }
 
-  /** Helpful, Want to go (which also saves the place) or Thanks; shows at once, undone if it doesn't save */
+  /** a like (the helpful vote) or a save (which also saves the place); shows at once, undone if it doesn't save */
   async function react(r: Review, kind: Reaction) {
     if (!requireAuth("Sign in to react to reviews. It takes a few seconds, no password.")) return;
     const on = !r.myReactions?.includes(kind);
@@ -238,11 +224,6 @@ export default function Reviews({ spot, openSignal = 0 }: { spot: Spot; /** bump
                       </>
                     )}
                   </span>
-                  {sum.recent && (
-                    <span className="rv-recent">
-                      Last 12 months: {sum.recent.avg.toFixed(1)} from {sum.recent.count}
-                    </span>
-                  )}
                 </span>
               </>
             ) : (
@@ -250,56 +231,13 @@ export default function Reviews({ spot, openSignal = 0 }: { spot: Spot; /** bump
                 <b>
                   {n} {n === 1 ? "review" : "reviews"} so far
                 </b>
-                <span>An average shows once there are {AVG_MIN}.</span>
               </span>
             )}
           </div>
-          {n >= AVG_MIN && (
-            <div className="rv-bars" role="group" aria-label="Filter by score">
-              {sum.dist.map((c, i) => {
-                const v = 5 - i;
-                return (
-                  <button type="button" key={v} className={`rv-bar ${stars === v ? "on" : ""}`} onClick={() => filterStars(v)} aria-pressed={stars === v} disabled={!c}>
-                    <span className="rv-bar-k">{v}</span>
-                    <span className="rv-bar-t">
-                      <motion.span initial={{ width: 0 }} animate={{ width: `${(c / n) * 100}%` }} transition={{ delay: 0.05 * i }} />
-                    </span>
-                    <span className="rv-bar-c">{c}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          {Object.keys(sum.subs).length > 0 && (
-            <p className="rv-subs">
-              {SUBS.filter((k) => sum.subs[k]).map((k) => (
-                <span key={k}>
-                  {labels[k]} <b>{sum.subs[k]!.avg.toFixed(1)}</b>
-                </span>
-              ))}
-            </p>
-          )}
           {sum.orders.length > 0 && (
-            <div className="rv-chips">
-              <span className="cl">People got</span>
-              {sum.orders.map((o) => (
-                <span key={o.name} className="rv-chip">
-                  {o.name}
-                  {o.n > 1 && <span className="rv-chip-n">{o.n}</span>}
-                </span>
-              ))}
-            </div>
-          )}
-          {sum.goodFor.length > 0 && (
-            <div className="rv-chips">
-              <span className="cl">Good for</span>
-              {sum.goodFor.map((g) => (
-                <span key={g.id} className="rv-chip">
-                  {g.label}
-                  {g.n > 1 && <span className="rv-chip-n">{g.n}</span>}
-                </span>
-              ))}
-            </div>
+            <p className="rv-most">
+              <span>People order</span> {sum.orders.slice(0, 4).map((o) => o.name).join(" · ")}
+            </p>
           )}
         </div>
       )}
@@ -348,7 +286,6 @@ export default function Reviews({ spot, openSignal = 0 }: { spot: Spot; /** bump
               key={r.id}
               r={r}
               spot={spot}
-              labels={labels}
               mine={r.userId === user?.id}
               friend={friendIds.has(r.userId)}
               onEdit={open}
@@ -375,7 +312,6 @@ export default function Reviews({ spot, openSignal = 0 }: { spot: Spot; /** bump
 function ReviewCard({
   r,
   spot,
-  labels,
   mine,
   friend,
   onEdit,
@@ -385,7 +321,6 @@ function ReviewCard({
 }: {
   r: Review;
   spot: Spot;
-  labels: Record<SubKey, string>;
   mine: boolean;
   friend?: boolean;
   onEdit: () => void;
@@ -398,7 +333,6 @@ function ReviewCard({
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
   const [reported, setReported] = useState(false);
-  const subs = SUBS.filter((k) => r.sub?.[k]);
 
   async function report(e: React.FormEvent) {
     e.preventDefault();
@@ -430,46 +364,25 @@ function ReviewCard({
       <div className="rv-top">
         <Stars value={r.rating} size={14} />
         <b className="rv-label">{RATING_WORDS[r.rating]?.short}</b>
-        {typeof r.goBack === "boolean" && <span className={r.goBack ? "rv-go go-yes" : "rv-go go-no"}>{r.goBack ? "Would go back" : "Wouldn't go back"}</span>}
       </div>
       <p className="rv-body">{r.body}</p>
       <ReviewPhotos photos={r.photos} spot={spot} />
-      {(!!r.ordered?.length || subs.length > 0 || !!r.goodFor?.length) && (
-        <p className="post-tags">
-          {r.ordered?.map((o) => (
-            <span key={o}>{o}</span>
-          ))}
-          {subs.map((k) => (
-            <span key={k}>
-              {labels[k]} {r.sub![k]}
-            </span>
-          ))}
-          {r.goodFor?.map((g) => GOOD_FOR_LABEL[g] && <span key={g}>{GOOD_FOR_LABEL[g]}</span>)}
-        </p>
-      )}
+      <ReviewFacts r={r} />
       <ReviewActions
         r={r}
         mine={mine}
         thread={thread}
         onReact={onReact}
         onThread={() => setThread((t) => (t ? null : window.matchMedia("(max-width: 900px)").matches ? "sheet" : "inline"))}
-        extra={
-          mine ? (
-            <>
-              <button type="button" className="textbtn" onClick={onEdit}>
-                Edit
-              </button>
-              <button type="button" className="textbtn" onClick={onDelete}>
-                Delete
-              </button>
-            </>
-          ) : (
-            !reported && (
-              <button type="button" className="textbtn rv-report" onClick={() => requireAuth("Sign in to report a review.") && setReporting((v) => !v)}>
-                Report
-              </button>
-            )
-          )
+        menu={
+          mine
+            ? [
+                { label: "Edit review", onClick: onEdit },
+                { label: "Delete review", onClick: onDelete },
+              ]
+            : reported
+              ? undefined
+              : [{ label: "Report review", onClick: () => requireAuth("Sign in to report a review.") && setReporting(true) }]
         }
       />
       <AnimatePresence initial={false}>
@@ -509,6 +422,7 @@ function ReviewForm({
   onPosted: (r: Review, d: ReviewDraft) => void;
 }) {
   const { backend, toast } = useApp();
+  // an edit keeps everything it had, including details this form no longer asks for
   const [d, setD] = useState<ReviewDraft>(() =>
     mine
       ? {
@@ -519,12 +433,11 @@ function ReviewForm({
           visited: mine.visited ?? visitMonths()[0].id,
           goodFor: mine.goodFor ?? [],
           sub: mine.sub ?? {},
-          affirmed: false,
+          affirmed: true,
         }
       : blank()
   );
   const [dish, setDish] = useState("");
-  const [details, setDetails] = useState(!!mine?.sub && Object.keys(mine.sub).length > 0);
   const [busy, setBusy] = useState(false);
   const [tried, setTried] = useState(false);
   // photos: the ones already on it (minus any taken off) and new ones, shown before they upload
@@ -532,15 +445,13 @@ function ReviewForm({
   const [adds, setAdds] = useState<{ file: File; url: string }[]>([]);
   const picker = useRef<HTMLInputElement>(null);
   const room = REVIEW_PHOTOS_MAX - keep.length - adds.length;
-  const labels = subLabels(spot);
-  const months = useMemo(() => visitMonths(), []);
   const set = <K extends keyof ReviewDraft>(k: K, v: ReviewDraft[K]) => setD((x) => ({ ...x, [k]: v }));
   const problem = checkDraft(d);
   const len = d.body.trim().length;
   const offer = Array.from(new Set(suggestions.map((x) => x.toLowerCase())))
     .map((k) => suggestions.find((x) => x.toLowerCase() === k)!)
     .filter((x) => x.length > 1 && !d.ordered.some((o) => o.toLowerCase() === x.toLowerCase()))
-    .slice(0, 5);
+    .slice(0, 4);
 
   useEffect(() => () => adds.forEach((a) => URL.revokeObjectURL(a.url)), []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -570,7 +481,7 @@ function ReviewForm({
       const r = await backend.addReview(spot.id, {
         rating: draft.rating,
         body: oneParagraph(draft.body).trim(),
-        goBack: !!draft.goBack,
+        goBack: draft.goBack,
         visited: draft.visited,
         ordered: draft.ordered,
         goodFor: draft.goodFor,
@@ -600,87 +511,83 @@ function ReviewForm({
   }
 
   return (
-    <motion.form className="rv-form" onSubmit={submit} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-      <fieldset className="rv-f">
-        <legend>Your score</legend>
-        <div className="rv-scale" role="radiogroup" aria-label="Score">
-          {[1, 2, 3, 4, 5].map((v) => (
-            <button key={v} type="button" role="radio" aria-checked={d.rating === v} className={d.rating === v ? "on" : d.rating > v ? "under" : ""} onClick={() => set("rating", v)}>
-              <b>{v}</b>
-              <span>{RATING_WORDS[v].short}</span>
+    <motion.form className="rv-form rv-form-simple" onSubmit={submit} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+      <div className="rv-stars-pick" role="radiogroup" aria-label="Your score">
+        {[1, 2, 3, 4, 5].map((v) => (
+          <button key={v} type="button" role="radio" aria-checked={d.rating === v} aria-label={`${v}: ${RATING_WORDS[v].short}`} className={d.rating >= v ? "on" : ""} onClick={() => set("rating", v)}>
+            <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden>
+              <path d="M12 2.8l2.8 6 6.6.8-4.9 4.5 1.3 6.5L12 17.3l-5.8 3.3 1.3-6.5L2.6 9.6l6.6-.8z" />
+            </svg>
+          </button>
+        ))}
+        <span className="rv-stars-word">{d.rating ? RATING_WORDS[d.rating].short : "Tap to score"}</span>
+      </div>
+
+      <textarea
+        className="rv-text"
+        value={d.body}
+        onChange={(e) => set("body", oneParagraph(e.target.value).slice(0, REVIEW_MAX))}
+        placeholder={`How was ${spot.name}? What should a friend order?`}
+        rows={4}
+        maxLength={REVIEW_MAX}
+        aria-label="Your review"
+      />
+      {len > REVIEW_MAX - 80 && <p className="rv-count">{REVIEW_MAX - len} left</p>}
+
+      <div className="rv-dishes" aria-label="What you got">
+        {d.ordered.map((o) => (
+          <button key={o} type="button" className="rv-chip on" onClick={() => set("ordered", d.ordered.filter((x) => x !== o))} aria-label={`Remove ${o}`}>
+            {o} ×
+          </button>
+        ))}
+        {d.ordered.length < ORDER_MAX && (
+          <input
+            value={dish}
+            onChange={(e) => setDish(e.target.value.slice(0, ORDER_LEN))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === ",") {
+                e.preventDefault();
+                addDish(dish);
+              }
+            }}
+            onBlur={() => dish.trim() && addDish(dish)}
+            placeholder={d.ordered.length ? "Anything else?" : "What did you get? (optional)"}
+            aria-label="Something you got"
+            maxLength={ORDER_LEN}
+          />
+        )}
+      </div>
+      {offer.length > 0 && d.ordered.length < ORDER_MAX && !d.ordered.length && (
+        <div className="rv-offer">
+          {offer.map((o) => (
+            <button key={o} type="button" className="rv-chip" onClick={() => addDish(o)}>
+              + {o}
             </button>
           ))}
         </div>
-        <p className="rv-hint">{d.rating ? RATING_WORDS[d.rating].long : "3 means good. Save 5 for the best in town."}</p>
-      </fieldset>
+      )}
 
-      <fieldset className="rv-f">
-        <legend>Would you go back?</legend>
-        <div className="seg rv-seg">
-          <button type="button" className={d.goBack === true ? "on" : ""} aria-pressed={d.goBack === true} onClick={() => set("goBack", true)}>
+      <div className="rv-row">
+        <span className="rv-lab">Go back?</span>
+        <div className="seg rv-seg rv-seg-sm">
+          <button type="button" className={d.goBack === true ? "on" : ""} aria-pressed={d.goBack === true} onClick={() => set("goBack", d.goBack === true ? null : true)}>
             Yes
           </button>
-          <button type="button" className={d.goBack === false ? "on" : ""} aria-pressed={d.goBack === false} onClick={() => set("goBack", false)}>
+          <button type="button" className={d.goBack === false ? "on" : ""} aria-pressed={d.goBack === false} onClick={() => set("goBack", d.goBack === false ? null : false)}>
             No
           </button>
         </div>
-      </fieldset>
+        <span className="rv-row-gap" />
+        <button type="button" className="rv-photo-btn" onClick={() => picker.current?.click()} disabled={room <= 0}>
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
+            <path d="M4 8h3l1.5-2h7L17 8h3v11H4V8Z M12 16.5a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+          </svg>
+          Photo
+        </button>
+        <input ref={picker} type="file" accept="image/*" multiple hidden onChange={(e) => pick(e.target.files)} />
+      </div>
 
-      <fieldset className="rv-f">
-        <legend>What did you get?</legend>
-        <div className="rv-dishes">
-          {d.ordered.map((o) => (
-            <button key={o} type="button" className="rv-chip on" onClick={() => set("ordered", d.ordered.filter((x) => x !== o))} aria-label={`Remove ${o}`}>
-              {o} ×
-            </button>
-          ))}
-          {d.ordered.length < ORDER_MAX && (
-            <input
-              value={dish}
-              onChange={(e) => setDish(e.target.value.slice(0, ORDER_LEN))}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === ",") {
-                  e.preventDefault();
-                  addDish(dish);
-                }
-              }}
-              onBlur={() => dish.trim() && addDish(dish)}
-              placeholder={d.ordered.length ? "Anything else?" : "The burger, a latte…"}
-              aria-label="Something you got"
-              maxLength={ORDER_LEN}
-            />
-          )}
-        </div>
-        {offer.length > 0 && d.ordered.length < ORDER_MAX && (
-          <div className="rv-offer">
-            {offer.map((o) => (
-              <button key={o} type="button" className="rv-chip" onClick={() => addDish(o)}>
-                + {o}
-              </button>
-            ))}
-          </div>
-        )}
-      </fieldset>
-
-      <fieldset className="rv-f">
-        <legend>Your review</legend>
-        <textarea
-          value={d.body}
-          onChange={(e) => set("body", oneParagraph(e.target.value).slice(0, REVIEW_MAX))}
-          placeholder="What stood out, good or bad? Would you order it again? One thing a friend should know before going."
-          rows={5}
-          maxLength={REVIEW_MAX}
-          aria-describedby="rv-count"
-        />
-        <p id="rv-count" className={`rv-count ${len < REVIEW_MIN ? "short" : ""}`}>
-          {len < REVIEW_MIN ? `${REVIEW_MIN - len} more to go` : "One paragraph."} <span>{len} / {REVIEW_MAX}</span>
-        </p>
-      </fieldset>
-
-      <fieldset className="rv-f">
-        <legend>
-          Photos <span className="rv-opt">optional, up to {REVIEW_PHOTOS_MAX}</span>
-        </legend>
+      {(keep.length > 0 || adds.length > 0) && (
         <div className="rv-pick">
           {keep.map((p) => (
             <span key={p.id} className="rv-pic">
@@ -708,97 +615,19 @@ function ReviewForm({
               </button>
             </span>
           ))}
-          {room > 0 && (
-            <button type="button" className="rv-pic rv-pic-add" onClick={() => picker.current?.click()}>
-              + Photo
-            </button>
-          )}
         </div>
-        <input ref={picker} type="file" accept="image/*" multiple hidden onChange={(e) => pick(e.target.files)} />
-        <p className="rv-photo-hint">The food, the room, the people you went with. They show with the place&apos;s photos too.</p>
-      </fieldset>
-
-      <fieldset className="rv-f rv-f-row">
-        <label>
-          <span className="rv-lab">When did you go?</span>
-          <select value={d.visited} onChange={(e) => set("visited", e.target.value)}>
-            {months.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </fieldset>
-
-      <fieldset className="rv-f">
-        <legend>
-          Good for <span className="rv-opt">optional, up to {GOOD_FOR_MAX}</span>
-        </legend>
-        <div className="rv-offer">
-          {GOOD_FOR.map((g) => {
-            const on = d.goodFor.includes(g.id);
-            return (
-              <button
-                key={g.id}
-                type="button"
-                className={`rv-chip ${on ? "on" : ""}`}
-                aria-pressed={on}
-                disabled={!on && d.goodFor.length >= GOOD_FOR_MAX}
-                onClick={() => set("goodFor", on ? d.goodFor.filter((x) => x !== g.id) : [...d.goodFor, g.id])}
-              >
-                {g.label}
-              </button>
-            );
-          })}
-        </div>
-      </fieldset>
-
-      {details ? (
-        <fieldset className="rv-f">
-          <legend>
-            The details <span className="rv-opt">optional</span>
-          </legend>
-          {SUBS.map((k) => (
-            <div className="rv-sub" key={k}>
-              <span>{labels[k]}</span>
-              <div role="radiogroup" aria-label={labels[k]}>
-                {[1, 2, 3, 4, 5].map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    role="radio"
-                    aria-checked={d.sub[k] === v}
-                    className={d.sub[k] === v ? "on" : ""}
-                    onClick={() => set("sub", { ...d.sub, [k]: d.sub[k] === v ? undefined : v })}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </fieldset>
-      ) : (
-        <button type="button" className="textbtn rv-add-details" onClick={() => setDetails(true)}>
-          + Score the {labels.taste.toLowerCase()}, service and vibe (optional)
-        </button>
       )}
-
-      <label className={`rv-affirm ${tried && !d.affirmed ? "missing" : ""}`}>
-        <input type="checkbox" checked={d.affirmed} onChange={(e) => set("affirmed", e.target.checked)} />
-        <span>I went myself. I don&apos;t own, work at or compete with {spot.name}, and nobody gave me anything for this review.</span>
-      </label>
 
       {tried && problem && <p className="form-err">{problem}</p>}
       <div className="row between rv-foot">
         <button type="button" className="textbtn" onClick={onCancel}>
-          Never mind
+          Cancel
         </button>
         <button className="btn btn-green" disabled={busy}>
-          {busy ? (adds.length ? "Posting and uploading…" : "Posting…") : mine ? "Save changes" : "Post review"}
+          {busy ? "Posting…" : mine ? "Save" : "Post"}
         </button>
       </div>
+      <p className="rv-fine">By posting, you&apos;re saying you went yourself and have no tie to {spot.name}.</p>
     </motion.form>
   );
 }

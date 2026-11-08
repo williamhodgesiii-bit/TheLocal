@@ -34,7 +34,7 @@ export function nextBadge(f: { reviews: number; helpful: number }): string | nul
   if (f.reviews < TRUSTED.reviews || f.helpful < TRUSTED.helpful) {
     const r = Math.max(0, TRUSTED.reviews - f.reviews);
     const h = Math.max(0, TRUSTED.helpful - f.helpful);
-    return `Trusted reviewer at ${TRUSTED.reviews} reviews and ${TRUSTED.helpful} Helpful votes${r || h ? ` (${[r && `${r} more reviews`, h && `${h} more Helpful`].filter(Boolean).join(", ")})` : ""}`;
+    return `Trusted reviewer at ${TRUSTED.reviews} reviews and ${TRUSTED.helpful} likes${r || h ? ` (${[r && `${r} more reviews`, h && `${h} more likes`].filter(Boolean).join(", ")})` : ""}`;
   }
   return null;
 }

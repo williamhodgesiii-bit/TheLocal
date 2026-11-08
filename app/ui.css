@@ -5143,3 +5143,210 @@ h2 {
   font-size: 14px;
   text-decoration: none;
 }
+
+/* ---------- Reviews, simplified (Nov 2026): heart, comment, save; one quiet line of facts ---------- */
+.rv-act {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 2px;
+  margin: 8px 0 0 -9px;
+}
+.ia {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s, transform 0.12s var(--ease);
+}
+span.ia {
+  cursor: default;
+}
+.ia.quiet {
+  opacity: 0.6;
+}
+button.ia:active {
+  transform: scale(0.92);
+}
+@media (hover: hover) {
+  button.ia:hover {
+    color: var(--ink);
+  }
+}
+.ia.on {
+  color: var(--ink);
+}
+.ia-like.on,
+.ia-like.on:hover {
+  color: var(--red);
+}
+.ia-like.on .ia-i {
+  animation: ia-pop 0.3s var(--ease);
+}
+@keyframes ia-pop {
+  50% {
+    transform: scale(1.22);
+  }
+}
+.ia-n {
+  font-variant-numeric: tabular-nums;
+}
+.ia-gap {
+  flex: 1;
+}
+.ia-more {
+  position: relative;
+  display: inline-flex;
+}
+.ia-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 4px);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 168px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: 0 10px 28px rgba(31, 29, 25, 0.14);
+}
+.ia-menu button {
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+.ia-menu button:hover {
+  background: var(--paper);
+}
+.rv-facts {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.rv-facts .go-yes {
+  color: var(--green);
+  font-weight: 600;
+}
+.rv-facts .go-no {
+  font-weight: 600;
+}
+.rv-most {
+  margin: 12px 0 0;
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.4;
+}
+.rv-most span {
+  color: var(--muted);
+}
+
+/* the review form: stars, words, and the optional bits on one line */
+.rv-form-simple {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rv-stars-pick {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.rv-stars-pick button {
+  padding: 2px;
+  border: 0;
+  background: none;
+  color: var(--paper-3);
+  line-height: 0;
+  cursor: pointer;
+  transition: color 0.12s, transform 0.12s var(--ease);
+}
+.rv-stars-pick button path {
+  fill: currentColor;
+}
+.rv-stars-pick button.on {
+  color: var(--red);
+}
+.rv-stars-pick button:active {
+  transform: scale(0.9);
+}
+.rv-stars-word {
+  margin-left: 10px;
+  color: var(--ink-2);
+  font-family: var(--f-display);
+  font-size: 18px;
+}
+.rv-form-simple .rv-text {
+  width: 100%;
+  min-height: 112px;
+  font-size: 16px;
+  line-height: 1.45;
+}
+.rv-form-simple .rv-count {
+  margin: -6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: right;
+}
+.rv-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.rv-row-gap {
+  flex: 1;
+}
+.rv-row .rv-lab {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+.seg.rv-seg.rv-seg-sm {
+  width: 132px;
+}
+.seg.rv-seg.rv-seg-sm button {
+  min-height: 32px;
+  font-size: 14px;
+}
+.rv-photo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rv-photo-btn:disabled {
+  opacity: 0.5;
+}
+.rv-fine {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
