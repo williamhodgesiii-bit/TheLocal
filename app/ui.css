@@ -5350,3 +5350,38 @@ button.ia:active {
   font-size: 12.5px;
   line-height: 1.4;
 }
+
+/* when a page breaks (app/error.tsx) */
+.crash {
+  display: grid;
+  place-content: center;
+  min-height: 70vh;
+  padding: 24px var(--gutter);
+  text-align: center;
+}
+.crash h1 {
+  margin: 0 0 8px;
+  font-family: var(--f-display);
+  font-size: 28px;
+  font-weight: 500;
+}
+.crash p {
+  margin: 0 0 18px;
+  color: var(--muted);
+}
+.crash-btns {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.crash-details {
+  max-width: 420px;
+  margin: 8px auto 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.crash-details code {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}

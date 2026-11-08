@@ -28,7 +28,7 @@ export function ReviewActions({
   /** what "…" offers: Edit and Delete on your own, Report on others' */
   menu?: { label: string; onClick: () => void }[];
 }) {
-  const my = r.myReactions ?? [];
+  const my = Array.isArray(r.myReactions) ? r.myReactions : [];
   const liked = my.includes("helpful") || my.includes("thanks");
   const likes = (r.reactions?.helpful ?? 0) + (r.reactions?.thanks ?? 0);
   const saved = my.includes("want");
@@ -142,7 +142,7 @@ function Icon({ k, on }: { k: "heart" | "talk" | "save" | "more"; on?: boolean }
  * ("Would go back · Ordered Italian Sub and Montucky"), not a row of pills.
  */
 export function ReviewFacts({ r }: { r: Review }) {
-  const had = r.ordered ?? [];
+  const had = Array.isArray(r.ordered) ? r.ordered.filter((x) => typeof x === "string" && x.trim()) : [];
   const go = typeof r.goBack === "boolean" ? r.goBack : null;
   if (!had.length && go === null) return null;
   const list = had.length > 1 ? `${had.slice(0, -1).join(", ")} and ${had[had.length - 1]}` : had[0];

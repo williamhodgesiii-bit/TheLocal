@@ -12,6 +12,7 @@ import type { MemberCover } from "@/lib/photos";
 import type { SpinList } from "@/lib/lists";
 import AuthModal, { type AuthStep } from "./AuthModal";
 import SignInNudge from "./SignInNudge";
+import { isStaleBuild, reloadForNewVersion } from "@/lib/recover";
 
 export type { BeenMap, Verdict } from "@/lib/backend";
 
@@ -129,6 +130,20 @@ function mergeGuest(remote: { saved: string[]; been: BeenMap }, saved: string[],
 
 export default function Providers({ children }: { children: ReactNode }) {
   const backend = useMemo(() => getBackend(), []);
+  // a page left open across a deploy: when it reaches for a file the new version replaced, reload
+  // into the new version instead of breaking (lib/recover.ts; app/error.tsx catches it during render)
+  useEffect(() => {
+    const on = (e: PromiseRejectionEvent | ErrorEvent) => {
+      const err = "reason" in e ? e.reason : (e.error ?? { message: e.message });
+      if (isStaleBuild(err)) reloadForNewVersion();
+    };
+    window.addEventListener("unhandledrejection", on);
+    window.addEventListener("error", on);
+    return () => {
+      window.removeEventListener("unhandledrejection", on);
+      window.removeEventListener("error", on);
+    };
+  }, []);
   const [user, setUser] = useState<User | null>(null);
   const userRef = useRef<User | null>(null);
   const [auth, setAuth] = useState<{ open: boolean; reason?: string; step?: AuthStep }>({ open: false });

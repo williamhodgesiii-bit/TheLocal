@@ -15,6 +15,7 @@ import { Cover, Poster } from "./Cover";
 import { Icon } from "./Icons";
 import Photo from "./Photo";
 import ScrollCue, { useSwipeHint } from "./ScrollCue";
+import Safe from "./Safe";
 import { Avatar, FollowButton, NameLink, useBadges } from "./People";
 import { milestoneName, nextMilestone } from "@/lib/passport";
 import { getThe } from "@/lib/words";
@@ -89,7 +90,9 @@ export default function Home({
             <span>Find friends and local reviewers</span>
             <Icon name="right" size={16} />
           </button>
-          <Friends spotById={spotById} onOpen={onOpen} onPins={onPins} tab={friendsTab} onTab={onFriendsTab} />
+          <Safe where="friends">
+            <Friends spotById={spotById} onOpen={onOpen} onPins={onPins} tab={friendsTab} onTab={onFriendsTab} />
+          </Safe>
         </>
       ) : (
         <ForYou spotById={spotById} letter={letter} rows={rows} fresh={fresh} onOpen={onOpen} onSeeAll={onSeeAll} onSignup={onSignup} onPeople={onPeople} onPassport={onPassport} onSearch={onSearch} />
@@ -146,9 +149,18 @@ function ForYou({
   const blocks: React.ReactNode[] = [];
   let mi = 0;
   posts.forEach((a, i) => {
-    while (mi < modules.length && modules[mi].at <= i) blocks.push(<div key={modules[mi].key}>{modules[mi++].node}</div>);
+    while (mi < modules.length && modules[mi].at <= i)
+      blocks.push(
+        <div key={modules[mi].key}>
+          <Safe where={`module-${modules[mi].key}`}>{modules[mi++].node}</Safe>
+        </div>
+      );
     const r = feed.reviews[a.reviewId!];
-    blocks.push(<FeedReviewCard key={a.id} actor={a.actor} at={a.at} r={r} spot={spotById[r.spotId]} onOpen={onOpen} onReview={feed.patch} />);
+    blocks.push(
+      <Safe key={a.id} where="feed-post">
+        <FeedReviewCard actor={a.actor} at={a.at} r={r} spot={spotById[r.spotId]} onOpen={onOpen} onReview={feed.patch} />
+      </Safe>
+    );
   });
   const rest = modules.slice(mi);
 
@@ -165,7 +177,9 @@ function ForYou({
           <JoinCard onJoin={() => openAuth()} />
         </>
       )}
-      <ThursdayThree letter={letter} onOpen={onOpen} onSignup={onSignup} />
+      <Safe where="thursday-three">
+        <ThursdayThree letter={letter} onOpen={onOpen} onSignup={onSignup} />
+      </Safe>
       {!guest && <PassportStrip total={Object.keys(spotById).length} onOpen={onPassport} />}
       {feed.items === null ? (
         <div className="skeleton-feed" aria-hidden>
@@ -194,7 +208,9 @@ function ForYou({
       )}
       {/* shelves draw right away (and for search engines), before the reviews arrive */}
       {(feed.items === null ? modules : rest).map((m) => (
-        <div key={m.key}>{m.node}</div>
+        <div key={m.key}>
+          <Safe where={`module-${m.key}`}>{m.node}</Safe>
+        </div>
       ))}
       {feed.more && !guest && (
         <button type="button" className="more-btn" onClick={feed.loadMore} ref={feed.sentinel}>
@@ -255,7 +271,7 @@ export const ThursdayThree = memo(function ThursdayThree({ letter, onOpen, onSig
               <span className="t3-meta">
                 {GENRE_BY_ID[spot.genres[0]]?.short} · {areaLabelOf(spot)} · {priceLabel(spot.price)}
               </span>
-              <span className="t3-note">{note || `${getThe(spot.knownFor).replace(/^Get/, "Order")}.`}</span>
+              <span className="t3-note">{note || (spot.knownFor ? `${getThe(spot.knownFor).replace(/^Get/, "Order")}.` : "")}</span>
             </button>
           </li>
         ))}
