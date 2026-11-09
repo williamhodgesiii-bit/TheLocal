@@ -149,12 +149,16 @@ function ForYou({
   const blocks: React.ReactNode[] = [];
   let mi = 0;
   posts.forEach((a, i) => {
-    while (mi < modules.length && modules[mi].at <= i)
+    // take the module first, then use it: a JSX key is read after its children, so reading
+    // modules[mi] for the key after mi++ ran past the end once the feed had 13+ posts
+    while (mi < modules.length && modules[mi].at <= i) {
+      const m = modules[mi++];
       blocks.push(
-        <div key={modules[mi].key}>
-          <Safe where={`module-${modules[mi].key}`}>{modules[mi++].node}</Safe>
+        <div key={m.key}>
+          <Safe where={`module-${m.key}`}>{m.node}</Safe>
         </div>
       );
+    }
     const r = feed.reviews[a.reviewId!];
     blocks.push(
       <Safe key={a.id} where="feed-post">
