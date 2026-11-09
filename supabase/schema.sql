@@ -1823,4 +1823,120 @@ as $$
 $$;
 grant execute on function public.top_reviewers(int, int) to anon, authenticated;
 
+
+-- ---------- Security hardening (Nov 2026) ----------
+-- From an audit of every table, policy, view and function. Row level security was already on
+-- everywhere; these close the gaps it found and add a second lock behind it.
+
+-- 1. Reviews and photos are signed with the writer's account name, never a name sent in with
+--    the request (a direct API call could otherwise post as "The Plate Next Door" or as someone
+--    else). Staff can still sign as the team. Runs last ("zz_") so nothing overrides it.
+create or replace function public.sign_as_member() returns trigger
+  language plpgsql security definer set search_path = public
+as $$
+declare
+  n text;
+begin
+  if public.is_admin() then return new; end if;
+  select display_name into n from public.members where id = new.user_id;
+  new.display_name := left(coalesce(nullif(btrim(n), ''), nullif(btrim(new.display_name), ''), 'Local'), 40);
+  return new;
+end $$;
+drop trigger if exists zz_reviews_signed on public.reviews;
+create trigger zz_reviews_signed before insert or update on public.reviews
+  for each row execute function public.sign_as_member();
+drop trigger if exists zz_photos_signed on public.photos;
+create trigger zz_photos_signed before insert or update on public.photos
+  for each row execute function public.sign_as_member();
+
+-- 2. A member's photo must be a file they uploaded here, to their own folder: no outside links
+--    (an outside image could be swapped for anything later, or track who views it).
+create or replace function public.photo_source_rules() returns trigger
+  language plpgsql security definer set search_path = public
+as $$
+declare
+  own text;
+begin
+  if public.is_admin() then return new; end if;
+  if tg_table_name = 'photos' then
+    own := '%/storage/v1/object/public/spot-photos/' || new.user_id::text || '/%';
+    if new.url is null or new.url not like own or new.url !~ '^https://' then
+      raise exception 'Photos have to be uploaded here.';
+    end if;
+  elsif tg_table_name = 'submissions' then
+    own := '%/storage/v1/object/public/spot-photos/' || new.submitted_by::text || '/%';
+    if new.photo_url is not null and (new.photo_url not like own or new.photo_url !~ '^https://') then
+      raise exception 'Photos have to be uploaded here.';
+    end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists zz_photos_source on public.photos;
+create trigger zz_photos_source before insert or update of url on public.photos
+  for each row execute function public.photo_source_rules();
+drop trigger if exists zz_submissions_source on public.submissions;
+create trigger zz_submissions_source before insert or update of photo_url on public.submissions
+  for each row execute function public.photo_source_rules();
+
+-- 3. Least privilege. Supabase gives the public (signed-out) role every privilege on every table
+--    and leaves it to row level security; take writing away from it entirely, except the four
+--    sign-up forms that are meant to be public, and take internal tables away from everyone.
+revoke insert, update, delete, truncate, references, trigger on all tables in schema public from anon;
+revoke truncate, references, trigger on all tables in schema public from authenticated;
+grant insert on public.gift_clicks, public.partner_leads, public.subscribers, public.waitlist to anon, authenticated;
+revoke all on public.admins, public.admin_emails, public.banned_terms, public.google_calls, public.google_cache, public.handle_history from anon, authenticated;
+-- lists of emails and private rows: never readable through the public API (the server reads them with its own key)
+revoke select on public.subscribers, public.waitlist, public.partner_leads from anon, authenticated;
+revoke select on public.profiles, public.push_tokens, public.notifications from anon;
+do $$ begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'schema_runs') then
+    execute 'revoke all on public.schema_runs from anon, authenticated';
+  end if;
+end $$;
+
+-- 4. The public sign-up forms take sensible input only (NOT VALID: older rows aren't re-checked).
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'waitlist_sane') then
+    alter table public.waitlist add constraint waitlist_sane check (
+      char_length(email) <= 254 and email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$' and char_length(state) <= 40 and char_length(coalesce(city, '')) <= 80
+    ) not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'partner_leads_sane') then
+    alter table public.partner_leads add constraint partner_leads_sane check (
+      char_length(email) <= 254 and email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$' and char_length(name) between 1 and 120
+      and char_length(business) between 1 and 160 and char_length(tier) <= 40 and char_length(coalesce(message, '')) <= 4000
+    ) not valid;
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'subscribers_sane') then
+    alter table public.subscribers add constraint subscribers_sane check (char_length(email) <= 254) not valid;
+  end if;
+end $$;
+
+-- 5. A dated record of each member agreeing to the Terms of Service and Privacy Policy, by
+--    version (lib/legal.ts → TERMS_VERSION). Written only through accept_terms(); a member can
+--    read their own rows; nobody can change or erase one except by deleting the account.
+create table if not exists public.terms_acceptances (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  version text not null check (char_length(version) between 1 and 40),
+  accepted_at timestamptz not null default now(),
+  user_agent text check (char_length(user_agent) <= 300),
+  primary key (user_id, version)
+);
+alter table public.terms_acceptances enable row level security;
+drop policy if exists "members see their own agreements" on public.terms_acceptances;
+create policy "members see their own agreements" on public.terms_acceptances for select using ((select auth.uid()) = user_id);
+revoke insert, update, delete, truncate on public.terms_acceptances from anon, authenticated;
+
+create or replace function public.accept_terms(v text, ua text default null) returns void
+  language plpgsql security definer set search_path = public
+as $$
+begin
+  if auth.uid() is null then raise exception 'Sign in first.'; end if;
+  insert into public.terms_acceptances (user_id, version, user_agent)
+    values (auth.uid(), left(btrim(v), 40), left(ua, 300))
+    on conflict (user_id, version) do nothing;
+end $$;
+revoke execute on function public.accept_terms(text, text) from public, anon;
+grant execute on function public.accept_terms(text, text) to authenticated;
+
 commit;

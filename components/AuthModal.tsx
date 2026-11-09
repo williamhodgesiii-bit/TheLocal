@@ -309,7 +309,8 @@ export default function AuthModal({
                     ) : (
                       <>New here or coming back, it&apos;s the same: we email you a code. No password to remember. </>
                     )}
-                    By continuing you agree to the <Link href="/terms">Terms</Link> (no abuse, no fake reviews) and the <Link href="/privacy">Privacy policy</Link>.
+                    By continuing, you agree to our <Link href="/terms">Terms of Service</Link>, including the arbitration agreement and class action waiver, and to our{" "}
+                    <Link href="/privacy">Privacy Policy</Link>, and you confirm you&apos;re 13 or older.
                   </p>
                 </motion.div>
               )}

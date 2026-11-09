@@ -209,6 +209,10 @@ export interface Backend {
   ratings(): Promise<RatingSummary>;
   subscribe(email: string): Promise<void>;
   lead(l: Lead): Promise<void>;
+  /** record that the signed-in member agreed to this version of the Terms and Privacy Policy */
+  acceptTerms(version: string): Promise<void>;
+  /** has the signed-in member agreed to this version? (true when it can't be checked, so nobody is locked out) */
+  acceptedTerms(version: string): Promise<boolean>;
   waitlist(email: string, state: string, city: string): Promise<void>;
 
   /* profile */
@@ -1157,6 +1161,18 @@ function supabaseBackend(sb: SupabaseClient): Backend {
         (data ?? []).map((r: any) => ({ id: r.spot_id, avg: Number(r.avg_rating), count: Number(r.review_count), goBack: r.go_back_pct == null ? null : Number(r.go_back_pct) }))
       );
     },
+    async acceptTerms(version) {
+      const ua = typeof navigator === "undefined" ? null : navigator.userAgent.slice(0, 300);
+      const { error } = await sb.rpc("accept_terms", { v: version, ua });
+      if (error && !/accept_terms|function|schema cache/i.test(error.message)) throw new Error(error.message);
+    },
+    async acceptedTerms(version) {
+      const uid = (await sb.auth.getSession()).data.session?.user.id;
+      if (!uid) return true;
+      const { data, error } = await sb.from("terms_acceptances").select("version").eq("user_id", uid).eq("version", version).maybeSingle();
+      if (error) return true; // the database hasn't been updated yet: don't block anyone
+      return !!data;
+    },
     async subscribe(email) {
       const { error } = await sb.from("subscribers").insert({ email: email.trim().toLowerCase() });
       if (error && !String(error.message).includes("duplicate")) throw error;
@@ -1951,6 +1967,16 @@ function localBackend(): Backend {
           };
         })
       );
+    },
+    async acceptTerms(version) {
+      const u = current();
+      if (!u) throw new Error("Sign in first.");
+      write(`tl.terms.${u.id}`, { version, at: new Date().toISOString() });
+    },
+    async acceptedTerms(version) {
+      const u = current();
+      if (!u) return true;
+      return read<{ version?: string }>(`tl.terms.${u.id}`, {}).version === version;
     },
     async subscribe(email) {
       write(K.subs, Array.from(new Set([...read<string[]>(K.subs, []), email])));

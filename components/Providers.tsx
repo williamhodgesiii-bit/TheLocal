@@ -12,6 +12,8 @@ import type { MemberCover } from "@/lib/photos";
 import type { SpinList } from "@/lib/lists";
 import AuthModal, { type AuthStep } from "./AuthModal";
 import SignInNudge from "./SignInNudge";
+import TermsGate from "./TermsGate";
+import { TERMS_VERSION } from "@/lib/legal";
 import { isStaleBuild, reloadForNewVersion } from "@/lib/recover";
 
 export type { BeenMap, Verdict } from "@/lib/backend";
@@ -177,6 +179,38 @@ export default function Providers({ children }: { children: ReactNode }) {
     userRef.current = u;
     setUser(u);
   }, []);
+
+  // The Terms: signing in through the sign-in window is agreeing (it says so right by the button),
+  // and that's recorded; anyone signed in who hasn't agreed to this version is asked once.
+  const [needTerms, setNeedTerms] = useState(false);
+  const agreedNow = useRef<string | null>(null);
+  const signedInHere = useCallback(
+    (u: User | null) => {
+      if (u) {
+        agreedNow.current = u.id;
+        backend.acceptTerms(TERMS_VERSION).catch(() => {});
+      }
+      applyUser(u);
+    },
+    [applyUser, backend]
+  );
+  useEffect(() => {
+    if (!user) return setNeedTerms(false);
+    const id = user.id;
+    let off = false;
+    // a moment's wait, so a sign-in that just recorded its agreement isn't asked again
+    const t = setTimeout(() => {
+      if (off || agreedNow.current === id) return;
+      backend.acceptedTerms(TERMS_VERSION).then(
+        (ok) => !off && agreedNow.current !== id && setNeedTerms(!ok),
+        () => {}
+      );
+    }, 1500);
+    return () => {
+      off = true;
+      clearTimeout(t);
+    };
+  }, [user?.id, backend]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** whose lists are loaded; anything tapped before signing in waits for them, so the pull can't overwrite it */
   const listsFor = useRef<string | null>(null);
@@ -554,7 +588,24 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <AppCtx.Provider value={value}>
       <MediaCtx.Provider value={media}>{children}</MediaCtx.Provider>
-      <AuthModal open={auth.open} reason={auth.reason} step={auth.step} onSignedIn={applyUser} onClose={closeAuth} />
+      <AuthModal open={auth.open} reason={auth.reason} step={auth.step} onSignedIn={signedInHere} onClose={closeAuth} />
+      {needTerms && user && (
+        <TermsGate
+          onAgree={async () => {
+            try {
+              await backend.acceptTerms(TERMS_VERSION);
+              agreedNow.current = user.id;
+              setNeedTerms(false);
+            } catch {
+              toast("Couldn't save that. Check your connection and try again.", "err");
+            }
+          }}
+          onSignOut={() => {
+            setNeedTerms(false);
+            backend.signOut();
+          }}
+        />
+      )}
       <SignInNudge authOpen={auth.open} />
       <div className="toasts" aria-live="polite">
         <AnimatePresence>

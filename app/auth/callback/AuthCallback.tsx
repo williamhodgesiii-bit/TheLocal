@@ -8,7 +8,15 @@ import { track } from "@/lib/analytics";
 
 /** only our own pages, never an open redirect */
 function safeNext(raw: string | null) {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/auth/") ? raw : "/";
+  // a path on this site only: no "//host", no "/\\host" (browsers read a backslash as a slash),
+  // no control characters, and it has to resolve to this same origin
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || /[\\\u0000-\u001f\u007f]/.test(raw) || raw.startsWith("/auth/")) return "/";
+  try {
+    const u = new URL(raw, location.origin);
+    return u.origin === location.origin ? u.pathname + u.search + u.hash : "/";
+  } catch {
+    return "/";
+  }
 }
 
 /** Where the link in the sign-in email (and Google's redirect fallback) lands. */

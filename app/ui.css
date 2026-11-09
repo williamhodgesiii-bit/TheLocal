@@ -5385,3 +5385,93 @@ button.ia:active {
   margin-top: 6px;
   overflow-wrap: anywhere;
 }
+
+/* ---------- The Terms, agreed once (components/TermsGate.tsx) ---------- */
+.terms-overlay {
+  z-index: 120;
+}
+.terms-gate {
+  max-width: 460px;
+  padding: 22px 20px 18px;
+}
+.terms-gate p {
+  margin: 8px 0 10px;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+.terms-gate a {
+  color: var(--ink);
+  text-decoration: underline;
+}
+.terms-points {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+.terms-points li + li {
+  margin-top: 4px;
+}
+.terms-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  background: var(--paper);
+  font-size: 14.5px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.terms-check input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--ink);
+}
+.terms-btns {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+/* the legal pages: a contents list and numbered sections */
+.legal-toc {
+  margin: 18px 0 8px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  columns: 2 220px;
+  column-gap: 24px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.legal-toc a {
+  color: var(--ink-2);
+}
+.legal-caps {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+.legal-alert {
+  margin: 14px 0;
+  padding: 14px 16px;
+  border-left: 3px solid var(--red);
+  background: var(--card);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.legal h2 {
+  scroll-margin-top: 80px;
+}
+.legal h3 {
+  margin: 16px 0 6px;
+  font-size: 16px;
+}
