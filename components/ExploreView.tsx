@@ -67,6 +67,8 @@ export default function ExploreView(p: {
   onMember?: (handle: string) => void;
   /** add a place we're missing */
   onAdd: () => void;
+  /** the city they're exploring ("Explore Birmingham") */
+  cityName: string;
 }) {
   const [sheet, setSheet] = useState<null | "food" | "price" | "sort">(null);
   // the first screenful draws at once, the rest a frame later as you scroll (phones stay quick)
@@ -233,7 +235,7 @@ export default function ExploreView(p: {
     <div className={`explore ${p.mapMode ? "split" : ""}`}>
       <div className="ex-main">
         <div className="ex-top">
-          <h1 className="ex-title">Explore</h1>
+          <h1 className="ex-title">Explore {p.cityName}</h1>
           <button type="button" className="btn btn-line btn-sm" onClick={p.onAdd}>
             <Icon name="plus" size={16} /> Add a place
           </button>

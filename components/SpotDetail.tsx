@@ -43,12 +43,15 @@ export default function SpotDetail({
   areas,
   onBack,
   onSelect,
+  reviewNow,
 }: {
   spot: Spot;
   pool: Spot[];
   areas: Area[];
   onBack: () => void;
   onSelect: (id: string) => void;
+  /** set (to a new number) to open the review form right away: Add a review hands off here */
+  reviewNow?: number;
 }) {
   const { backend, requireAuth, toast, covers, refreshCovers, google, saved, toggleSaved, been, markBeen, user } = useApp();
   const [photos, setPhotos] = useState<MemberPhoto[]>([]);
@@ -58,6 +61,9 @@ export default function SpotDetail({
   const [uploading, setUploading] = useState(false);
   const [uploadKind, setUploadKind] = useState<PhotoKind>("food");
   const [writeSignal, setWriteSignal] = useState(0);
+  useEffect(() => {
+    if (reviewNow) setWriteSignal((n) => n + 1);
+  }, [reviewNow]);
   const [listing, setListing] = useState(false);
   const [newList, setNewList] = useState<SpinList | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);

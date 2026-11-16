@@ -69,6 +69,7 @@ const You = dynamic(() => import("./You"));
 const MemberPage = dynamic(() => import("./MemberPage"));
 const ListEditor = dynamic(() => import("./ListsView").then((m) => m.ListEditor), { ssr: false });
 const Surprise = dynamic(() => import("./Surprise"), { ssr: false });
+const AddReview = dynamic(() => import("./AddReview"), { ssr: false });
 const WherePicker = dynamic(() => import("./WherePicker"), { ssr: false });
 const CityPicker = dynamic(() => import("./CityPicker"), { ssr: false });
 const StampPicker = dynamic(() => import("./StampPicker"), { ssr: false });
@@ -163,7 +164,9 @@ export default function Explorer({
   const [surprise, setSurprise] = useState<{ open: boolean; from: string | null }>({ open: false, from: null });
   const [newList, setNewList] = useState<SpinList | null>(null);
   const [ratings, setRatings] = useState<RatingSummary>({});
-  const [userMenu, setUserMenu] = useState(false);
+  // Add a review: pick the place you just ate at, then its review form opens
+  const [reviewing, setReviewing] = useState(false);
+  const [reviewAsk, setReviewAsk] = useState<{ id: string; n: number } | null>(null);
   const [view, setView] = useState<View>(initialView ?? (cityId ? "explore" : "home"));
   const [returnView, setReturnView] = useState<View>("home");
   const [focusId, setFocusId] = useState<string | null>(null);
@@ -249,6 +252,8 @@ export default function Explorer({
     return [...seed, ...community.filter((x) => x.city === city.id && !seedIds.has(x.id))];
   }, [city.id, community, google, initialSpot]);
   const spotById = useMemo(() => Object.fromEntries(allSpots.map((x) => [x.id, x])) as Record<string, Spot>, [allSpots]);
+  // For you's second shelf: the Michelin and James Beard places, best-loved first
+  const honorSpots = useMemo(() => allSpots.filter((x) => COLLECTION_BY_ID.honors?.match(x)).sort((a, b) => b.pop - a.pop), [allSpots]);
   const areas = useMemo(() => deriveAreas(city.id, allSpots), [city.id, allSpots]);
   const areaById = useMemo(() => Object.fromEntries(areas.map((a) => [a.id, a])), [areas]);
   const inArea = useCallback(
@@ -599,6 +604,18 @@ export default function Explorer({
     [allSpots.length, requireAuth]
   );
 
+  const openAddReview = useCallback(() => {
+    if (requireAuth("Sign in to add a review. It takes a few seconds, no password.", () => setReviewing(true))) setReviewing(true);
+  }, [requireAuth]);
+  const reviewPlace = useCallback(
+    (id: string) => {
+      setReviewing(false);
+      setReviewAsk({ id, n: Date.now() });
+      select(id);
+    },
+    [select]
+  );
+
   // keyboard: "/" search, "s" surprise, Esc back
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -801,13 +818,12 @@ export default function Explorer({
     </footer>
   );
 
-  const tabs: { id: View | "surprise"; label: string; icon: IconName; on: boolean; go: () => void; desk?: boolean }[] = [
-    { id: "home", label: "Home", icon: "home", on: navTo ? navTo === "home" || navTo === "friends" : (view === "home" || view === "friends") && !selected, go: () => (view === "home" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("home")) },
+  const onHome = navTo ? navTo === "home" || navTo === "friends" || navTo === "lists" : (view === "home" || view === "friends" || view === "lists") && !selected;
+  const tabs: { id: View | "review"; label: string; icon: IconName; on: boolean; go: () => void }[] = [
+    { id: "home", label: "Home", icon: "home", on: onHome, go: () => (view === "home" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("home")) },
     { id: "explore", label: "Explore", icon: "search", on: navTo ? navTo === "explore" : view === "explore" && !selected, go: () => (view === "explore" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("explore")) },
-    { id: "surprise", label: "Surprise", icon: "spark", on: false, go: () => openSurprise() },
-    { id: "lists", label: "Lists", icon: "lists", on: navTo ? navTo === "lists" : view === "lists" && !selected, go: () => goView("lists") },
-    { id: "people", label: "People", icon: "people", on: navTo ? navTo === "people" : (view === "people" || (view === "member" && !(me && handle === me.handle))) && !selected, go: () => goView("people"), desk: true },
-    { id: "me", label: "You", icon: "user", on: navTo ? navTo === "me" : (view === "me" || (view === "member" && !!me && handle === me.handle)) && !selected, go: () => goView("me") },
+    { id: "people", label: "People", icon: "people", on: navTo ? navTo === "people" : (view === "people" || (view === "member" && !(me && handle === me.handle))) && !selected, go: () => goView("people") },
+    { id: "review", label: "Add a review", icon: "pen", on: reviewing, go: openAddReview },
   ];
 
   let body: React.ReactNode;
@@ -819,36 +835,47 @@ export default function Explorer({
         <span />
       </div>
     );
-  else if (selected) body = <SpotDetail key={selected.id} spot={selected} pool={allSpots} areas={areas} onBack={() => goBack(() => select(null))} onSelect={select} />;
-  else if (view === "home" || view === "friends")
+  else if (selected)
+    body = (
+      <SpotDetail
+        key={selected.id}
+        spot={selected}
+        pool={allSpots}
+        areas={areas}
+        onBack={() => goBack(() => select(null))}
+        onSelect={select}
+        reviewNow={reviewAsk?.id === selected.id ? reviewAsk.n : 0}
+      />
+    );
+  else if (view === "home" || view === "friends" || view === "lists")
     body = (
       <div className="with-rail">
         <div className="col-main">
           <Home
-            tab={view === "friends" ? "friends" : "foryou"}
+            tab={view === "friends" ? "friends" : view === "lists" ? "lists" : "foryou"}
             onTab={(t) => {
-              if (t === "friends" && !userRef.current) return openAuth(GATE.friends!.why, () => setView("friends"));
-              setView(t === "friends" ? "friends" : "home");
+              const v: View = t === "friends" ? "friends" : t === "lists" ? "lists" : "home";
+              const gate = GATE[v];
+              if (gate && !userRef.current) return openAuth(gate.why, () => setView(v));
+              setView(v);
+              top();
             }}
-            onSearch={findPlace}
             friendsTab={friendsTab}
             onFriendsTab={setFriendsTab}
             spotById={spotById}
             letter={letter}
-            rows={rows}
-            fresh={fresh}
+            honors={honorSpots}
+            lists={<ListsView spots={allSpots} areas={areas} onOpen={select} onSpin={(from) => openSurprise(from)} inHome />}
             onOpen={select}
             onSeeAll={seeCollection}
             onPins={setPins}
             onSignup={toLetter}
             onPeople={() => goView("people")}
-            onPassport={() => goView("me")}
           />
         </div>
         <aside className="rail" aria-label="More">
           <div className="d-only">
-            <SpinCard onSpin={openSurprise} onLists={() => goView("lists")} />
-            <Shelf title="Award winners" spots={allSpots.filter((s) => COLLECTION_BY_ID.honors?.match(s)).slice(0, 6)} onOpen={select} onSeeAll={() => seeCollection("honors")} />
+            <SpinCard onSpin={openSurprise} onLists={() => setView("lists")} />
           </div>
           {foot}
         </aside>
@@ -911,9 +938,9 @@ export default function Explorer({
         people={peopleHits}
         onMember={openMember}
         onAdd={openAdd}
+        cityName={city.name}
       />
     );
-  else if (view === "lists") body = <ListsView spots={allSpots} areas={areas} onOpen={select} onSpin={(from) => openSurprise(from)} />;
   else if (view === "people")
     body = (
       <div className="col-narrow">
@@ -963,13 +990,11 @@ export default function Explorer({
             <span className="brand-name">{BRAND}</span>
           </button>
           <nav className="tnav" aria-label="Sections">
-            {tabs
-              .filter((t) => t.id !== "surprise")
-              .map((t) => (
-                <button key={t.id} className={t.on ? "on" : ""} onClick={t.go} aria-current={t.on ? "page" : undefined}>
-                  {t.label}
-                </button>
-              ))}
+            {tabs.map((t) => (
+              <button key={t.id} className={t.on ? "on" : ""} onClick={t.go} aria-current={t.on ? "page" : undefined}>
+                {t.label}
+              </button>
+            ))}
           </nav>
           <div className="tright">
             <button className="icon-btn search-jump" onClick={() => (toExplore(), setTimeout(() => searchRef.current?.focus(), 80))} aria-label="Search">
@@ -985,51 +1010,14 @@ export default function Explorer({
               <Icon name="spark" size={17} /> Surprise me
             </button>
             {user ? (
-              <div className="user-wrap">
-                <button className="av-btn" onClick={() => setUserMenu((v) => !v)} aria-expanded={userMenu} aria-label="Your account">
-                  <Avatar m={{ id: user.id, name: user.name }} size={32} />
-                </button>
-                <AnimatePresence>
-                  {userMenu && (
-                    <motion.div className="user-menu" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} onMouseLeave={() => setUserMenu(false)}>
-                      <span className="um-name">{user.name}</span>
-                      <span className="um-mail">{user.email}</span>
-                      <button className="menu-item" onClick={() => (goView("me"), setUserMenu(false))}>
-                        You &amp; your passport
-                      </button>
-                      {me && (
-                        <button className="menu-item" onClick={() => (openMember(me.handle), setUserMenu(false))}>
-                          Your page (@{me.handle})
-                        </button>
-                      )}
-                      <button className="menu-item" onClick={() => (openAdd(), setUserMenu(false))}>
-                        Add a place
-                      </button>
-                      <button className="menu-item" onClick={() => (setMine(true), setUserMenu(false))}>
-                        Places you&apos;ve added
-                      </button>
-                      <Link className="menu-item" href="/partners">
-                        For restaurants
-                      </Link>
-                      {admin && (
-                        <Link className="menu-item" href="/admin">
-                          Verification desk
-                        </Link>
-                      )}
-                      <button
-                        className="menu-item"
-                        onClick={() => {
-                          backend.signOut();
-                          setUserMenu(false);
-                          toast("Signed out.");
-                        }}
-                      >
-                        Sign out
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              <button
+                className={`av-btn ${view === "me" && !selected ? "on" : ""}`}
+                onClick={() => goView("me")}
+                aria-label="You: your passport, reviews and settings"
+                aria-current={view === "me" && !selected ? "page" : undefined}
+              >
+                <Avatar m={me ?? { id: user.id, name: user.name }} size={32} />
+              </button>
             ) : (
               <button className="btn btn-line btn-sm signin" onClick={() => openAuth()}>
                 Sign in
@@ -1044,10 +1032,10 @@ export default function Explorer({
       </main>
 
       <nav className="tabbar" aria-label="Sections">
-        {tabs.filter((t) => !t.desk).map((t) => (
-          <button key={t.id} className={`${t.on ? "on" : ""} ${t.id === "surprise" ? "tab-spin" : ""}`} onClick={t.go} aria-current={t.on ? "page" : undefined}>
+        {tabs.map((t) => (
+          <button key={t.id} className={t.on ? "on" : ""} onClick={t.go} aria-current={t.on ? "page" : undefined}>
             <span className="tab-ico">
-              <Icon name={t.icon} size={t.id === "surprise" ? 22 : 23} fill={false} stroke={t.on ? 2.1 : 1.7} />
+              <Icon name={t.icon} size={23} fill={false} stroke={t.on ? 2.1 : 1.7} />
               {t.id === "home" && user && unread > 0 && <span className="tab-dot" aria-label={`${unread} new`} />}
             </span>
             <span className="tab-l">{t.label}</span>
@@ -1072,6 +1060,7 @@ export default function Explorer({
       />}
       {cityPicked && <CityPicker open={cityPicker} city={city} onPick={goCity} onClose={() => setCityPicker(false)} />}
       {stampPicked && <StampPicker open={stampPicker} onClose={() => setStampPicker(false)} spots={allSpots} areas={areas} />}
+      {reviewing && <AddReview spots={allSpots} onPick={reviewPlace} onClose={() => setReviewing(false)} />}
       {surprisePicked && <Surprise
         open={surprise.open && allSpots.length > 0}
         from={surprise.from}
@@ -1118,7 +1107,7 @@ function SpinCard({ onSpin, onLists }: { onSpin: (from?: string | null) => void;
     <section className="spin-card">
       <p className="eyebrow">{hi || " "}</p>
       <h2 className="spin-h">Can&apos;t decide?</h2>
-      <p className="spin-p">Let us pick. Spin from everywhere, or from one of your lists.</p>
+      <p className="spin-p">Let us pick, from everywhere or from one of your lists.</p>
       <button type="button" className="btn btn-red btn-block" onClick={() => onSpin()}>
         <Icon name="spark" size={18} /> Surprise me
       </button>
@@ -1132,7 +1121,7 @@ function SpinCard({ onSpin, onLists }: { onSpin: (from?: string | null) => void;
         </div>
       )}
       <button type="button" className="link-btn" onClick={onLists}>
-        {user && lists.length ? "Your lists" : "Make a list to spin from"} <Icon name="right" size={14} />
+        {user && lists.length ? "Your lists" : "Make a list to choose from"} <Icon name="right" size={14} />
       </button>
     </section>
   );

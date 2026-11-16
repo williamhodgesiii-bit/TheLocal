@@ -21,12 +21,15 @@ export default function ListsView({
   areas,
   onOpen,
   onSpin,
+  inHome,
 }: {
   spots: Spot[];
   areas: Area[];
   onOpen: (id: string) => void;
-  /** Surprise me from this list ("saved", "been" or a list id) */
-  onSpin: (from: string) => void;
+  /** Surprise me from this list ("saved", "been" or a list id), or from everywhere (null) */
+  onSpin: (from: string | null) => void;
+  /** shown as Home's Lists tab: the tab names it, so no big title */
+  inHome?: boolean;
 }) {
   const { user, authReady, openAuth, lists, saved, been, deleteList } = useApp();
   const [editing, setEditing] = useState<SpinList | null>(null);
@@ -105,14 +108,19 @@ export default function ListsView({
 
   return (
     <div className="lists">
-      <header className="page-head">
+      <header className={`page-head ${inHome ? "page-head-tab" : ""}`}>
         <div>
-          <h1 className="page-title">Lists</h1>
-          <p className="page-sub">Make a list once, then let Surprise me pick from it.</p>
+          {inHome ? <h2 className="sr-only">Lists</h2> : <h1 className="page-title">Lists</h1>}
+          <p className="page-sub">Make a list once, then let Surprise me choose from it.</p>
         </div>
-        <button type="button" className="btn btn-ink" onClick={startNew}>
-          <Icon name="plus" size={18} /> New list
-        </button>
+        <div className="row gap8">
+          <button type="button" className="btn btn-red" onClick={() => onSpin(null)}>
+            <Icon name="spark" size={17} /> Surprise me
+          </button>
+          <button type="button" className="btn btn-ink" onClick={startNew}>
+            <Icon name="plus" size={18} /> New list
+          </button>
+        </div>
       </header>
 
       {authReady && !user ? (
@@ -240,7 +248,7 @@ export function ListEditor({
     setBusy(false);
     if (out) {
       track("list_saved", { rules: Object.keys(out.rules).length, picks: out.spotIds.length, new: isNew });
-      toast(isNew ? `"${out.title}" is ready. Surprise me can spin from it.` : "List saved.", "ok");
+      toast(isNew ? `"${out.title}" is ready. Surprise me can choose from it.` : "List saved.", "ok");
       onClose();
     }
   }
