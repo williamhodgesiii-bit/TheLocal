@@ -5478,7 +5478,7 @@ button.ia:active {
 
 /* ---------- Nav (Nov 2026): Home, Explore, People, Add a review; You is the account picture ---------- */
 .tabbar {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
 }
 .av-btn {
   border-radius: 50%;

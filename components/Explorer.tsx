@@ -819,9 +819,11 @@ export default function Explorer({
   );
 
   const onHome = navTo ? navTo === "home" || navTo === "friends" || navTo === "lists" : (view === "home" || view === "friends" || view === "lists") && !selected;
-  const tabs: { id: View | "review"; label: string; icon: IconName; on: boolean; go: () => void }[] = [
+  const tabs: { id: View | "review" | "surprise"; label: string; icon: IconName; on: boolean; go: () => void }[] = [
     { id: "home", label: "Home", icon: "home", on: onHome, go: () => (view === "home" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("home")) },
     { id: "explore", label: "Explore", icon: "search", on: navTo ? navTo === "explore" : view === "explore" && !selected, go: () => (view === "explore" && !selected ? window.scrollTo({ top: 0, behavior: "smooth" }) : goView("explore")) },
+    // Surprise me sits in the middle of the phone's tab bar (on a computer it's the red button up top)
+    { id: "surprise", label: "Surprise", icon: "spark", on: false, go: () => openSurprise() },
     { id: "people", label: "People", icon: "people", on: navTo ? navTo === "people" : (view === "people" || (view === "member" && !(me && handle === me.handle))) && !selected, go: () => goView("people") },
     { id: "review", label: "Add a review", icon: "pen", on: reviewing, go: openAddReview },
   ];
@@ -990,11 +992,13 @@ export default function Explorer({
             <span className="brand-name">{BRAND}</span>
           </button>
           <nav className="tnav" aria-label="Sections">
-            {tabs.map((t) => (
-              <button key={t.id} className={t.on ? "on" : ""} onClick={t.go} aria-current={t.on ? "page" : undefined}>
-                {t.label}
-              </button>
-            ))}
+            {tabs
+              .filter((t) => t.id !== "surprise")
+              .map((t) => (
+                <button key={t.id} className={t.on ? "on" : ""} onClick={t.go} aria-current={t.on ? "page" : undefined}>
+                  {t.label}
+                </button>
+              ))}
           </nav>
           <div className="tright">
             <button className="icon-btn search-jump" onClick={() => (toExplore(), setTimeout(() => searchRef.current?.focus(), 80))} aria-label="Search">
@@ -1033,9 +1037,9 @@ export default function Explorer({
 
       <nav className="tabbar" aria-label="Sections">
         {tabs.map((t) => (
-          <button key={t.id} className={t.on ? "on" : ""} onClick={t.go} aria-current={t.on ? "page" : undefined}>
+          <button key={t.id} className={`${t.on ? "on" : ""} ${t.id === "surprise" ? "tab-spin" : ""}`} onClick={t.go} aria-current={t.on ? "page" : undefined}>
             <span className="tab-ico">
-              <Icon name={t.icon} size={23} fill={false} stroke={t.on ? 2.1 : 1.7} />
+              <Icon name={t.icon} size={t.id === "surprise" ? 22 : 23} fill={false} stroke={t.on ? 2.1 : 1.7} />
               {t.id === "home" && user && unread > 0 && <span className="tab-dot" aria-label={`${unread} new`} />}
             </span>
             <span className="tab-l">{t.label}</span>
